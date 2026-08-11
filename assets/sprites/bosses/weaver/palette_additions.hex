@@ -1,0 +1,6 @@
+# weaver — ДОБАВЛЕНИЯ к палитре world_eater (4 новых оттенка)
+# База (хитин/плоть/тень/глаза) наследуется из world_eater/palette.hex
+#9EB82E  venom_core
+#3A3A4C  silk_shadow
+#8B8A9E  silk_mid
+#E6E4F0  silk_hi
