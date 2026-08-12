@@ -5,20 +5,18 @@ package core
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 
-	"github.com/vladislav/game/internal/assets"
 	"github.com/vladislav/game/internal/config"
-	"github.com/vladislav/game/internal/hero"
 	"github.com/vladislav/game/internal/scene"
+	"github.com/vladislav/game/internal/ui"
 )
 
 type Game struct {
 	scene scene.Scene
 }
 
-// New создаёт игру, начиная с меню. Загрузчик ассетов инъектируется снаружи
-// (в проде — вшитая embed.FS из main), чтобы ядро не зависело от диска.
-func New(l *assets.Loader) *Game {
-	return &Game{scene: scene.NewMenu(hero.NewRegistry(l))}
+// New создаёт игру, начиная со стартового меню.
+func New() *Game {
+	return &Game{scene: scene.NewMenu()}
 }
 
 func (g *Game) Update() error {
@@ -32,6 +30,8 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	g.scene.Draw(screen)
+	ui.DrawFPS(screen)    // счётчик кадров (если включён в настройках)
+	ui.DrawCursor(screen) // игровой курсор-прицел (системный скрыт)
 }
 
 func (g *Game) Layout(outsideW, outsideH int) (int, int) {

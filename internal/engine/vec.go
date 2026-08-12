@@ -12,6 +12,7 @@ func (a Vec2) Sub(b Vec2) Vec2      { return Vec2{a.X - b.X, a.Y - b.Y} }
 func (a Vec2) Scale(s float64) Vec2 { return Vec2{a.X * s, a.Y * s} }
 func (a Vec2) Len() float64         { return math.Hypot(a.X, a.Y) }
 func (a Vec2) Angle() float64       { return math.Atan2(a.Y, a.X) }
+func (a Vec2) Dot(b Vec2) float64   { return a.X*b.X + a.Y*b.Y }
 
 // Normalized — вектор длины 1 (направление). Для нулевого возвращает нулевой.
 func (a Vec2) Normalized() Vec2 {
