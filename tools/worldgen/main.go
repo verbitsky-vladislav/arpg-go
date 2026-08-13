@@ -36,6 +36,10 @@ func main() {
 		runRef(os.Args[2:])
 	case "tiles":
 		runTilesDump(os.Args[2:])
+	case "tmx":
+		runTMXExport(os.Args[2:])
+	case "level":
+		runLevelDump(os.Args[2:])
 	case "-h", "--help", "help":
 		usage()
 	default:

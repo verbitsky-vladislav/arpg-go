@@ -29,6 +29,7 @@ func (g *Generator) Run() {
 	// устойчивости.
 	for pass := 0; pass < 4; pass++ {
 		g.stagePlateauFix()
+		g.stagePlateauTerrace()
 		before := len(g.Cliff)
 		g.stagePlateauApron()
 		if pass > 0 && len(g.Cliff) == before {

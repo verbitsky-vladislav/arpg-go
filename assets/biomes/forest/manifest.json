@@ -104,22 +104,12 @@
   "rock_top": {
    "sheet": "spots_rock",
    "wangset": "grass_top",
-   "fill": 68,
-   "corner": {
-    "1,1,0,0": [68, 70],
-    "1,1,1,1": [68, 70]
-   }
+   "fill": 68
   },
   "rock_face": {
    "sheet": "spots_rock",
    "wangset": "cliff_face",
-   "fill": 22,
-   "corner": {
-    "1,0,1,1": [150, 152, 245, 247],
-    "0,1,1,1": [150, 152, 245, 247],
-    "1,0,1,0": [150, 152, 245, 247],
-    "0,1,0,1": [150, 152, 245, 247]
-   }
+   "fill": 22
   },
   "rock_bottom": {
    "sheet": "spots_rock",

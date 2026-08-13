@@ -47,24 +47,23 @@
   </wangset>
   <wangset name="grass_top" type="corner" tile="-1">
    <wangcolor name="" color="#ff0000" tile="-1" probability="1"/>
-   <wangtile tileid="68" wangid="0,1,0,1,0,1,0,1"/>
-   <wangtile tileid="70" wangid="0,1,0,1,0,1,0,1"/>
-   <wangtile tileid="80" wangid="0,1,0,0,0,1,0,1"/>
-   <wangtile tileid="82" wangid="0,1,0,1,0,0,0,1"/>
-   <wangtile tileid="166" wangid="0,1,0,0,0,0,0,1"/>
-   <wangtile tileid="204" wangid="0,1,0,1,0,0,0,1"/>
-   <wangtile tileid="249" wangid="0,1,0,0,0,1,0,1"/>
-   <wangtile tileid="287" wangid="0,1,0,0,0,0,0,1"/>
-   <wangtile tileid="289" wangid="0,1,0,0,0,0,0,1"/>
-   <wangtile tileid="358" wangid="0,1,0,1,0,1,0,1"/>
-   <wangtile tileid="360" wangid="0,1,0,1,0,1,0,1"/>
+   <wangtile tileid="68" wangid="0,1,0,0,0,0,0,1"/>
+   <wangtile tileid="70" wangid="0,1,0,0,0,0,0,1"/>
+   <wangtile tileid="358" wangid="0,1,0,0,0,1,0,1"/>
+   <wangtile tileid="360" wangid="0,1,0,1,0,0,0,1"/>
    <wangtile tileid="361" wangid="0,1,0,0,0,0,0,0"/>
-   <wangtile tileid="363" wangid="0,1,0,1,0,1,0,1"/>
+   <wangtile tileid="363" wangid="0,1,0,0,0,0,0,1"/>
    <wangtile tileid="365" wangid="0,0,0,0,0,0,0,1"/>
-   <wangtile tileid="408" wangid="0,1,0,0,0,1,0,1"/>
-   <wangtile tileid="410" wangid="0,1,0,1,0,0,0,1"/>
-   <wangtile tileid="450" wangid="0,1,0,1,0,1,0,1"/>
-   <wangtile tileid="452" wangid="0,1,0,1,0,1,0,1"/>
+   <wangtile tileid="366" wangid="0,1,0,0,0,1,0,0"/>
+   <wangtile tileid="368" wangid="0,0,0,1,0,0,0,1"/>
+   <wangtile tileid="370" wangid="0,0,0,1,0,0,0,1"/>
+   <wangtile tileid="372" wangid="0,1,0,0,0,1,0,0"/>
+   <wangtile tileid="400" wangid="0,0,0,0,0,1,0,1"/>
+   <wangtile tileid="402" wangid="0,1,0,1,0,0,0,0"/>
+   <wangtile tileid="442" wangid="0,0,0,0,0,1,0,1"/>
+   <wangtile tileid="444" wangid="0,1,0,1,0,0,0,0"/>
+   <wangtile tileid="450" wangid="0,0,0,0,0,0,0,1"/>
+   <wangtile tileid="452" wangid="0,1,0,0,0,0,0,0"/>
   </wangset>
  </wangsets>
 </tileset>

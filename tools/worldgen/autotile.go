@@ -6,7 +6,10 @@ package main
 // НОРМАЛИЗОВАННАЯ маска (целое), одинаково вычисляемая при добыче из .tmx
 // (tmxhint) и при генерации, поэтому соответствие «маска → тайл» сходится.
 
-import "math/bits"
+import (
+	"math/bits"
+	"sort"
+)
 
 // normalizeBlob обнуляет «висящие» угловые биты: угол значим, только если
 // выставлены оба смежных с ним ортогональных соседа. Так 256 комбинаций
@@ -74,9 +77,18 @@ func resolveCorner(set map[string][]int, k [4]bool) ([]int, bool) {
 	if ids, ok := set[key]; ok && len(ids) > 0 {
 		return ids, true
 	}
+	// Порядок перебора map случаен, поэтому среди РАВНОУДАЛЁННЫХ ключей выбор
+	// прыгал бы между запусками и один сид давал бы разные карты. Идём по
+	// отсортированным ключам: подбор остаётся приблизительным, но воспроизводимым.
+	keys := make([]string, 0, len(set))
+	for sk := range set {
+		keys = append(keys, sk)
+	}
+	sort.Strings(keys)
 	best := 5
 	var bestIDs []int
-	for sk, ids := range set {
+	for _, sk := range keys {
+		ids := set[sk]
 		var kk [4]bool
 		p := 0
 		for i := 0; i < 7; i += 2 { // позиции 0,2,4,6 строки "b,b,b,b"
