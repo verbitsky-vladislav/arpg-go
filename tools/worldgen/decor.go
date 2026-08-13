@@ -90,39 +90,3 @@ func (g *Generator) scatterStamps(rng *rand.Rand, occ map[[2]int]bool, group, la
 		placed += len(s.Cells)
 	}
 }
-
-// stageDecor раскладывает штампы декора по зонам (шаг после воды/земли/троп).
-// Плотности — доли покрытия зоны, замерены по карте художника (SUMMARY §1.5).
-func (g *Generator) stageDecor() {
-	if g.Decor == nil || len(g.Decor.Stamps) == 0 {
-		return
-	}
-	rng := rand.New(rand.NewSource(int64(g.Seed) ^ 0xDEC0DE))
-	occ := map[[2]int]bool{}
-
-	isWater := func(x, y int) bool { return g.Level.In(x, y) && g.Level.At(x, y).isLiquid() }
-	nearLand := func(x, y int) bool {
-		for a := -2; a <= 2; a++ {
-			for b := -2; b <= 2; b++ {
-				if g.Level.In(x+a, y+b) && g.Level.At(x+a, y+b).isLand() {
-					return true
-				}
-			}
-		}
-		return false
-	}
-	landOpen := func(x, y int) bool { // трава: суша, не тропа
-		return g.Level.In(x, y) && g.Level.At(x, y).isLand() && !g.Trail[[2]int{x, y}]
-	}
-
-	shallowNear := func(x, y int) bool { return isWater(x, y) && nearLand(x, y) }
-	deepWater := func(x, y int) bool { return isWater(x, y) && !nearLand(x, y) }
-
-	// рябь (water_detail) здесь НЕ раскладывается — у неё своя стадия
-	// stageWaterDetail: она уже подключена к пайплайну и знает про береговые тайлы.
-	// порядок: сначала вода (кувшинки, камыш), потом суша (пятна, трава)
-	g.scatterStamps(rng, occ, "lilies", "surface_liquid", deepWater, 0.05)
-	g.scatterStamps(rng, occ, "reeds", "surface_liquid", shallowNear, 0.30)
-	g.scatterStamps(rng, occ, "ground_spots", "ground_spots", landOpen, 0.10)
-	g.scatterStamps(rng, occ, "grass", "ground_spots", landOpen, 0.45)
-}

@@ -88,18 +88,6 @@ func mask8(g *Grid[Level], x, y int, pred func(Level) bool) uint8 {
 // если из четырёх примыкающих клеток хотя бы ДВЕ ему принадлежат. Так берег
 // получается мягким, органическим, без ступенек — рёберная схема так не умеет.
 
-// cornerInSet — принадлежит ли угол (cx,cy) террейну: считаем 4 клетки,
-// сходящиеся в этом углу — (cx-1,cy-1),(cx,cy-1),(cx-1,cy),(cx,cy).
-func cornerInSet(inSet func(x, y int) bool, cx, cy int) bool {
-	n := 0
-	for _, c := range [4][2]int{{cx - 1, cy - 1}, {cx, cy - 1}, {cx - 1, cy}, {cx, cy}} {
-		if inSet(c[0], c[1]) {
-			n++
-		}
-	}
-	return n >= 2
-}
-
 // cornerKey — dual-grid: тайл (x,y) определяется четырьмя клетками, сходящимися
 // в его ВЕРХНЕ-ЛЕВОМ углу. Так граница двух террейнов (трава/вода) даёт
 // переходный тайл и на ПРЯМОМ ребре, а не только на выступах. Порядок NW NE SE SW,
@@ -132,22 +120,6 @@ func cornerKeyStr(k [4]bool) string {
 		b[6] = '1'
 	}
 	return string(b)
-}
-
-// mask4 — 4-битная ортогональная маска (N,E,S,W) по предикату.
-func mask4(g *Grid[Level], x, y int, pred func(Level) bool) uint8 {
-	var m uint8
-	for i, d := range nb4 {
-		nx, ny := x+d[0], y+d[1]
-		if !g.In(nx, ny) {
-			m |= 1 << uint(i)
-			continue
-		}
-		if pred(g.At(nx, ny)) {
-			m |= 1 << uint(i)
-		}
-	}
-	return m
 }
 
 // components — метки связных компонент клеток, где sel истинен (4-связность).

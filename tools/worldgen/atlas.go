@@ -72,16 +72,6 @@ func loadImage(path string) (image.Image, error) {
 	return img, nil
 }
 
-// sheetIndex — индекс листа в порядке order (для SparseTile.Sheet и SheetRef).
-func (a *AtlasSet) sheetIndex(name string) int {
-	for i, n := range a.order {
-		if n == name {
-			return i
-		}
-	}
-	return -1
-}
-
 // tileRect — прямоугольник тайла id в атласе листа.
 func (a *AtlasSet) tileRect(sheet string, id int) image.Rectangle {
 	cols := a.m.Sheets[sheet].Columns

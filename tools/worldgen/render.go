@@ -94,14 +94,6 @@ func waterPaletteRGBA(m *Manifest) []color.RGBA {
 	return out
 }
 
-// liquidRole — имя жидкой роли (solid для пещер).
-func liquidRole(m *Manifest) string {
-	if m.EdgeMode == "wall" {
-		return "solid"
-	}
-	return "liquid"
-}
-
 // drawTileScaled рисует 16px тайл в позицию с целочисленным масштабом (nearest).
 func drawTileScaled(dst *image.RGBA, tile *image.RGBA, dx, dy, scale int) {
 	b := tile.Bounds()
@@ -129,21 +121,6 @@ func drawTileScaled(dst *image.RGBA, tile *image.RGBA, dx, dy, scale int) {
 type propCache struct {
 	dir  string
 	imgs map[string]*image.RGBA
-}
-
-func drawProps(dst *image.RGBA, mp *MapV1, m *Manifest, scale int) {
-	pc := &propCache{dir: m.dir, imgs: map[string]*image.RGBA{}}
-	ts := mp.TileSize
-	for _, p := range mp.Props {
-		img := pc.get(p.File)
-		if img == nil {
-			continue
-		}
-		// низ-центр футпринта совмещаем с якорем клетки
-		px := (p.X * ts) * scale
-		py := (p.Y * ts) * scale
-		drawTileScaled(dst, img, px, py, scale)
-	}
 }
 
 func (pc *propCache) get(file string) *image.RGBA {

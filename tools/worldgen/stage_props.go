@@ -208,9 +208,6 @@ func markDisc(blocked []bool, W, H, cx, cy, r int) {
 	}
 }
 
-// stageSurface — шаг 17: кувшинки на глубокой воде, камыш на мелкой у берега.
-func (g *Generator) stageSurface() {}
-
 // stageMarkers — шаг 18: точка появления и выходы.
 func (g *Generator) stageMarkers() {
 	if g.hasSpawn {

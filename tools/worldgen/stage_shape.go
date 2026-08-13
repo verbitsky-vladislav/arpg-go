@@ -196,17 +196,6 @@ func plateauThin(lv *Grid[Level]) int {
 	return thin
 }
 
-// dropPlateau срезает все клетки плато до нижней земли. Временная мера Фазы 1:
-// плато с обрывом ещё не собрано (SUMMARY §1.7), а его краевые тайлы в blob-схеме
-// давали визуальный мусор. Фаза 4 заменит это настоящей геометрией обрыва.
-func (g *Generator) dropPlateau() {
-	for i, lv := range g.Level.Data {
-		if lv == Plateau {
-			g.Level.Data[i] = Ground
-		}
-	}
-}
-
 // stageStairs — шаг 8: лестницы (узкое место связности, §6) — в stage_stairs.go.
 
 // stageConnectivity — шаг 9: достижимость плато. Реализация в M3.

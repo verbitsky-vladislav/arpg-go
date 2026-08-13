@@ -39,9 +39,6 @@ func normalizeBlob(m uint8) uint8 {
 // blobKey — строковый ключ набора для нормализованной маски.
 func blobKey(m uint8) string { return itoa(int(normalizeBlob(m))) }
 
-// wangKey — строковый ключ 4-битной маски N,E,S,W (0..15).
-func wangKey(m uint8) string { return itoa(int(m & 0x0F)) }
-
 // resolveFromSet ищет тайл по ключу маски; при промахе берёт ближайший по
 // Хеммингу среди имеющихся ключей, иначе -1. Гарантирует, что дырки покрытия
 // не роняют рендер (worldgen.spec §3, риск покрытия).
@@ -118,36 +115,6 @@ func variantAt(seed uint64, x, y, salt int, ids []int) int {
 	}
 	h := hash2(x*2654435761+salt*40503, y*40503+salt, seed)
 	return ids[int(h*float64(len(ids)))%len(ids)]
-}
-
-// paintCorner заполняет площадную роль по угловой схеме в ДВА прохода:
-// under-набор (overlay, полупрозрачные кромки) рисуется снизу, over-набор
-// (сам блок) — поверх него. Соглашение автора: *_overlay под блоком, сквозь
-// его кромку виден нижний слой. present — членство клетки в террейне.
-// dstUnder/dstOver — два плотных слоя одного листа. Возвращает число клеток.
-func (g *Generator) paintCorner(underRole, overRole string, present func(x, y int) bool, dstUnder, dstOver *Grid[uint16]) int {
-	under := g.Manifest.Terrains[underRole]
-	over := g.Manifest.Terrains[overRole]
-	n := 0
-	for y := 0; y < g.P.Height; y++ {
-		for x := 0; x < g.P.Width; x++ {
-			if !present(x, y) {
-				continue
-			}
-			k := cornerKey(present, x, y)
-			if !(k[0] || k[1] || k[2] || k[3]) {
-				continue // все углы вне — пусто
-			}
-			if ids, ok := resolveCorner(under.Corner, k); ok {
-				dstUnder.Set(x, y, uint16(variantAt(g.Seed, x, y, 1, ids)+1))
-			}
-			if ids, ok := resolveCorner(over.Corner, k); ok {
-				dstOver.Set(x, y, uint16(variantAt(g.Seed, x, y, 2, ids)+1))
-			}
-			n++
-		}
-	}
-	return n
 }
 
 // paintLand красит наземную поверхность с учётом берега.
@@ -255,38 +222,4 @@ func (g *Generator) touchesLiquid(x, y int) bool {
 		}
 	}
 	return false
-}
-
-// presentPred возвращает предикат «эта клетка принадлежит той же площадной роли».
-func presentPred(role string) func(Level) bool {
-	switch role {
-	case "liquid", "solid":
-		return func(l Level) bool { return l.isLiquid() }
-	case "plateau":
-		return func(l Level) bool { return l == Plateau }
-	default: // ground_a/ground_b/ground
-		return func(l Level) bool { return l.isLand() }
-	}
-}
-
-// autotileArea заполняет плотный слой тайлами роли по blob-маске.
-// present — где данная роль присутствует (там и ставим тайл).
-func (g *Generator) autotileArea(role string, present func(Level) bool, dst *Grid[uint16]) {
-	t, ok := g.Manifest.Terrains[role]
-	if !ok {
-		return
-	}
-	for y := 0; y < g.P.Height; y++ {
-		for x := 0; x < g.P.Width; x++ {
-			if !present(g.Level.At(x, y)) {
-				continue
-			}
-			m := mask8(g.Level, x, y, present)
-			id, found := resolveFromSet(t.Blob, normalizeBlob(m), 8)
-			if !found {
-				id = t.Fill
-			}
-			dst.Set(x, y, uint16(id+1)) // +1: 0 зарезервирован под «пусто»
-		}
-	}
 }
