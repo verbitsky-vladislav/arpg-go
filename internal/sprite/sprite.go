@@ -72,6 +72,20 @@ type Size struct {
 	H int `json:"h"`
 }
 
+// Point — точка внутри кадра.
+type Point struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
+// Rect — рамка внутри кадра.
+type Rect struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+	W int `json:"w"`
+	H int `json:"h"`
+}
+
 // AnimDef — описание одной анимации в манифесте.
 type AnimDef struct {
 	File   string `json:"file"`
@@ -89,6 +103,10 @@ type Manifest struct {
 	Frame      Size               `json:"frame"`
 	Directions []string           `json:"directions"`
 	Animations map[string]AnimDef `json:"animations"`
+	// BBox и Anchor считает tools/spriteanchor по непрозрачным пикселям.
+	// Могут отсутствовать (старый манифест) — тогда работают запасные значения.
+	BBox   *Rect  `json:"bbox,omitempty"`
+	Anchor *Point `json:"anchor,omitempty"`
 }
 
 // Pack — загруженный спрайт-пак: манифест плюс нарезанные клипы.
@@ -175,6 +193,26 @@ func (p *Pack) Clip(name string, d Dir) *anim.Clip {
 		return nil
 	}
 	return cs[row]
+}
+
+// Foot — точка опоры кадра: смещение внутри кадра, которое ставится на позицию
+// существа в мире. Считается по пикселям (tools/spriteanchor), потому что кадр
+// 32×32 не значит, что зверь занимает все 32 пикселя: сверху пустота, снизу тень
+// под лапами. Если манифест старый и якоря нет — низ и середина кадра.
+func (p *Pack) Foot() Point {
+	if p.Anchor != nil {
+		return *p.Anchor
+	}
+	return Point{X: p.Frame.W / 2, Y: p.Frame.H}
+}
+
+// Bounds — рамка непрозрачных пикселей в координатах кадра. Нужна для отсечения
+// и для оценки размеров существа; при отсутствии — весь кадр.
+func (p *Pack) Bounds() Rect {
+	if p.BBox != nil {
+		return *p.BBox
+	}
+	return Rect{W: p.Frame.W, H: p.Frame.H}
 }
 
 // Has сообщает, есть ли в паке анимация name.
