@@ -153,7 +153,20 @@ func (m *Manifest) loadWangsets() error {
 		if !ok {
 			return fmt.Errorf("роль %s: в %s нет wangset %q", role, filepath.Base(tsxPath), t.Wangset)
 		}
-		t.Corner = tbl
+		// Разметка .tsx — источник истины, но ключи, которых художник не
+		// нарисовал, можно дописать в манифесте (поле corner). Без этого
+		// генератор молча подставлял ближайший по Хеммингу тайл, и на стыке
+		// вставал чужой кусок. Ключ из манифеста имеет приоритет.
+		merged := make(map[string][]int, len(tbl)+len(t.Corner))
+		for k, ids := range tbl {
+			merged[k] = ids
+		}
+		for k, ids := range t.Corner {
+			if len(ids) > 0 {
+				merged[k] = ids
+			}
+		}
+		t.Corner = merged
 		m.Terrains[role] = t
 	}
 	return nil

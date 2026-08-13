@@ -32,6 +32,10 @@ func main() {
 		runTMXHint(os.Args[2:])
 	case "plateautest":
 		runPlateauTest(os.Args[2:])
+	case "ref":
+		runRef(os.Args[2:])
+	case "tiles":
+		runTilesDump(os.Args[2:])
 	case "-h", "--help", "help":
 		usage()
 	default:

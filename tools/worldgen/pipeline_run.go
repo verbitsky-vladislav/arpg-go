@@ -10,17 +10,33 @@ func (g *Generator) Run() {
 	g.stageMoisture()
 	g.stageLevels()
 
-	// шаги 5-9: форма (CA-сглаживание, острова, срез узких плато, лестницы,
-	// связность). Реализуются в stage_shape.go.
+	// шаги 5-9: форма (CA-сглаживание, острова, чистка силуэта возвышенностей,
+	// срез узких плато, лестницы, связность). Реализуются в stage_shape.go.
 	g.stageSmooth()
 	g.stageIslands()
+	g.stagePlateauShape()
 	g.stagePlateauFix()
 	g.stageStairs()
 	g.stageConnectivity()
 	g.forceEdgeRing() // §4: гарантировать водяную рамку после сглаживания (E1)
 
 	// Пруды/реки вырезаются в уровнях до автотайла; тропы копятся набором.
+	// Вода режет только нижнюю землю, плато обходит: раньше река проходила
+	// сквозь возвышенность и резала её на ленты в 1-2 клетки уже ПОСЛЕ
+	// stagePlateauFix — отсюда и брались узкие плато в отчёте (E4).
 	g.stageWater()
+	// вода могла отрезать от плато куски — чистим силуэт ещё раз. Срез узких
+	// клеток и резервирование юбки влияют друг на друга (юбка срезает южные
+	// ряды, от этого плато может стать у́же 4), поэтому крутим до устойчивости.
+	for pass := 0; pass < 4; pass++ {
+		g.stagePlateauShape()
+		g.stagePlateauFix()
+		before := len(g.Cliff)
+		g.stagePlateauApron()
+		if pass > 0 && len(g.Cliff) == before {
+			break
+		}
+	}
 	g.stageTrails()
 
 	// Автотайлинг ТОЛЬКО из Ground_grass + Water_coasts, по ручным наборам.
@@ -42,7 +58,10 @@ func (g *Generator) Run() {
 	// плато: травяной верх grass_cliff + скальный обрыв на юг (spots_rock)
 	g.stagePlateau()
 
-	// маркер спавна
+	// точка появления, объекты, маркеры. Спавн — отдельная стадия: stageProps
+	// выходит сразу, если у биома нет пропсов, и раньше уносила спавн с собой (E5).
+	g.stageSpawn()
+	g.stageProps()
 	g.stageMarkers()
 }
 
@@ -113,6 +132,13 @@ func (g *Generator) buildNav() NavData {
 			cost[i] = 160 // ×0.6
 		default:
 			cost[i] = 255
+		}
+	}
+	// тело обрыва — стена, а не земля: клетки под южной кромкой плато закрыты
+	// скалой, ходить по ним нельзя.
+	for c := range g.Cliff {
+		if g.Level.In(c[0], c[1]) {
+			cost[c[1]*g.P.Width+c[0]] = 0
 		}
 	}
 	return NavData{Width: g.P.Width, Height: g.P.Height, Cost: cost}

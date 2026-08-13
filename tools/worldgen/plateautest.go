@@ -51,6 +51,7 @@ func runPlateauTest(args []string) {
 	}
 	_ = math.Sqrt
 
+	g.stagePlateauApron()
 	g.Trail = map[[2]int]bool{}
 	g.GroundUnderLayer = NewGrid[uint16](W, H)
 	g.GroundLayer = NewGrid[uint16](W, H)

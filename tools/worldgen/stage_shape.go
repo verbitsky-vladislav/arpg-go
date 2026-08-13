@@ -68,6 +68,104 @@ func (g *Generator) stageIslands() {
 	}
 }
 
+// stagePlateauShape — морфологическая чистка силуэта возвышенностей.
+// Порог по высоте даёт рваные ленты в 1-2 клетки: на них не встаёт ни обрыв,
+// ни лестница, а автотайл на такой ширине вырождается в пунктир. Открытие
+// (эрозия→дилатация) убирает ленты и усы, закрытие (дилатация→эрозия) заливает
+// дыры-проколы. Итог — компактные «столовые горы» с гладким контуром.
+func (g *Generator) stagePlateauShape() {
+	W, H := g.P.Width, g.P.Height
+	set := make([]bool, W*H)
+	for i, lv := range g.Level.Data {
+		set[i] = lv == Plateau
+	}
+	// r=1 открытие убирает ленты шириной 1-2, закрытие радиусом 2 заливает дыры
+	set = morph(set, W, H, false, 1) // эрозия
+	set = morph(set, W, H, true, 2)  // дилатация (открытие + начало закрытия)
+	set = morph(set, W, H, false, 1) // эрозия (конец закрытия)
+	for i := range g.Level.Data {
+		switch {
+		case set[i] && g.Level.Data[i] == Ground:
+			g.Level.Data[i] = Plateau
+		case !set[i] && g.Level.Data[i] == Plateau:
+			g.Level.Data[i] = Ground
+		}
+	}
+}
+
+// morph — одна морфологическая операция радиуса r по 8-связности.
+// grow=true — дилатация (клетка включается, если рядом есть включённая),
+// grow=false — эрозия (клетка выживает, только если все соседи включены).
+// Вне массива считаем «выключено», поэтому плато не липнет к рамке.
+func morph(src []bool, W, H int, grow bool, r int) []bool {
+	cur := src
+	for it := 0; it < r; it++ {
+		next := make([]bool, W*H)
+		for y := 0; y < H; y++ {
+			for x := 0; x < W; x++ {
+				v := cur[y*W+x]
+				for _, d := range nb8 {
+					nx, ny := x+d[0], y+d[1]
+					n := nx >= 0 && ny >= 0 && nx < W && ny < H && cur[ny*W+nx]
+					if grow {
+						v = v || n
+					} else {
+						v = v && n
+					}
+				}
+				next[y*W+x] = v
+			}
+		}
+		cur = next
+	}
+	return cur
+}
+
+// stagePlateauApron — резервирует клетки тела обрыва под южной кромкой плато.
+// Обрыв рисуется вниз на cliffHeight клеток и должен лечь на ЧИСТУЮ нижнюю
+// землю: если под кромкой вода, край массива или другое плато, ставить скалу
+// некуда — такую клетку плато срезаем и повторяем, пока юбка не встанет везде.
+// Без этого шага обрыв упирался в воду и линия рвалась (те самые «кривые тайлы»
+// на концах). Юбка кладётся в g.Cliff: она непроходима (nav) и её не трогают
+// вода и тропы.
+func (g *Generator) stagePlateauApron() {
+	isP := func(x, y int) bool { return g.Level.In(x, y) && g.Level.At(x, y) == Plateau }
+	for pass := 0; pass < 12; pass++ {
+		var cut [][2]int
+		for y := 0; y < g.P.Height; y++ {
+			for x := 0; x < g.P.Width; x++ {
+				if !isP(x, y) || isP(x, y+1) {
+					continue // не южная кромка
+				}
+				for d := 1; d <= cliffHeight; d++ {
+					if !g.Level.In(x, y+d) || g.Level.At(x, y+d) != Ground {
+						cut = append(cut, [2]int{x, y})
+						break
+					}
+				}
+			}
+		}
+		if len(cut) == 0 {
+			break
+		}
+		for _, c := range cut {
+			g.Level.Set(c[0], c[1], Ground)
+		}
+	}
+	// юбка встала — фиксируем её клетки
+	g.Cliff = map[[2]int]bool{}
+	for y := 0; y < g.P.Height; y++ {
+		for x := 0; x < g.P.Width; x++ {
+			if !isP(x, y) || isP(x, y+1) {
+				continue
+			}
+			for d := 1; d <= cliffHeight; d++ {
+				g.Cliff[[2]int{x, y + d}] = true
+			}
+		}
+	}
+}
+
 // stagePlateauFix — шаг 7: срезать плато уже 4 тайлов (на нём не помещается
 // лестница). Клетка плато срезается, если у неё нет плато-соседа на расстоянии
 // ≥4 в какой-либо из осей (грубая проверка «толщины»).

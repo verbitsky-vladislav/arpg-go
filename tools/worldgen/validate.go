@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -21,7 +22,6 @@ type checkResult struct {
 // validate прогоняет проверки над результатом одного сида.
 func (g *Generator) validate(mp *MapV1) []checkResult {
 	W, H := g.P.Width, g.P.Height
-	area := W * H
 	land, plateau, deep, shallow := 0, 0, 0, 0
 	for _, lv := range g.Level.Data {
 		switch lv {
@@ -76,9 +76,11 @@ func (g *Generator) validate(mp *MapV1) []checkResult {
 	}
 	add("E5", "точка появления на суше", e5, "")
 
-	// E6: доля суши 45..70%
-	lf := float64(land) / float64(area) * 100
-	add("E6", "доля суши 45..70%", lf >= 45 && lf <= 70, fmt.Sprintf("%.1f%%", lf))
+	// E6: доля суши 45..70% от полезной площади. Считаем не от всего массива:
+	// островная маска высоты держит сушу в круге, и от массива физический
+	// максимум — π/4≈78.5%, порог был недостижим по построению.
+	lf := float64(land) / g.usableArea() * 100
+	add("E6", "доля суши 45..70% (от площади острова)", lf >= 45 && lf <= 70, fmt.Sprintf("%.1f%%", lf))
 
 	// E7: доля плато от суши 10..30%
 	pf := 0.0
@@ -106,6 +108,26 @@ func (g *Generator) validate(mp *MapV1) []checkResult {
 	}
 	add("E8", "пропсы без пересечений и не в воде", overlap == 0 && inWater == 0,
 		fmt.Sprintf("пересечений: %d, в воде: %d", overlap, inWater))
+
+	// E9: тело обрыва целиком лежит на нижней земле (иначе скала висит над
+	// водой или над другим плато и линия обрыва рвётся)
+	badApron := 0
+	for c := range g.Cliff {
+		if !g.Level.In(c[0], c[1]) || g.Level.At(c[0], c[1]) != Ground {
+			badApron++
+		}
+	}
+	add("E9", "обрыв стоит на нижней земле", badApron == 0, fmt.Sprintf("висящих клеток: %d", badApron))
+
+	// E13: покрытие угловых наборов — сколько раз точного ключа не нашлось и
+	// пришлось ставить ближайший тайл. Это и есть «кривые стыки» на картинке.
+	miss, keys := 0, make([]string, 0, len(g.cornerMiss))
+	for set, n := range g.cornerMiss {
+		miss += n
+		keys = append(keys, fmt.Sprintf("%s×%d", set, n))
+	}
+	sort.Strings(keys)
+	add("E13", "угловые наборы покрывают все ключи", miss == 0, strings.Join(keys, ", "))
 
 	// E11: обязательные роли манифеста закрыты
 	gaps := g.Manifest.validateRoles()

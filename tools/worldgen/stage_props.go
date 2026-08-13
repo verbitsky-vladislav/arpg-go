@@ -35,13 +35,24 @@ func (g *Generator) zoneAt(x, y int) string {
 	}
 }
 
-// pickSpawn выбирает точку появления — крупную клетку земли ближе к центру.
+// stageSpawn выбирает точку появления. Отдельная стадия, а не часть stageProps:
+// раньше спавн вычислялся внутри неё, а она выходит сразу, если у биома нет
+// пропсов — у forest их нет, поэтому маркер спавна не появлялся никогда (E5).
+func (g *Generator) stageSpawn() {
+	if x, y, ok := g.pickSpawn(); ok {
+		g.spawn = [2]int{x, y}
+		g.hasSpawn = true
+	}
+}
+
+// pickSpawn выбирает точку появления — клетку нижней земли ближе к центру,
+// не занятую телом обрыва.
 func (g *Generator) pickSpawn() (int, int, bool) {
 	cx, cy := g.P.Width/2, g.P.Height/2
 	best, bx, by := 1<<30, -1, -1
 	for y := 1; y < g.P.Height-1; y++ {
 		for x := 1; x < g.P.Width-1; x++ {
-			if g.Level.At(x, y) != Ground {
+			if g.Level.At(x, y) != Ground || g.Cliff[[2]int{x, y}] {
 				continue
 			}
 			d := (x-cx)*(x-cx) + (y-cy)*(y-cy)
@@ -63,10 +74,8 @@ func (g *Generator) stageProps() {
 
 	// сетка занятости (радиус Пуассона) и маска запрета анкеров
 	blocked := make([]bool, W*H)
-	spawnX, spawnY, hasSpawn := g.pickSpawn()
-	if hasSpawn {
-		g.spawn = [2]int{spawnX, spawnY}
-		markDisc(blocked, W, H, spawnX, spawnY, 6) // §7: 6 тайлов вокруг спавна
+	if g.hasSpawn {
+		markDisc(blocked, W, H, g.spawn[0], g.spawn[1], 6) // §7: 6 тайлов вокруг спавна
 	}
 
 	// индекс пропсов по зонам для быстрого взвешенного выбора
@@ -204,7 +213,7 @@ func (g *Generator) stageSurface() {}
 
 // stageMarkers — шаг 18: точка появления и выходы.
 func (g *Generator) stageMarkers() {
-	if g.spawn[0] != 0 || g.spawn[1] != 0 {
+	if g.hasSpawn {
 		g.Marks = append(g.Marks, Marker{Kind: "spawn", X: g.spawn[0], Y: g.spawn[1]})
 	}
 }
