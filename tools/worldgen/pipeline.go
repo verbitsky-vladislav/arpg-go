@@ -86,15 +86,20 @@ func (g *Generator) stageHeight() {
 	}
 }
 
-// applyEdge — формула спада высоты у границы (§4):
-// edge = distance_to_border / EDGE_FALLOFF; h -= (1-clamp(edge))^2 * 1.5
+// applyEdge — радиальная островная маска: суша концентрируется в круге от
+// центра карты, а высота плавно спадает к кромке острова, поэтому силуэт выходит
+// округлым, а не квадратным. edge = (R - dist_to_center) / EDGE_FALLOFF —
+// сколько тайлов «вглубь» от берега; h -= (1-clamp(edge))^2 * 1.5.
 func (g *Generator) applyEdge(x, y int, h float64) float64 {
-	dx := math.Min(float64(x), float64(g.P.Width-1-x))
-	dy := math.Min(float64(y), float64(g.P.Height-1-y))
-	d := math.Min(dx, dy)
-	edge := d / g.P.EdgeFalloff
+	cx := float64(g.P.Width-1) / 2
+	cy := float64(g.P.Height-1) / 2
+	R := math.Min(float64(g.P.Width), float64(g.P.Height)) / 2
+	dc := math.Hypot(float64(x)-cx, float64(y)-cy)
+	edge := (R - dc) / g.P.EdgeFalloff
 	if edge > 1 {
 		edge = 1
+	} else if edge < 0 {
+		edge = 0
 	}
 	k := 1 - edge
 	return h - k*k*1.5
