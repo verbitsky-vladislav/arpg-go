@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "doc": "docs/character/character.md",
+  "about": "Описательные данные игрового персонажа: тело (внешность), лоадаут (чем вооружён) и баланс. Графика (кадры, размеры, анимации) — в manifest.json рядом со спрайтами; здесь её нет. Аналог mobs/animals/species.json, только персонаж один, а вариантов у него два измерения: тело × лоадаут.",
+
+  "vocab": {
+    "body": "каталог в assets/character — внешность персонажа",
+    "loadout": "подкаталог тела — чем персонаж вооружён; задаёт набор анимаций и удар",
+    "pack": "assets/character/<body>/<loadout> — спрайт-пак пары",
+    "clips": ["idle", "walk", "run", "attack", "walk_attack", "run_attack", "hurt", "death"],
+    "hit_at": "номер кадра клипа (с нуля), на котором удар наносит урон",
+    "swing_ticks": "длительность замаха в тиках логики (60 тиков = 1 с); клип растягивается или сжимается под неё, потому что fps в manifest.json общий на весь пак и к скорости боя отношения не имеет"
+  },
+
+  "base": {
+    "_": "Общее для всех тел и лоадаутов; тело и лоадаут только домножают своими коэффициентами.",
+    "hp": 50,
+    "speed": { "walk": 55, "run": 105 },
+    "body_radius": 7,
+    "_body_radius": "Радиус тела в мировых пикселях. Задан числом, а не взят из bbox манифеста: у пака sword рамка включает вылет клинка (46 px против 30 у unarmed), и тело от смены оружия толстеть не должно.",
+    "hurt": {
+      "lock_ticks": 18,
+      "invuln_ticks": 36,
+      "knockback": 40
+    },
+    "death": { "fade_ticks": 90 },
+    "attack_move_scale": 0.6,
+    "_attack_move_scale": "Во сколько раз медленнее персонаж двигается, пока бьёт на ходу (loadout.attack.on_move)."
+  },
+
+  "bodies": {
+    "male": {
+      "art": "male",
+      "title": { "ru": "Мужчина", "en": "Male" },
+      "default_loadout": "sword",
+      "hp_scale": 1.0,
+      "speed_scale": 1.0,
+      "notes": ""
+    },
+    "female": {
+      "art": "female",
+      "title": { "ru": "Женщина", "en": "Female" },
+      "default_loadout": "sword",
+      "hp_scale": 1.0,
+      "speed_scale": 1.0,
+      "notes": "Тела равны по балансу — различаются только внешностью; наборы анимаций у них одинаковые. Коэффициенты оставлены единицами, чтобы разводить тела было чем, если баланс передумает."
+    }
+  },
+
+  "loadouts": {
+    "unarmed": {
+      "art": "unarmed",
+      "title": { "ru": "Без оружия", "en": "Unarmed" },
+      "speed_scale": 1.05,
+      "attack": {
+        "damage": 5,
+        "reach": 16,
+        "arc": 130,
+        "swing_ticks": 24,
+        "cooldown_ticks": 22,
+        "knockback": 20,
+        "on_move": false,
+        "hit_at": {}
+      },
+      "notes": "В паке нет ни attack, ни walk_attack/run_attack — удар отыгрывается ускоренным walk (рывок), урон наносится на середине подменного клипа. Бить на ходу нечем, поэтому on_move=false."
+    },
+    "sword": {
+      "art": "sword",
+      "title": { "ru": "Меч", "en": "Sword" },
+      "speed_scale": 1.0,
+      "attack": {
+        "damage": 14,
+        "reach": 30,
+        "arc": 100,
+        "swing_ticks": 32,
+        "cooldown_ticks": 30,
+        "knockback": 55,
+        "on_move": true,
+        "hit_at": { "attack": 4, "walk_attack": 3, "run_attack": 4 }
+      },
+      "notes": "Полный набор: attack стоя, walk_attack на шаге, run_attack на бегу."
+    }
+  }
+}

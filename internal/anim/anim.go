@@ -26,6 +26,16 @@ func (c *Clip) Ticks() int {
 	return len(c.Frames) * c.frameTicks()
 }
 
+// Retimed — тот же клип с другой длительностью кадра: ускоренная походка вместо
+// бега, замедленный бег вместо походки. Кадры общие с исходным клипом,
+// копируется только тайминг, поэтому подмена ничего не стоит по памяти.
+func (c *Clip) Retimed(frameTicks int) *Clip {
+	if !c.Valid() {
+		return nil
+	}
+	return &Clip{Frames: c.Frames, FrameTicks: max(1, frameTicks), Loop: c.Loop}
+}
+
 func (c *Clip) frameTicks() int {
 	if c.FrameTicks < 1 {
 		return 1
