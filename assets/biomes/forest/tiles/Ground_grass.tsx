@@ -2,7 +2,7 @@
 <tileset version="1.10" tiledversion="1.12.2" name="Ground_grass" tilewidth="16" tileheight="16" tilecount="651" columns="21">
  <image source="Ground_grass.png" width="336" height="496"/>
  <wangsets>
-  <wangset name="grass_underlay" type="corner" tile="-1">
+  <wangset name="grass_shadow" type="corner" tile="-1">
    <wangcolor name="" color="#ff0000" tile="-1" probability="1"/>
    <wangtile tileid="454" wangid="0,0,0,1,0,0,0,0"/>
    <wangtile tileid="455" wangid="0,0,0,1,0,1,0,0"/>
@@ -27,7 +27,7 @@
    <wangtile tileid="542" wangid="0,1,0,0,0,0,0,1"/>
    <wangtile tileid="543" wangid="0,1,0,0,0,0,0,1"/>
   </wangset>
-  <wangset name="mud_underlay" type="corner" tile="-1">
+  <wangset name="mud_shadow" type="corner" tile="-1">
    <wangcolor name="" color="#ff0000" tile="-1" probability="1"/>
    <wangtile tileid="349" wangid="0,0,0,1,0,0,0,0"/>
    <wangtile tileid="350" wangid="0,0,0,1,0,1,0,0"/>

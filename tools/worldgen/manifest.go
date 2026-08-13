@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -20,6 +21,7 @@ type Manifest struct {
 	RenderScale int                   `json:"render_scale"`
 	EdgeMode    string                `json:"edge_mode"`   // "water" | "wall"
 	WaterColor  []int                 `json:"water_color"` // RGB заливки воды (в Water_coasts нет сплошного водного тайла)
+	WaterColors [][]int               `json:"water_colors"`
 	Sheets      map[string]Sheet      `json:"sheets"`
 	Terrains    map[string]Terrain    `json:"terrains"`
 	Transitions map[string]Transition `json:"transitions"`
@@ -38,11 +40,48 @@ type SpotSet struct {
 	Variants []int  `json:"variants"`
 }
 
-// Sheet — метаданные атласа: файл + геометрия сетки.
+// Sheet — метаданные атласа: файл + геометрия сетки. Anim задаётся, если ВЕСЬ
+// лист анимирован (у воды кадры лежат вертикальными блоками с шагом stride
+// тайлов): любой тайл этого листа уезжает в вывод со ссылкой на анимацию.
 type Sheet struct {
 	File    string `json:"file"`
 	Columns int    `json:"columns"`
 	Count   int    `json:"tilecount"`
+	Anim    *Anim  `json:"anim,omitempty"`
+}
+
+// waterPalette — цвета воды от мели к глубине. Источник — water_colors; если его
+// нет, палитра вырождается в один water_color (поведение до полос глубины).
+func (m *Manifest) waterPalette() [][3]uint8 {
+	rgb := func(v []int) ([3]uint8, bool) {
+		if len(v) != 3 {
+			return [3]uint8{}, false
+		}
+		return [3]uint8{uint8(v[0]), uint8(v[1]), uint8(v[2])}, true
+	}
+	var pal [][3]uint8
+	for _, c := range m.WaterColors {
+		if v, ok := rgb(c); ok {
+			pal = append(pal, v)
+		}
+	}
+	if len(pal) > 0 {
+		return pal
+	}
+	if v, ok := rgb(m.WaterColor); ok {
+		return [][3]uint8{v}
+	}
+	return [][3]uint8{{53, 87, 120}}
+}
+
+// waterPaletteRGB — та же палитра в виде, в котором она уезжает в map_format.
+func (m *Manifest) waterPaletteRGB() [][]int {
+	pal := m.waterPalette()
+	out := make([][]int, 0, len(pal))
+	for _, c := range pal {
+		out = append(out, []int{int(c[0]), int(c[1]), int(c[2])})
+	}
+	return out
 }
 
 // Terrain — площадная роль. Blob: маска-строка "0".."46" → локальный id тайла.
@@ -74,11 +113,76 @@ type Anim struct {
 	MS     int `json:"ms"`
 }
 
-// Stairs — лестницы. Variants: каждый вариант — список локальных id (footprint width×height).
+// Stairs — лестницы. Материал описан тремя угловыми наборами .tsx: ряд у
+// макушки, повторяемое тело и ряд у подножия. Лестница нужной высоты набирается
+// из них, тело при необходимости повторяется; материал всегда один на лестницу.
+//
+// Осторожно с именами наборов художника: они названы по ходу ПОДЪЁМА, то есть
+// «start» лежит внизу у подножия, а «end» — наверху у макушки. В манифесте роли
+// названы по месту на карте (top/bottom), чтобы не путать порядок укладки.
+// Раскладка сверена с эталоном elevated_test.tsx.tmx, где лестница врезана в
+// центр южного обрыва.
 type Stairs struct {
-	Sheet    string  `json:"sheet"`
-	Variants [][]int `json:"variants"`
-	Width    int     `json:"width"`
+	Sheet     string                   `json:"sheet"`
+	Width     int                      `json:"width"`
+	Materials map[string]StairMaterial `json:"materials"`
+
+	kits map[string][][]int // материал → ряды сверху вниз, заполняется при загрузке
+}
+
+// StairMaterial — угловые наборы одного материала лестницы, по месту на карте.
+type StairMaterial struct {
+	Top    string `json:"top"`    // ряд, примыкающий к макушке плато
+	Block  string `json:"block"`  // тело, повторяется по высоте обрыва
+	Bottom string `json:"bottom"` // ряд у подножия
+}
+
+// stairMaterials — имена материалов в устойчивом порядке (map сам по себе
+// перебирается случайно, а выбор материала обязан зависеть только от сида).
+func (s *Stairs) stairMaterials() []string {
+	names := make([]string, 0, len(s.kits))
+	for n := range s.kits {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	return names
+}
+
+// loadStairs разбирает наборы лестниц из .tsx листа Stairs.Sheet: тайлы набора
+// режутся на ряды по Width в порядке разметки (сверху вниз, слева направо).
+func (m *Manifest) loadStairs() error {
+	st := &m.Stairs
+	if st.Sheet == "" || len(st.Materials) == 0 {
+		return nil
+	}
+	sh, ok := m.Sheets[st.Sheet]
+	if !ok {
+		return fmt.Errorf("stairs: нет листа %s", st.Sheet)
+	}
+	tsxPath := filepath.Join(m.dir, strings.TrimSuffix(sh.File, filepath.Ext(sh.File))+".tsx")
+	sets, err := parseWangCorners(tsxPath)
+	if err != nil {
+		return fmt.Errorf("stairs: %w", err)
+	}
+	st.kits = map[string][][]int{}
+	for name, mat := range st.Materials {
+		var rows [][]int
+		for _, set := range []string{mat.Top, mat.Block, mat.Bottom} {
+			tbl, ok := sets[set]
+			if !ok {
+				return fmt.Errorf("stairs %s: в %s нет набора %q",
+					name, filepath.Base(tsxPath), set)
+			}
+			ids := tbl["1,1,1,1"]
+			if len(ids) < st.Width {
+				return fmt.Errorf("stairs %s: в наборе %q %d тайлов при ширине %d",
+					name, set, len(ids), st.Width)
+			}
+			rows = append(rows, ids[:st.Width])
+		}
+		st.kits[name] = rows
+	}
+	return nil
 }
 
 // Hangers — свесы (лианы) на южной грани обрыва.
@@ -121,6 +225,9 @@ func LoadManifest(biomeDir string) (*Manifest, error) {
 		m.RenderScale = 2
 	}
 	if err := m.loadWangsets(); err != nil {
+		return nil, err
+	}
+	if err := m.loadStairs(); err != nil {
 		return nil, err
 	}
 	return &m, nil
@@ -221,12 +328,12 @@ func parseWangCorners(path string) (map[string]map[string][]int, error) {
 }
 
 // requiredRoles — обязательные роли манифеста (валидатор E11). Единый словарь
-// поверхностей для всех биомов: жидкость + подложка и поверхность нижней земли.
-// Для edge_mode=wall жидкая роль называется solid.
+// поверхностей для всех биомов: поверхность нижней земли и её затенённый вариант
+// под возвышенностью. Для edge_mode=wall жидкая роль называется solid.
 func (m *Manifest) requiredRoles() []string {
 	// Вода — сплошной цвет (water_color), тайла воды в наборах нет; обязательны
 	// только наземные роли-поверхности.
-	return []string{"ground_under", "ground"}
+	return []string{"ground", "ground_shadow"}
 }
 
 // validateRoles проверяет, что обязательные роли присутствуют (E11).

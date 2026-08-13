@@ -13,10 +13,14 @@ type MapV1 struct {
 	Height   int        `json:"height"`
 	TileSize int        `json:"tile_size"`
 	Sheets   []SheetRef `json:"sheets"` // упорядочены, index используется ссылками тайлов
-	Layers   Layers     `json:"layers"`
-	Props    []PropInst `json:"props"`
-	Markers  []Marker   `json:"markers"`
-	Nav      NavData    `json:"nav"`
+	// WaterColors — палитра воды от мели к глубине; индекс = значение в
+	// layers.liquid_shade минус 1. Сплошного водного тайла в наборах нет, воду
+	// красит движок (autotiling.md §5).
+	WaterColors [][]int    `json:"water_colors"`
+	Layers      Layers     `json:"layers"`
+	Props       []PropInst `json:"props"`
+	Markers     []Marker   `json:"markers"`
+	Nav         NavData    `json:"nav"`
 }
 
 // SheetRef — лист тайлсета в порядке firstgid (для совместимости с Tiled-нумерацией).
@@ -32,10 +36,9 @@ type SheetRef struct {
 // каждый из одного листа. Разрежённые — списки клеток со своим листом.
 type Layers struct {
 	Liquid        []uint16     `json:"liquid"`         // dense
+	LiquidShade   []uint8      `json:"liquid_shade"`   // dense, индекс цвета в water_colors (1 = мель)
 	LiquidDetail  []SparseTile `json:"liquid_detail"`  // sparse, anim
-	GroundUnder   []uint16     `json:"ground_under"`   // dense, grass_overlay под блоком
 	Ground        []uint16     `json:"ground"`         // dense, grass-блок
-	MudUnder      []uint16     `json:"mud_under"`      // dense, mud_overlay под тропой
 	Mud           []uint16     `json:"mud"`            // dense, mud-блок (тропы)
 	GroundSpots   []SparseTile `json:"ground_spots"`   // sparse
 	Coast         []SparseTile `json:"coast"`          // sparse, anim

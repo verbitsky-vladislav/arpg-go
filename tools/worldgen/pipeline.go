@@ -41,17 +41,25 @@ type Generator struct {
 	Moisture *Grid[float64]
 	Level    *Grid[Level]
 
+	// WaterShade — полоса глубины воды на тайл (1 = мель у берега, дальше
+	// глубже), индекс в палитре manifest.water_colors. Заполняется stageWaterShade.
+	WaterShade *Grid[uint8]
+
 	// плотные слои тайлов (локальные id листа, 0 = пусто)
-	LiquidLayer      *Grid[uint16]
-	GroundUnderLayer *Grid[uint16] // grass_overlay, рисуется под GroundLayer
-	GroundLayer      *Grid[uint16] // grass-блок
-	MudUnderLayer    *Grid[uint16] // mud_overlay, рисуется под MudLayer поверх травы
-	MudLayer         *Grid[uint16] // mud-блок (грунтовые тропы)
-	PlateauLayer     *Grid[uint16]
+	LiquidLayer  *Grid[uint16]
+	GroundLayer  *Grid[uint16] // grass-блок
+	MudLayer     *Grid[uint16] // mud-блок (грунтовые тропы)
+	PlateauLayer *Grid[uint16]
 
 	Trail map[[2]int]bool // клетки грунтовых троп (роль mud)
 	Cliff map[[2]int]bool // клетки тела обрыва (юбка под южной кромкой плато)
+	Stair map[[2]int]bool // клетки лестниц: врезаны в обрыв и в отличие от него проходимы
 	Decor *DecorLib       // библиотека штампов декора (decor.json)
+
+	// Kind — тип возвышенности в клетке (plateauKind), 0 вне плато. От него
+	// зависит высота обрыва, предел макушки и наличие подъёма.
+	Kind         *Grid[uint8]
+	PlateauCount map[plateauKind]int // сколько кусков каждого типа реально встало
 
 	// cornerMiss — сколько раз угловой набор не имел точного ключа и пришлось
 	// брать ближайший по Хеммингу. Ненулевое значение = дыра в разметке, из-за
@@ -74,6 +82,7 @@ func NewGenerator(p Params, seed uint64, m *Manifest) *Generator {
 		Decor:      loadDecor(m.dir),
 		Sparse:     map[string][]SparseTile{},
 		Cliff:      map[[2]int]bool{},
+		Stair:      map[[2]int]bool{},
 		cornerMiss: map[string]int{},
 	}
 }

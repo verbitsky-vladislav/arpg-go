@@ -55,17 +55,69 @@ func (g *Generator) validate(mp *MapV1) []checkResult {
 	}
 	add("E1", fmt.Sprintf("суша не ближе %d тайлов к краю", border), e1, "")
 
-	// E4: плато шириной < 4 тайлов
-	narrow := 0
-	isP := func(x, y int) bool { return g.Level.In(x, y) && g.Level.At(x, y) == Plateau }
-	for y := 0; y < H; y++ {
-		for x := 0; x < W; x++ {
-			if g.Level.At(x, y) == Plateau && !thickEnough(isP, x, y, 4) {
-				narrow++
+	// разбор возвышенностей по кускам: тип, размер макушки, наличие подъёма
+	pl, pn := components(g.Level, func(l Level) bool { return l == Plateau })
+	psize := componentSizes(pl, pn)
+	pkind := make([]plateauKind, pn+1)
+	for i, id := range pl.Data {
+		if id > 0 {
+			pkind[id] = plateauKind(g.Kind.Data[i])
+		}
+	}
+	reach := make([]bool, pn+1)
+	for c := range g.Stair {
+		// лестница стоит НИЖЕ кромки, поэтому кусок ищем над её верхним рядом
+		for dy := 1; dy <= maxCliffDepth+1; dy++ {
+			if id := pl.AtOr(c[0], c[1]-dy, 0); id > 0 {
+				reach[id] = true
+				break
 			}
 		}
 	}
-	add("E4", "плато шириной < 4 тайлов", narrow == 0, fmt.Sprintf("узких клеток: %d", narrow))
+
+	// E3: подъём есть ровно там, где его требует тип. Без лестницы верх —
+	// декорация: тело обрыва в nav стоит стеной, обойти его негде; лишняя
+	// лестница на декоративном высоком плато — тоже ошибка.
+	noStairs, extraStairs := 0, 0
+	for id := 1; id <= pn; id++ {
+		switch want := specOf(pkind[id]).stairs; {
+		case want && !reach[id]:
+			noStairs++
+		case !want && reach[id]:
+			extraStairs++
+		}
+	}
+	add("E3", "подъёмы по типу плато", noStairs == 0 && extraStairs == 0,
+		fmt.Sprintf("без нужного подъёма: %d, лишних: %d, кусков: %d", noStairs, extraStairs, pn))
+
+	// E14: типы возвышенностей соответствуют спецификации — количество кусков в
+	// заданном коридоре, макушка не больше предела типа.
+	var gaps []string
+	for _, sp := range plateauSpecs {
+		cnt, over := 0, 0
+		for id := 1; id <= pn; id++ {
+			if pkind[id] != sp.kind {
+				continue
+			}
+			cnt++
+			if psize[id] > sp.capCells {
+				over++
+			}
+		}
+		if cnt < sp.min || cnt > sp.max {
+			gaps = append(gaps, fmt.Sprintf("%s: %d шт (нужно %d..%d)", sp.name, cnt, sp.min, sp.max))
+		}
+		if over > 0 {
+			gaps = append(gaps, fmt.Sprintf("%s: %d макушек больше %d клеток", sp.name, over, sp.capCells))
+		}
+	}
+	add("E14", "типы плато по спецификации", len(gaps) == 0, strings.Join(gaps, "; "))
+
+	// E4: на макушке нет лент и усов тоньше трёх клеток. Прямоугольность здесь
+	// не проверяется намеренно: силуэт должен быть округлым и неровным, важно
+	// лишь отсутствие полосок, на которых не встаёт ни обрыв, ни автотайл.
+	narrow := plateauThin(g.Level)
+	add("E4", "макушка без лент тоньше 3 тайлов", narrow == 0, fmt.Sprintf("узких клеток: %d", narrow))
 
 	// E5: спавн существует и стоит на земле
 	e5 := false
@@ -82,12 +134,14 @@ func (g *Generator) validate(mp *MapV1) []checkResult {
 	lf := float64(land) / g.usableArea() * 100
 	add("E6", "доля суши 45..70% (от площади острова)", lf >= 45 && lf <= 70, fmt.Sprintf("%.1f%%", lf))
 
-	// E7: доля плато от суши 10..30%
+	// E7: доля плато от суши — теперь справочная величина, а не порог. Раньше
+	// требовалось 10..30%, но при явном размещении кусков площадь возвышенностей
+	// задана лимитами типов (E14), и старый коридор ей противоречит.
 	pf := 0.0
 	if land > 0 {
 		pf = float64(plateau) / float64(land) * 100
 	}
-	add("E7", "доля плато от суши 10..30%", pf >= 10 && pf <= 30, fmt.Sprintf("%.1f%%", pf))
+	add("E7", "доля плато от суши (справочно)", true, fmt.Sprintf("%.1f%%", pf))
 
 	// E8: пропсы не пересекаются между собой и лежат на суше
 	occ := map[[2]int]bool{}
@@ -130,8 +184,8 @@ func (g *Generator) validate(mp *MapV1) []checkResult {
 	add("E13", "угловые наборы покрывают все ключи", miss == 0, strings.Join(keys, ", "))
 
 	// E11: обязательные роли манифеста закрыты
-	gaps := g.Manifest.validateRoles()
-	add("E11", "роли манифеста закрыты", len(gaps) == 0, strings.Join(gaps, "; "))
+	roleGaps := g.Manifest.validateRoles()
+	add("E11", "роли манифеста закрыты", len(roleGaps) == 0, strings.Join(roleGaps, "; "))
 
 	// E12: файлы пропсов существуют
 	missing := 0

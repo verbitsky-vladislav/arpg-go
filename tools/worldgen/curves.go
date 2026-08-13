@@ -29,10 +29,10 @@ type astarNode struct {
 }
 type astarHeap []*astarNode
 
-func (h astarHeap) Len() int            { return len(h) }
-func (h astarHeap) Less(i, j int) bool  { return h[i].f < h[j].f }
-func (h astarHeap) Swap(i, j int)       { h[i], h[j] = h[j], h[i]; h[i].idx = i; h[j].idx = j }
-func (h *astarHeap) Push(x any)         { n := x.(*astarNode); n.idx = len(*h); *h = append(*h, n) }
+func (h astarHeap) Len() int           { return len(h) }
+func (h astarHeap) Less(i, j int) bool { return h[i].f < h[j].f }
+func (h astarHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i]; h[i].idx = i; h[j].idx = j }
+func (h *astarHeap) Push(x any)        { n := x.(*astarNode); n.idx = len(*h); *h = append(*h, n) }
 func (h *astarHeap) Pop() any {
 	old := *h
 	n := len(old)
@@ -162,6 +162,78 @@ func chaikin(p []fpt, it int) []fpt {
 		p = out
 	}
 	return p
+}
+
+// brushBand растеризует кривую полосой РОВНО в 2 клетки: каждая точка кривой
+// кладёт блок 2×2 — четыре клетки, сходящиеся в ближайшем к ней узле сетки.
+// Круглая кисть так не умеет: brush центрирует диск на клетке, поэтому её след
+// всегда нечётной ширины (1, 3, 5...), а «диск радиуса ~0.6» даёт то 1 клетку,
+// то 2 — в зависимости от того, куда легла точка.
+// Блоки соседних точек всегда перекрываются хотя бы одной клеткой, так что
+// полоса непрерывна и 4-связна: на dual-grid она рисуется сплошной лентой без
+// «бус» из ключа 1,0,1,0, который получается на голой диагонали.
+// Клетки вне zone отбрасываются — у самой воды полоса может стать у́же.
+func brushBand(pts []fpt, zone func(x, y int) bool) map[[2]int]bool {
+	cells := map[[2]int]bool{}
+	if len(pts) < 2 {
+		return cells
+	}
+	for i := 0; i+1 < len(pts); i++ {
+		a, b := pts[i], pts[i+1]
+		n := int(math.Hypot(b.x-a.x, b.y-a.y) * 3)
+		if n < 1 {
+			n = 1
+		}
+		for k := 0; k <= n; k++ {
+			t := float64(k) / float64(n)
+			cx := a.x + (b.x-a.x)*t
+			cy := a.y + (b.y-a.y)*t
+			// узел сетки между клетками gx,gx+1 и gy,gy+1 — ближайший к точке
+			gx := int(math.Round(cx - 0.5))
+			gy := int(math.Round(cy - 0.5))
+			for dy := 0; dy <= 1; dy++ {
+				for dx := 0; dx <= 1; dx++ {
+					if zone(gx+dx, gy+dy) {
+						cells[[2]int{gx + dx, gy + dy}] = true
+					}
+				}
+			}
+		}
+	}
+	fill4(cells, zone)
+	return cells
+}
+
+// fill4 достраивает след до 4-связного: чисто диагональный стык на dual-grid
+// даёт ключ «1,0,1,0» (два противоположных угла), и лента рассыпается в бусы.
+// Целая полоса brushBand такого стыка не даёт — страховка нужна там, где zone
+// срезал часть блока у самой воды.
+// Решение по каждой паре принимается по ИСХОДНОМУ набору, поэтому от порядка
+// обхода map результат не зависит.
+func fill4(cells map[[2]int]bool, zone func(x, y int) bool) {
+	var add [][2]int
+	for c := range cells {
+		// двух диагоналей достаточно: каждая пара разбирается один раз, слева
+		for _, d := range [2][2]int{{1, 1}, {1, -1}} {
+			if !cells[[2]int{c[0] + d[0], c[1] + d[1]}] {
+				continue
+			}
+			a := [2]int{c[0] + d[0], c[1]}
+			b := [2]int{c[0], c[1] + d[1]}
+			if cells[a] || cells[b] {
+				continue // ступенька уже есть
+			}
+			switch {
+			case zone(a[0], a[1]):
+				add = append(add, a)
+			case zone(b[0], b[1]):
+				add = append(add, b)
+			}
+		}
+	}
+	for _, c := range add {
+		cells[c] = true
+	}
 }
 
 // brush растеризует кривую круглой кистью: для каждого сегмента шагаем с шагом

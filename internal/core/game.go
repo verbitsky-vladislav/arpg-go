@@ -14,9 +14,9 @@ type Game struct {
 	scene scene.Scene
 }
 
-// New создаёт игру, начиная со стартового меню.
-func New() *Game {
-	return &Game{scene: scene.NewMenu()}
+// New создаёт игру, начиная со сцены start.
+func New(start scene.Scene) *Game {
+	return &Game{scene: start}
 }
 
 func (g *Game) Update() error {

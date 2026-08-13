@@ -138,30 +138,26 @@ func (g *Generator) paintCorner(underRole, overRole string, present func(x, y in
 	return n
 }
 
-// paintLand красит наземную поверхность в два прохода с учётом берега.
+// paintLand красит наземную поверхность с учётом берега.
 // Ключ клетки — угловой, относительно present (членство в этой поверхности).
-// under — подложка (рисуется снизу). Поверхность выбирается так:
-//   ключ 1,1,1,1 (все углы — суша)         → fullRole (интерьер, напр. grass_ground)
-//   иначе, клетка граничит с водой          → waterRole (берег, напр. grass_water)
-//   иначе (граница с другой сушей/тропой)   → edgeRole (кромка того же материала)
+// Поверхность выбирается так:
+//
+//	ключ 1,1,1,1 (все углы — суша)         → fullRole (интерьер, напр. grass_ground)
+//	иначе, клетка граничит с водой          → waterRole (берег, напр. grass_water)
+//	иначе (граница с другой сушей/тропой)   → edgeRole (кромка того же материала)
+//
 // Пустые роли просто пропускаются (сквозь прозрачные углы видно воду-фон/низ).
 // waterRole лежит на другом листе (Water_coasts), поэтому берег пишется в
-// разрежённый слой coastLayer (свой лист), а подложка/интерьер/кромка того же
-// материала (Ground_grass) — в плотные dstUnder/dstOver.
-func (g *Generator) paintLand(present func(x, y int) bool, underRole, fullRole, edgeRole, waterRole, coastLayer string, dstUnder, dstOver *Grid[uint16]) int {
-	under := g.Manifest.Terrains[underRole]
+// разрежённый слой coastLayer (свой лист), а интерьер/кромка того же материала
+// (Ground_grass) — в плотный dst.
+//
+// Подложки здесь нет намеренно: наборы grass_shadow/mud_shadow, которые раньше
+// клались под каждую клетку суши, оказались НЕ подложкой материала, а тенью
+// возвышенности — их кладёт stagePlateauShadow вокруг плато.
+func (g *Generator) paintLand(present func(x, y int) bool, fullRole, edgeRole, waterRole, coastLayer string, dst *Grid[uint16]) int {
 	full := g.Manifest.Terrains[fullRole]
 	edge := g.Manifest.Terrains[edgeRole]
 	water := g.Manifest.Terrains[waterRole]
-	touchesWater := func(x, y int) bool {
-		for _, d := range nb8 {
-			nx, ny := x+d[0], y+d[1]
-			if g.Level.In(nx, ny) && g.Level.At(nx, ny).isLiquid() {
-				return true
-			}
-		}
-		return false
-	}
 	n := 0
 	for y := 0; y < g.P.Height; y++ {
 		for x := 0; x < g.P.Width; x++ {
@@ -169,27 +165,84 @@ func (g *Generator) paintLand(present func(x, y int) bool, underRole, fullRole, 
 			if !(k[0] || k[1] || k[2] || k[3]) {
 				continue // ни один угол не в террейне — пусто
 			}
-			if ids, ok := resolveCorner(under.Corner, k); ok {
-				dstUnder.Set(x, y, uint16(variantAt(g.Seed, x, y, 1, ids)+1))
-			}
 			switch {
 			case k[0] && k[1] && k[2] && k[3]: // интерьер
 				if ids, ok := resolveCorner(full.Corner, k); ok {
-					dstOver.Set(x, y, uint16(variantAt(g.Seed, x, y, 2, ids)+1))
+					dst.Set(x, y, uint16(variantAt(g.Seed, x, y, 2, ids)+1))
 				}
-			case touchesWater(x, y): // берег → другой лист, разрежённый слой
+			case g.touchesLiquid(x, y): // берег → другой лист, разрежённый слой
 				if ids, ok := resolveCorner(water.Corner, k); ok {
 					g.addSparse(coastLayer, water.Sheet, x, y, variantAt(g.Seed, x, y, 3, ids), nil)
 				}
 			default: // кромка того же материала (напр. mud над травой)
 				if ids, ok := resolveCorner(edge.Corner, k); ok {
-					dstOver.Set(x, y, uint16(variantAt(g.Seed, x, y, 2, ids)+1))
+					dst.Set(x, y, uint16(variantAt(g.Seed, x, y, 2, ids)+1))
 				}
 			}
 			n++
 		}
 	}
 	return n
+}
+
+// paintUnder красит ПОДЛОЖКУ поверхности: там, где террейн present касается
+// клетки хотя бы одним углом, кладётся ЗАЛИВОЧНЫЙ тайл роли (ключ 1,1,1,1), а не
+// переходный. Форму подложке задаёт слой above СВЕРХУ — это он вырезает по ней
+// свои переходные тайлы. Так собрана земля в карте автора (forest.tmx): в нижнем
+// слое у mud всегда ключ 1,1,1,1, а очертания тропы даёт grass_ground над ним.
+// Если подложку красить переходными тайлами, её кромка и кромка травы не
+// совпадают попиксельно и между ними светится вода-фон.
+//
+// Клетки, где above сплошной (все четыре угла его), пропускаются: подложки там
+// всё равно не видно, а слой она бы раздула на всю сушу.
+// У воды сплошную подложку класть нельзя — она вылезет на воду. Свой берег
+// (waterRole с листа Water_coasts) подложка получает, только если сверху её не
+// кроет ничто, то есть тропа сама вышла к воде; иначе берег даёт слой above, и
+// грунтовый берег под ним был бы не виден.
+func (g *Generator) paintUnder(present, above func(x, y int) bool, fillRole, waterRole, coastLayer string, dst *Grid[uint16]) int {
+	fill := g.Manifest.Terrains[fillRole]
+	water := g.Manifest.Terrains[waterRole]
+	solid, hasSolid := resolveCorner(fill.Corner, [4]bool{true, true, true, true})
+	if !hasSolid && fill.Fill > 0 {
+		solid, hasSolid = []int{fill.Fill}, true
+	}
+	n := 0
+	for y := 0; y < g.P.Height; y++ {
+		for x := 0; x < g.P.Width; x++ {
+			k := cornerKey(present, x, y)
+			if !(k[0] || k[1] || k[2] || k[3]) {
+				continue // подложке здесь нечего подпирать
+			}
+			a := cornerKey(above, x, y)
+			if a[0] && a[1] && a[2] && a[3] {
+				continue // сверху сплошной тайл
+			}
+			if !(k[0] && k[1] && k[2] && k[3]) && g.touchesLiquid(x, y) {
+				if !(a[0] || a[1] || a[2] || a[3]) {
+					if ids, ok := resolveCorner(water.Corner, k); ok {
+						g.addSparse(coastLayer, water.Sheet, x, y, variantAt(g.Seed, x, y, 3, ids), nil)
+					}
+				}
+				continue
+			}
+			if hasSolid {
+				dst.Set(x, y, uint16(variantAt(g.Seed, x, y, 2, solid)+1))
+				n++
+			}
+		}
+	}
+	return n
+}
+
+// touchesLiquid — есть ли среди 8 соседей клетки жидкая.
+func (g *Generator) touchesLiquid(x, y int) bool {
+	for _, d := range nb8 {
+		nx, ny := x+d[0], y+d[1]
+		if g.Level.In(nx, ny) && g.Level.At(nx, ny).isLiquid() {
+			return true
+		}
+	}
+	return false
 }
 
 // presentPred возвращает предикат «эта клетка принадлежит той же площадной роли».

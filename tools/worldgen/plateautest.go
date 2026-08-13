@@ -53,14 +53,12 @@ func runPlateauTest(args []string) {
 
 	g.stagePlateauApron()
 	g.Trail = map[[2]int]bool{}
-	g.GroundUnderLayer = NewGrid[uint16](W, H)
 	g.GroundLayer = NewGrid[uint16](W, H)
-	g.MudUnderLayer = NewGrid[uint16](W, H)
 	g.MudLayer = NewGrid[uint16](W, H)
 	isLand := func(x, y int) bool { return g.Level.In(x, y) && g.Level.At(x, y).isLand() }
-	g.paintLand(isLand, "ground_under", "ground", "ground", "grass_water", "coast",
-		g.GroundUnderLayer, g.GroundLayer)
+	g.paintLand(isLand, "ground", "ground", "grass_water", "coast", g.GroundLayer)
 	g.stagePlateau()
+	g.stagePlateauShadow()
 
 	mp := g.ToMapV1(1)
 	atlas, err := NewAtlasSet(m)

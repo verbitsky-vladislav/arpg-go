@@ -68,30 +68,9 @@ func (g *Generator) stageIslands() {
 	}
 }
 
-// stagePlateauShape — морфологическая чистка силуэта возвышенностей.
-// Порог по высоте даёт рваные ленты в 1-2 клетки: на них не встаёт ни обрыв,
-// ни лестница, а автотайл на такой ширине вырождается в пунктир. Открытие
-// (эрозия→дилатация) убирает ленты и усы, закрытие (дилатация→эрозия) заливает
-// дыры-проколы. Итог — компактные «столовые горы» с гладким контуром.
-func (g *Generator) stagePlateauShape() {
-	W, H := g.P.Width, g.P.Height
-	set := make([]bool, W*H)
-	for i, lv := range g.Level.Data {
-		set[i] = lv == Plateau
-	}
-	// r=1 открытие убирает ленты шириной 1-2, закрытие радиусом 2 заливает дыры
-	set = morph(set, W, H, false, 1) // эрозия
-	set = morph(set, W, H, true, 2)  // дилатация (открытие + начало закрытия)
-	set = morph(set, W, H, false, 1) // эрозия (конец закрытия)
-	for i := range g.Level.Data {
-		switch {
-		case set[i] && g.Level.Data[i] == Ground:
-			g.Level.Data[i] = Plateau
-		case !set[i] && g.Level.Data[i] == Plateau:
-			g.Level.Data[i] = Ground
-		}
-	}
-}
+// Морфологическая чистка силуэта, бюджет доли плато и врезка ступеней снизу
+// удалены: форма, размер и количество возвышенностей теперь задаются явным
+// размещением кусков (plateau_kind.go), а не подтачиванием изолинии шума.
 
 // morph — одна морфологическая операция радиуса r по 8-связности.
 // grow=true — дилатация (клетка включается, если рядом есть включённая),
@@ -137,7 +116,8 @@ func (g *Generator) stagePlateauApron() {
 				if !isP(x, y) || isP(x, y+1) {
 					continue // не южная кромка
 				}
-				for d := 1; d <= cliffHeight; d++ {
+				// глубина своя у каждого типа возвышенности
+				for d := 1; d <= g.cliffDepthAt(x, y); d++ {
 					if !g.Level.In(x, y+d) || g.Level.At(x, y+d) != Ground {
 						cut = append(cut, [2]int{x, y})
 						break
@@ -150,6 +130,9 @@ func (g *Generator) stagePlateauApron() {
 		}
 		for _, c := range cut {
 			g.Level.Set(c[0], c[1], Ground)
+			if g.Kind != nil {
+				g.Kind.Set(c[0], c[1], uint8(kindNone))
+			}
 		}
 	}
 	// юбка встала — фиксируем её клетки
@@ -159,59 +142,58 @@ func (g *Generator) stagePlateauApron() {
 			if !isP(x, y) || isP(x, y+1) {
 				continue
 			}
-			for d := 1; d <= cliffHeight; d++ {
+			for d := 1; d <= g.cliffDepthAt(x, y); d++ {
 				g.Cliff[[2]int{x, y + d}] = true
 			}
 		}
 	}
 }
 
-// stagePlateauFix — шаг 7: срезать плато уже 4 тайлов (на нём не помещается
-// лестница). Клетка плато срезается, если у неё нет плато-соседа на расстоянии
-// ≥4 в какой-либо из осей (грубая проверка «толщины»).
+// stagePlateauFix — шаг 7: убрать с макушки ленты и усы шириной 1-2 клетки.
+// На них не встаёт ни обрыв, ни лестница, а автотайл вырождается в пунктир.
+// Критерий — морфологическое открытие: клетка выживает, если попадает в ядро
+// (эрозия на 1) или примыкает к нему. Прямоугольности он НЕ требует, поэтому
+// силуэт остаётся округлым и неровным.
 func (g *Generator) stagePlateauFix() {
-	isP := func(x, y int) bool { return g.Level.In(x, y) && g.Level.At(x, y) == Plateau }
+	W, H := g.P.Width, g.P.Height
 	// срез узких клеток порождает новые узкие — повторяем до стабилизации
 	for pass := 0; pass < 8; pass++ {
-		toCut := make([]int, 0)
-		for y := 0; y < g.P.Height; y++ {
-			for x := 0; x < g.P.Width; x++ {
-				if g.Level.At(x, y) == Plateau && !thickEnough(isP, x, y, 4) {
-					toCut = append(toCut, y*g.P.Width+x)
+		set := make([]bool, W*H)
+		for i, lv := range g.Level.Data {
+			set[i] = lv == Plateau
+		}
+		keep := morph(morph(set, W, H, false, 1), W, H, true, 1)
+		cut := 0
+		for i := range g.Level.Data {
+			if set[i] && !keep[i] {
+				g.Level.Data[i] = Ground
+				if g.Kind != nil {
+					g.Kind.Data[i] = uint8(kindNone)
 				}
+				cut++
 			}
 		}
-		if len(toCut) == 0 {
+		if cut == 0 {
 			return
-		}
-		for _, i := range toCut {
-			g.Level.Data[i] = Ground
 		}
 	}
 }
 
-// thickEnough — есть ли непрерывная полоса плато шириной w и по горизонтали,
-// и по вертикали, проходящая через (x,y).
-func thickEnough(isP func(x, y int) bool, x, y, w int) bool {
-	run := func(dx, dy int) int {
-		c := 1
-		for k := 1; k < w; k++ {
-			if isP(x+dx*k, y+dy*k) {
-				c++
-			} else {
-				break
-			}
-		}
-		for k := 1; k < w; k++ {
-			if isP(x-dx*k, y-dy*k) {
-				c++
-			} else {
-				break
-			}
-		}
-		return c
+// plateauThin — сколько клеток плато не переживают открытие на 1, то есть
+// сидят на ленте или усе шириной меньше трёх (проверка E4).
+func plateauThin(lv *Grid[Level]) int {
+	set := make([]bool, len(lv.Data))
+	for i, v := range lv.Data {
+		set[i] = v == Plateau
 	}
-	return run(1, 0) >= w && run(0, 1) >= w
+	keep := morph(morph(set, lv.W, lv.H, false, 1), lv.W, lv.H, true, 1)
+	thin := 0
+	for i := range set {
+		if set[i] && !keep[i] {
+			thin++
+		}
+	}
+	return thin
 }
 
 // dropPlateau срезает все клетки плато до нижней земли. Временная мера Фазы 1:
@@ -225,8 +207,7 @@ func (g *Generator) dropPlateau() {
 	}
 }
 
-// stageStairs — шаг 8: лестницы (узкое место связности, §6). Реализация в M3.
-func (g *Generator) stageStairs() {}
+// stageStairs — шаг 8: лестницы (узкое место связности, §6) — в stage_stairs.go.
 
 // stageConnectivity — шаг 9: достижимость плато. Реализация в M3.
 func (g *Generator) stageConnectivity() {}

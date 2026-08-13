@@ -46,6 +46,51 @@ func loadDecor(biomeDir string) *DecorLib {
 	return &d
 }
 
+// scatterStamps кладёт штампы группы group в слой layer по зоне pred, пока
+// покрытие зоны не достигнет frac. occ — общая карта занятости (штампы не лезут
+// друг на друга), rng — общий поток случайности вызывающей стадии: и то и другое
+// снаружи, чтобы несколько групп раскладывались согласованно.
+func (g *Generator) scatterStamps(rng *rand.Rand, occ map[[2]int]bool, group, layer string,
+	pred func(x, y int) bool, frac float64) {
+	lib := g.Decor.Stamps[group]
+	if len(lib) == 0 {
+		return
+	}
+	zone := 0
+	for y := 0; y < g.P.Height; y++ {
+		for x := 0; x < g.P.Width; x++ {
+			if pred(x, y) {
+				zone++
+			}
+		}
+	}
+	target := int(float64(zone) * frac)
+	placed, attempts := 0, 0
+	for placed < target && attempts < target*40+200 {
+		attempts++
+		s := lib[rng.Intn(len(lib))]
+		px := rng.Intn(g.P.Width)
+		py := rng.Intn(g.P.Height)
+		ok := true
+		for _, c := range s.Cells {
+			x, y := px+c.Dx, py+c.Dy
+			if !pred(x, y) || occ[[2]int{x, y}] {
+				ok = false
+				break
+			}
+		}
+		if !ok {
+			continue
+		}
+		for _, c := range s.Cells {
+			x, y := px+c.Dx, py+c.Dy
+			occ[[2]int{x, y}] = true
+			g.addSparse(layer, c.Sheet, x, y, c.Tile, g.sheetAnim(c.Sheet))
+		}
+		placed += len(s.Cells)
+	}
+}
+
 // stageDecor раскладывает штампы декора по зонам (шаг после воды/земли/троп).
 // Плотности — доли покрытия зоны, замерены по карте художника (SUMMARY §1.5).
 func (g *Generator) stageDecor() {
@@ -70,60 +115,14 @@ func (g *Generator) stageDecor() {
 		return g.Level.In(x, y) && g.Level.At(x, y).isLand() && !g.Trail[[2]int{x, y}]
 	}
 
-	// зоны с оценкой размера (для целевого покрытия)
-	countZone := func(pred func(x, y int) bool) int {
-		n := 0
-		for y := 0; y < g.P.Height; y++ {
-			for x := 0; x < g.P.Width; x++ {
-				if pred(x, y) {
-					n++
-				}
-			}
-		}
-		return n
-	}
-
-	// scatter кладёт штампы группы, пока покрытие зоны не достигнет frac.
-	scatter := func(group, layer string, pred func(x, y int) bool, frac float64) {
-		lib := g.Decor.Stamps[group]
-		if len(lib) == 0 {
-			return
-		}
-		zone := countZone(pred)
-		target := int(float64(zone) * frac)
-		placed, attempts := 0, 0
-		for placed < target && attempts < target*40+200 {
-			attempts++
-			s := lib[rng.Intn(len(lib))]
-			px := rng.Intn(g.P.Width)
-			py := rng.Intn(g.P.Height)
-			ok := true
-			for _, c := range s.Cells {
-				x, y := px+c.Dx, py+c.Dy
-				if !pred(x, y) || occ[[2]int{x, y}] {
-					ok = false
-					break
-				}
-			}
-			if !ok {
-				continue
-			}
-			for _, c := range s.Cells {
-				x, y := px+c.Dx, py+c.Dy
-				occ[[2]int{x, y}] = true
-				g.addSparse(layer, c.Sheet, x, y, c.Tile, nil)
-			}
-			placed += len(s.Cells)
-		}
-	}
-
 	shallowNear := func(x, y int) bool { return isWater(x, y) && nearLand(x, y) }
 	deepWater := func(x, y int) bool { return isWater(x, y) && !nearLand(x, y) }
 
-	// порядок: сначала вода (рябь, кувшинки, камыш), потом суша (пятна, трава)
-	scatter("water_detail", "liquid_detail", isWater, 0.26)
-	scatter("lilies", "surface_liquid", deepWater, 0.05)
-	scatter("reeds", "surface_liquid", shallowNear, 0.30)
-	scatter("ground_spots", "ground_spots", landOpen, 0.10)
-	scatter("grass", "ground_spots", landOpen, 0.45)
+	// рябь (water_detail) здесь НЕ раскладывается — у неё своя стадия
+	// stageWaterDetail: она уже подключена к пайплайну и знает про береговые тайлы.
+	// порядок: сначала вода (кувшинки, камыш), потом суша (пятна, трава)
+	g.scatterStamps(rng, occ, "lilies", "surface_liquid", deepWater, 0.05)
+	g.scatterStamps(rng, occ, "reeds", "surface_liquid", shallowNear, 0.30)
+	g.scatterStamps(rng, occ, "ground_spots", "ground_spots", landOpen, 0.10)
+	g.scatterStamps(rng, occ, "grass", "ground_spots", landOpen, 0.45)
 }

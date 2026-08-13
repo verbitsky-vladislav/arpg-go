@@ -10,26 +10,24 @@ func (g *Generator) Run() {
 	g.stageMoisture()
 	g.stageLevels()
 
-	// шаги 5-9: форма (CA-сглаживание, острова, чистка силуэта возвышенностей,
-	// срез узких плато, лестницы, связность). Реализуются в stage_shape.go.
+	// шаги 5-9: форма суши (CA-сглаживание, мелкие острова, связность).
 	g.stageSmooth()
 	g.stageIslands()
-	g.stagePlateauShape()
-	g.stagePlateauFix()
-	g.stageStairs()
 	g.stageConnectivity()
 	g.forceEdgeRing() // §4: гарантировать водяную рамку после сглаживания (E1)
 
 	// Пруды/реки вырезаются в уровнях до автотайла; тропы копятся набором.
-	// Вода режет только нижнюю землю, плато обходит: раньше река проходила
-	// сквозь возвышенность и резала её на ленты в 1-2 клетки уже ПОСЛЕ
-	// stagePlateauFix — отсюда и брались узкие плато в отчёте (E4).
 	g.stageWater()
-	// вода могла отрезать от плато куски — чистим силуэт ещё раз. Срез узких
-	// клеток и резервирование юбки влияют друг на друга (юбка срезает южные
-	// ряды, от этого плато может стать у́же 4), поэтому крутим до устойчивости.
+
+	// Возвышенности ставятся ПОСЛЕ воды: место под кусок и под его юбку ищется
+	// уже по окончательной суше, поэтому река не может разрезать плато на ленты.
+	// Порог по высоте, который насыпал stageLevels, здесь снимается — форма,
+	// размер и количество задаются типом куска, а не изолинией шума.
+	g.stagePlateauPlace()
+	// Срез узких клеток и резервирование юбки влияют друг на друга (юбка режет
+	// южные ряды, от этого макушка может стать у́же 4), поэтому крутим до
+	// устойчивости.
 	for pass := 0; pass < 4; pass++ {
-		g.stagePlateauShape()
 		g.stagePlateauFix()
 		before := len(g.Cliff)
 		g.stagePlateauApron()
@@ -37,26 +35,43 @@ func (g *Generator) Run() {
 			break
 		}
 	}
+	// Лестницы врезаются в готовую юбку обрыва: до этой точки g.Cliff ещё
+	// переставляется, а лестница обязана лечь на окончательное тело скалы.
+	g.stageStairs()
 	g.stageTrails()
 
+	// Вид воды считается по окончательной сетке уровней, до автотайлинга суши:
+	// полосы глубины у берега + рябь на открытой воде.
+	g.stageWaterShade()
+	g.stageWaterDetail()
+
 	// Автотайлинг ТОЛЬКО из Ground_grass + Water_coasts, по ручным наборам.
-	// Слои: вода (цвет-фон) → grass_underlay → grass_ground → mud_underlay → mud;
-	// берега (grass_water/mud_water, лист Water_coasts) — в разрежённый слой coast.
-	g.GroundUnderLayer = NewGrid[uint16](g.P.Width, g.P.Height)
+	// Слои: вода (цвет-фон) → mud → grass_ground; берега (grass_water/mud_water,
+	// лист Water_coasts) — в разрежённый слой coast.
+	//
+	// Земля собрана как у автора в forest.tmx: снизу СПЛОШНОЙ mud (в его карте в
+	// слое ground у грунта всегда ключ 1,1,1,1), сверху трава, которая вырезает по
+	// нему свои переходные тайлы. Очертания тропе задаёт трава, а не грунт —
+	// отсюда и травяная кайма вокруг тропы, ровно как берег вокруг воды.
+	//
+	// Подложка — свойство СУШИ, а не тропы: любая будущая проплешина в траве
+	// (поляна, стоянка) сразу получит грунт под собой и кайму по краю. Под
+	// сплошной травой подложка не кладётся — её там не видно.
 	g.GroundLayer = NewGrid[uint16](g.P.Width, g.P.Height)
-	g.MudUnderLayer = NewGrid[uint16](g.P.Width, g.P.Height)
 	g.MudLayer = NewGrid[uint16](g.P.Width, g.P.Height)
 	isLandCell := func(x, y int) bool { return g.Level.In(x, y) && g.Level.At(x, y).isLand() }
 	inTrail := func(x, y int) bool { return g.Trail[[2]int{x, y}] }
-	// трава: интерьер grass_ground, берег grass_water; подложка grass_underlay
-	g.paintLand(isLandCell, "ground_under", "ground", "ground", "grass_water", "coast",
-		g.GroundUnderLayer, g.GroundLayer)
-	// тропы: интерьер/кромка mud (кромка ложится над травой), берег mud_water; подложка mud_underlay
-	g.paintLand(inTrail, "mud_under", "mud", "mud", "mud_water", "coast",
-		g.MudUnderLayer, g.MudLayer)
+	// трава обрывается на тропе — иначе кромке неоткуда взяться
+	grassCell := func(x, y int) bool { return isLandCell(x, y) && !inTrail(x, y) }
+	// грунт: сплошная подложка под травой, берег mud_water
+	g.paintUnder(isLandCell, grassCell, "mud", "mud_water", "coast", g.MudLayer)
+	// трава: интерьер grass_ground, кромка по краю тропы, берег grass_water
+	g.paintLand(grassCell, "ground", "ground", "grass_water", "coast", g.GroundLayer)
 
-	// плато: травяной верх grass_cliff + скальный обрыв на юг (spots_rock)
+	// плато: травяной верх grass_cliff + скальный обрыв на юг (spots_rock),
+	// вокруг — тень возвышенности на нижней земле (grass_shadow/mud_shadow)
 	g.stagePlateau()
+	g.stagePlateauShadow()
 
 	// точка появления, объекты, маркеры. Спавн — отдельная стадия: stageProps
 	// выходит сразу, если у биома нет пропсов, и раньше уносила спавн с собой (E5).
@@ -68,18 +83,18 @@ func (g *Generator) Run() {
 // ToMapV1 собирает результат в выходной формат.
 func (g *Generator) ToMapV1(seed int64) *MapV1 {
 	mp := &MapV1{
-		Format:   "map_format v1",
-		Biome:    g.Manifest.ID,
-		Seed:     seed,
-		Width:    g.P.Width,
-		Height:   g.P.Height,
-		TileSize: g.Manifest.TileSize,
-		Sheets:   g.sheetRefs(),
+		Format:      "map_format v1",
+		Biome:       g.Manifest.ID,
+		Seed:        seed,
+		Width:       g.P.Width,
+		Height:      g.P.Height,
+		TileSize:    g.Manifest.TileSize,
+		Sheets:      g.sheetRefs(),
+		WaterColors: g.Manifest.waterPaletteRGB(),
 		Layers: Layers{
 			Liquid:        denseData(g.LiquidLayer),
-			GroundUnder:   denseData(g.GroundUnderLayer),
+			LiquidShade:   shadeData(g.WaterShade),
 			Ground:        denseData(g.GroundLayer),
-			MudUnder:      denseData(g.MudUnderLayer),
 			Mud:           denseData(g.MudLayer),
 			Plateau:       denseData(g.PlateauLayer),
 			LiquidDetail:  g.Sparse["liquid_detail"],
@@ -99,6 +114,13 @@ func (g *Generator) ToMapV1(seed int64) *MapV1 {
 }
 
 func denseData(g *Grid[uint16]) []uint16 {
+	if g == nil {
+		return nil
+	}
+	return g.Data
+}
+
+func shadeData(g *Grid[uint8]) []uint8 {
 	if g == nil {
 		return nil
 	}
@@ -141,6 +163,13 @@ func (g *Generator) buildNav() NavData {
 			cost[c[1]*g.P.Width+c[0]] = 0
 		}
 	}
+	// лестницы — единственный проход сквозь обрыв, поэтому открываются ПОСЛЕ
+	// него: их клетки лежат внутри g.Cliff и иначе остались бы стеной.
+	for c := range g.Stair {
+		if g.Level.In(c[0], c[1]) {
+			cost[c[1]*g.P.Width+c[0]] = 255
+		}
+	}
 	return NavData{Width: g.P.Width, Height: g.P.Height, Cost: cost}
 }
 
@@ -152,6 +181,16 @@ func (g *Generator) sheetIndexInManifest(name string) uint8 {
 		}
 	}
 	return 0
+}
+
+// sheetAnim — ссылка на анимацию листа целиком (вода), если она объявлена в
+// манифесте. Тайлы такого листа всегда уезжают в вывод анимированными.
+func (g *Generator) sheetAnim(sheet string) *AnimRef {
+	sh, ok := g.Manifest.Sheets[sheet]
+	if !ok || sh.Anim == nil {
+		return nil
+	}
+	return &AnimRef{Frames: sh.Anim.Frames, Stride: sh.Anim.Stride, MS: sh.Anim.MS}
 }
 
 // addSparse добавляет клетку в разрежённый слой layer.

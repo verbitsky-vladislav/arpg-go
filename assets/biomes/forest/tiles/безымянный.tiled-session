@@ -5,11 +5,11 @@
     "file.lastUsedOpenFilter": "Все файлы (*)",
     "fileStates": {
         "/Users/personal/Development/game/assets/biomes/forest/authoring/forest.tmx": {
-            "scale": 2.4577,
+            "scale": 1,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 452.4555478699597,
-                "y": 306.79090206290437
+                "x": 344.5,
+                "y": 323.5
             }
         },
         "/Users/personal/Development/game/assets/biomes/forest/authoring/forest.tmx#Ground_grass": {
@@ -40,11 +40,11 @@
             "scaleInDock": 1
         },
         "elevated_test.tsx.tmx": {
-            "scale": 2.44,
+            "scale": 2.43,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 221.72131147540983,
-                "y": 163.52459016393445
+                "x": 215.02057613168722,
+                "y": 167.28395061728392
             }
         },
         "spots_rock.tsx": {

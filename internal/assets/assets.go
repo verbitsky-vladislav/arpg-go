@@ -33,6 +33,10 @@ func NewLoader(fsys fs.FS) *Loader {
 	}
 }
 
+// FS — файловая система загрузчика: нужна тем, кто читает рядом с картинками
+// не-картинки (манифесты спрайт-паков, таблицы видов).
+func (l *Loader) FS() fs.FS { return l.fsys }
+
 // Image загружает одиночный PNG по пути внутри fs (с кэшированием).
 func (l *Loader) Image(path string) (*ebiten.Image, error) {
 	l.mu.Lock()

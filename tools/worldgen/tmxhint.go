@@ -333,7 +333,7 @@ func emitDraftManifest(biomeDir, tmxPath string) {
 		Transitions: map[string]Transition{
 			"liquid->ground_a": {Sheet: coastSheet, Set: coastSet},
 		},
-		Stairs:  Stairs{Sheet: "stairs_grass", Variants: [][]int{{23}}, Width: 2},
+		Stairs:  Stairs{Sheet: "stairs_grass", Width: 2},
 		Hangers: Hangers{Sheet: "lianas", Variants: [][]int{{113}}, On: "cliff_south"},
 		Props:   scanProps(biomeDir),
 		Surface: map[string][]string{"liquid": {"water_lilis"}, "shallow": {"reeds"}},

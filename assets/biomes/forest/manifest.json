@@ -22,12 +22,22 @@
   "Water_detilazation": {
    "file": "tiles/water_detilazation.png",
    "columns": 37,
-   "tilecount": 2886
+   "tilecount": 2886,
+   "anim": {
+    "frames": 6,
+    "stride": 481,
+    "ms": 180
+   }
   },
   "Water_detilazation2": {
-   "file": "tiles/water_detilazation.png",
+   "file": "tiles/water_detilazation_v2.png",
    "columns": 37,
-   "tilecount": 2886
+   "tilecount": 2886,
+   "anim": {
+    "frames": 6,
+    "stride": 481,
+    "ms": 180
+   }
   },
   "lianas": {
    "file": "tiles/lianas.png",
@@ -56,9 +66,9 @@
   }
  },
  "terrains": {
-  "ground_under": {
+  "ground_shadow": {
    "sheet": "Ground_grass",
-   "wangset": "grass_underlay",
+   "wangset": "grass_shadow",
    "fill": 476
   },
   "ground": {
@@ -66,9 +76,9 @@
    "wangset": "grass_ground",
    "fill": 590
   },
-  "mud_under": {
+  "mud_shadow": {
    "sheet": "Ground_grass",
-   "wangset": "mud_underlay",
+   "wangset": "mud_shadow",
    "fill": 371
   },
   "mud": {
@@ -117,9 +127,37 @@
    "fill": 154
   }
  },
+ "stairs": {
+  "sheet": "stairs_grass",
+  "width": 2,
+  "materials": {
+   "grass": {
+    "top": "stairs_end_grass",
+    "block": "stairs_block_grass",
+    "bottom": "stairts_start_grass"
+   }
+  }
+ },
  "water_color": [
   53,
   87,
   120
+ ],
+ "water_colors": [
+  [
+   63,
+   115,
+   158
+  ],
+  [
+   58,
+   101,
+   139
+  ],
+  [
+   53,
+   87,
+   120
+  ]
  ]
 }

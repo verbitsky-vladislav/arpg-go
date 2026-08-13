@@ -35,13 +35,22 @@ func RenderMap(mp *MapV1, a *AtlasSet, scale int) image.Image {
 		drawTileScaled(canvas, tile, tx*ts*scale, ty*ts*scale, scale)
 	}
 
-	// фон — сплошной водный цвет (в Water_coasts нет сплошного водного тайла;
-	// берега — полупрозрачные тайлы поверх этого цвета).
-	wc := color.RGBA{53, 87, 120, 255}
-	if len(a.m.WaterColor) == 3 {
-		wc = color.RGBA{uint8(a.m.WaterColor[0]), uint8(a.m.WaterColor[1]), uint8(a.m.WaterColor[2]), 255}
+	// фон — водный цвет (в Water_coasts нет сплошного водного тайла; берега —
+	// полупрозрачные тайлы поверх этого цвета). Не заливка, а полосы глубины:
+	// liquid_shade даёт на каждый тайл индекс
+	// в палитре от мели к глубине. Нет слоя (карта старого формата) — вся вода
+	// красится последним цветом палитры, как раньше.
+	pal := waterPaletteRGBA(a.m)
+	draw.Draw(canvas, canvas.Bounds(), &image.Uniform{pal[len(pal)-1]}, image.Point{}, draw.Src)
+	if sh := mp.Layers.LiquidShade; len(sh) == mp.Width*mp.Height {
+		for i, v := range sh {
+			if v == 0 {
+				continue
+			}
+			c := pal[clampInt(int(v)-1, 0, len(pal)-1)]
+			fillBlock(canvas, (i%mp.Width)*ts*scale, (i/mp.Width)*ts*scale, ts*scale, c)
+		}
 	}
-	draw.Draw(canvas, canvas.Bounds(), &image.Uniform{wc}, image.Point{}, draw.Src)
 
 	dense := func(data []uint16, role string) {
 		sheet, ok := a.denseRoleSheet(role)
@@ -64,14 +73,25 @@ func RenderMap(mp *MapV1, a *AtlasSet, scale int) image.Image {
 	// точный порядок §3 снизу вверх: тень плато рисуется ПОД плато, но НАД
 	// нижней землёй — поэтому слои чередуются, а не «все плотные, потом все разрежённые».
 	// Всё, кроме воды-фона, — автотайлинг размеченных наборов (снизу вверх):
-	dense(mp.Layers.GroundUnder, "ground_under") // grass_underlay (подложка травы)
-	dense(mp.Layers.Ground, "ground")            // grass_ground (интерьер травы)
-	dense(mp.Layers.MudUnder, "mud_under")       // mud_underlay (подложка тропы)
-	dense(mp.Layers.Mud, "mud")                  // mud (тропа поверх травы)
-	sparse(mp.Layers.Coast)                      // grass_water/mud_water — берега (Water_coasts)
-	dense(mp.Layers.Plateau, "plateau")          // верх плато grass_cliff (зад/бока/интерьер)
-	sparse(mp.Layers.Cliff)                      // скала (spots_rock): grass_top-свес спереди + стенка — ПОВЕРХ grass_cliff
+	sparse(mp.Layers.LiquidDetail)      // рябь на воде — сразу над водным фоном, под всей сушей
+	dense(mp.Layers.Mud, "mud")         // грунт тропы — сплошная подложка ПОД травой
+	dense(mp.Layers.Ground, "ground")   // grass_ground поверх грунта: он и вырезает тропу
+	sparse(mp.Layers.Coast)             // grass_water/mud_water — берега (Water_coasts)
+	sparse(mp.Layers.PlateauShadow)     // тень возвышенности (grass_shadow/mud_shadow) — НАД землёй, но ПОД плато: залита и под самой возвышенностью, иначе на кромках просветы
+	dense(mp.Layers.Plateau, "plateau") // верх плато grass_cliff (зад/бока/интерьер)
+	sparse(mp.Layers.Cliff)             // скала (spots_rock): grass_top-свес спереди + стенка — ПОВЕРХ grass_cliff
+	sparse(mp.Layers.Stairs)            // лестницы врезаны в обрыв — рисуются ПОВЕРХ скалы и её свеса
 	return canvas
+}
+
+// waterPaletteRGBA — палитра воды манифеста в цветах рендера (мель → глубина).
+func waterPaletteRGBA(m *Manifest) []color.RGBA {
+	pal := m.waterPalette()
+	out := make([]color.RGBA, 0, len(pal))
+	for _, c := range pal {
+		out = append(out, color.RGBA{c[0], c[1], c[2], 255})
+	}
+	return out
 }
 
 // liquidRole — имя жидкой роли (solid для пещер).

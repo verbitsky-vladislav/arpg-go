@@ -34,37 +34,8 @@ func (g *Generator) stageCoast() {
 // не нужен.
 func (g *Generator) stageCliff() {}
 
-// stageShadow — шаг 12: тень плато падает на нижнюю землю у южной грани обрыва.
-// Ставится на не-плато клетки суши, над которыми (в пределах 2 тайлов севернее)
-// есть плато; тайл выбирается по маске формы плато.
-func (g *Generator) stageShadow() {
-	sh, ok := g.Manifest.Terrains["shadow"]
-	if !ok {
-		return
-	}
-	isPlateau := func(l Level) bool { return l == Plateau }
-	for y := 0; y < g.P.Height; y++ {
-		for x := 0; x < g.P.Width; x++ {
-			lv := g.Level.At(x, y)
-			if lv != Ground {
-				continue
-			}
-			// плато сверху в пределах 2 тайлов?
-			above := (g.Level.In(x, y-1) && g.Level.At(x, y-1) == Plateau) ||
-				(g.Level.In(x, y-2) && g.Level.At(x, y-2) == Plateau)
-			if !above {
-				continue
-			}
-			id := sh.Fill
-			if sh.Blob != nil {
-				if v, found := resolveFromSet(sh.Blob, normalizeBlob(mask8(g.Level, x, y, isPlateau)), 8); found {
-					id = v
-				}
-			}
-			g.addSparse("plateau_shadow", sh.Sheet, x, y, id, nil)
-		}
-	}
-}
+// stageShadow — шаг 12: тень возвышенности — в stage_shadow.go (угловой набор
+// grass_shadow/mud_shadow по раздутому силуэту, а не blob-маска по роли shadow).
 
 // stageHangers — шаг 13: лианы на южных гранях обрыва.
 func (g *Generator) stageHangers() {}
