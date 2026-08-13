@@ -159,6 +159,15 @@ func (c *Catalog) Validate() []string {
 		if s.Stats.HP <= 0 {
 			probs = append(probs, fmt.Sprintf("%s: hp <= 0", id))
 		}
+		if s.Stats.Speed.Walk <= 0 {
+			probs = append(probs, fmt.Sprintf("%s: нулевая скорость шага", id))
+		}
+		// Урон и признак «нападает» — одно и то же утверждение, записанное
+		// дважды; разошлись — значит правка задела только половину.
+		if s.Threat.Attacks != (s.Threat.Damage > 0) {
+			probs = append(probs, fmt.Sprintf("%s: attacks=%v при damage=%d",
+				id, s.Threat.Attacks, s.Threat.Damage))
+		}
 		if len(s.Habitat.Biomes) == 0 {
 			probs = append(probs, fmt.Sprintf("%s: не задан ни один биом", id))
 		}

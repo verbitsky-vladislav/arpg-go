@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "doc": "docs/mobs/spawn.md",
+  "about": "Правила заселения карты животными: сколько их, где появляются относительно игрока и когда снимаются. КТО именно появится — не здесь: виды и их частота по биомам лежат в species.json (habitat.biomes).",
+
+  "radius": {
+    "_": "Мировые пиксели. Экран 640x360, полудиагональ обзора ~367 — spawn_min обязан быть больше, иначе игрок увидит появление из воздуха.",
+    "spawn_min": 400,
+    "spawn_max": 800,
+    "keep": 1000,
+    "despawn": 1200
+  },
+
+  "limits": {
+    "_": "global — на всю карту, near — в радиусе keep вокруг игрока, per_species — одного вида на карте. Ограничивает первый достигнутый.",
+    "global": 50,
+    "near": 18,
+    "per_species": 8,
+    "per_species_overrides": {
+      "buffalo": 4,
+      "bull": 3,
+      "horse": 4,
+      "donkey": 4,
+      "deer": 6,
+      "boar": 5,
+      "fox": 3,
+      "sheep": 12,
+      "chick": 12
+    }
+  },
+
+  "rate": {
+    "_": "Цикл спавна: раз в interval_ticks берём attempts случайных точек в кольце; на каждую особь группы даётся place_tries попыток встать рядом.",
+    "interval_ticks": 20,
+    "attempts": 8,
+    "place_tries": 6,
+    "group_spread": 48
+  },
+
+  "initial_fill": 0.7,
+  "despawn_chance": 0.02,
+  "despawn_interval_ticks": 60,
+  "activity_mismatch_weight": 0.25
+}

@@ -12,18 +12,28 @@
     "right"
   ],
   "animations": {
+    "sitting": {
+      "file": "sitting.png",
+      "frames": 6,
+      "fps": 7,
+      "loop": true
+    },
     "walk": {
       "file": "walk.png",
       "frames": 6,
       "fps": 7,
       "loop": true
-    },
-    "walk_2": {
-      "file": "walk_2.png",
-      "frames": 6,
-      "fps": 7,
-      "loop": false
     }
+  },
+  "bbox": {
+    "x": 1,
+    "y": 8,
+    "w": 30,
+    "h": 21
+  },
+  "anchor": {
+    "x": 16,
+    "y": 29
   },
   "anim_names": "heuristic (frame-count / water); verify in-engine, rename freely"
 }

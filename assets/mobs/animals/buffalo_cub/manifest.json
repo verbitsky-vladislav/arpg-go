@@ -12,18 +12,28 @@
     "right"
   ],
   "animations": {
-    "walk": {
-      "file": "walk.png",
-      "frames": 6,
-      "fps": 7,
-      "loop": true
-    },
     "idle": {
       "file": "idle.png",
       "frames": 4,
       "fps": 7,
       "loop": true
+    },
+    "walk": {
+      "file": "walk.png",
+      "frames": 6,
+      "fps": 7,
+      "loop": true
     }
+  },
+  "bbox": {
+    "x": 17,
+    "y": 20,
+    "w": 30,
+    "h": 26
+  },
+  "anchor": {
+    "x": 32,
+    "y": 46
   },
   "anim_names": "heuristic (frame-count / water); verify in-engine, rename freely"
 }
