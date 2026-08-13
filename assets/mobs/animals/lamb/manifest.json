@@ -1,0 +1,29 @@
+{
+  "name": "lamb",
+  "category": "animal",
+  "frame": {
+    "w": 32,
+    "h": 32
+  },
+  "directions": [
+    "down",
+    "up",
+    "left",
+    "right"
+  ],
+  "animations": {
+    "walk": {
+      "file": "walk.png",
+      "frames": 6,
+      "fps": 7,
+      "loop": true
+    },
+    "idle": {
+      "file": "idle.png",
+      "frames": 4,
+      "fps": 7,
+      "loop": true
+    }
+  },
+  "anim_names": "heuristic (frame-count / water); verify in-engine, rename freely"
+}

@@ -1,0 +1,115 @@
+{
+ "id": "forest",
+ "tile_size": 16,
+ "render_scale": 2,
+ "edge_mode": "water",
+ "sheets": {
+  "Ground_grass": {
+   "file": "tiles/Ground_grass.png",
+   "columns": 21,
+   "tilecount": 651
+  },
+  "Objects": {
+   "file": "tiles/Objects.png",
+   "columns": 32,
+   "tilecount": 1056
+  },
+  "Water_coasts": {
+   "file": "tiles/Water_coasts.png",
+   "columns": 30,
+   "tilecount": 1470
+  },
+  "Water_detilazation": {
+   "file": "tiles/water_detilazation.png",
+   "columns": 37,
+   "tilecount": 2886
+  },
+  "Water_detilazation2": {
+   "file": "tiles/water_detilazation.png",
+   "columns": 37,
+   "tilecount": 2886
+  },
+  "lianas": {
+   "file": "tiles/lianas.png",
+   "columns": 26,
+   "tilecount": 260
+  },
+  "spots": {
+   "file": "tiles/spots.png",
+   "columns": 21,
+   "tilecount": 336
+  },
+  "spots_rock": {
+   "file": "tiles/spots_rock.png",
+   "columns": 21,
+   "tilecount": 483
+  },
+  "stairs_grass": {
+   "file": "tiles/stairs_grass.png",
+   "columns": 21,
+   "tilecount": 357
+  },
+  "water_lilis": {
+   "file": "tiles/water_lilis.png",
+   "columns": 7,
+   "tilecount": 301
+  }
+ },
+ "terrains": {
+  "ground_under": {
+   "sheet": "Ground_grass",
+   "wangset": "grass_underlay",
+   "fill": 476
+  },
+  "ground": {
+   "sheet": "Ground_grass",
+   "wangset": "grass_ground",
+   "fill": 590
+  },
+  "mud_under": {
+   "sheet": "Ground_grass",
+   "wangset": "mud_underlay",
+   "fill": 371
+  },
+  "mud": {
+   "sheet": "Ground_grass",
+   "wangset": "mud",
+   "fill": 422
+  },
+  "grass_water": {
+   "sheet": "Water_coasts",
+   "wangset": "grass_water",
+   "fill": 181
+  },
+  "mud_water": {
+   "sheet": "Water_coasts",
+   "wangset": "mud_water",
+   "fill": 61
+  },
+  "plateau": {
+   "sheet": "Ground_grass",
+   "wangset": "grass_cliff",
+   "fill": 527
+  },
+  "rock_top": {
+   "sheet": "spots_rock",
+   "wangset": "grass_top",
+   "fill": 68
+  },
+  "rock_face": {
+   "sheet": "spots_rock",
+   "wangset": "cliff_face",
+   "fill": 22
+  },
+  "rock_bottom": {
+   "sheet": "spots_rock",
+   "wangset": "grass_bottom",
+   "fill": 154
+  }
+ },
+ "water_color": [
+  53,
+  87,
+  120
+ ]
+}

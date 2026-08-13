@@ -1,0 +1,49 @@
+{
+  "id": "female_unarmed",
+  "name": "unarmed",
+  "type": "female",
+  "category": "player",
+  "source_pack": "female",
+  "frame": {
+    "w": 64,
+    "h": 64
+  },
+  "directions": [
+    "down",
+    "up",
+    "left",
+    "right"
+  ],
+  "animations": {
+    "death": {
+      "file": "death.png",
+      "frames": 7,
+      "fps": 7,
+      "loop": false
+    },
+    "hurt": {
+      "file": "hurt.png",
+      "frames": 5,
+      "fps": 7,
+      "loop": false
+    },
+    "idle": {
+      "file": "idle.png",
+      "frames": 12,
+      "fps": 7,
+      "loop": true
+    },
+    "run": {
+      "file": "run.png",
+      "frames": 8,
+      "fps": 7,
+      "loop": true
+    },
+    "walk": {
+      "file": "walk.png",
+      "frames": 6,
+      "fps": 7,
+      "loop": true
+    }
+  }
+}

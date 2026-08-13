@@ -1,0 +1,55 @@
+{
+  "id": "gnoll_t3",
+  "name": "t3",
+  "type": "gnoll",
+  "category": "enemy",
+  "source_pack": "gnoll",
+  "frame": {
+    "w": 64,
+    "h": 64
+  },
+  "directions": [
+    "down",
+    "up",
+    "left",
+    "right"
+  ],
+  "animations": {
+    "attack": {
+      "file": "attack.png",
+      "frames": 10,
+      "fps": 7,
+      "loop": false
+    },
+    "death": {
+      "file": "death.png",
+      "frames": 6,
+      "fps": 7,
+      "loop": false
+    },
+    "hurt": {
+      "file": "hurt.png",
+      "frames": 4,
+      "fps": 7,
+      "loop": false
+    },
+    "idle": {
+      "file": "idle.png",
+      "frames": 4,
+      "fps": 7,
+      "loop": true
+    },
+    "run": {
+      "file": "run.png",
+      "frames": 8,
+      "fps": 7,
+      "loop": true
+    },
+    "walk": {
+      "file": "walk.png",
+      "frames": 6,
+      "fps": 7,
+      "loop": true
+    }
+  }
+}

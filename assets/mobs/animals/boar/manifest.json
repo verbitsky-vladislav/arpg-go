@@ -1,0 +1,52 @@
+{
+  "name": "boar",
+  "category": "animal",
+  "frame": {
+    "w": 32,
+    "h": 32
+  },
+  "directions": [
+    "down",
+    "up",
+    "left",
+    "right"
+  ],
+  "animations": {
+    "attack": {
+      "file": "attack.png",
+      "frames": 5,
+      "fps": 7,
+      "loop": false
+    },
+    "death": {
+      "file": "death.png",
+      "frames": 6,
+      "fps": 7,
+      "loop": false
+    },
+    "hurt": {
+      "file": "hurt.png",
+      "frames": 4,
+      "fps": 7,
+      "loop": false
+    },
+    "idle": {
+      "file": "idle.png",
+      "frames": 4,
+      "fps": 7,
+      "loop": true
+    },
+    "run": {
+      "file": "run.png",
+      "frames": 5,
+      "fps": 7,
+      "loop": true
+    },
+    "walk": {
+      "file": "walk.png",
+      "frames": 6,
+      "fps": 7,
+      "loop": true
+    }
+  }
+}

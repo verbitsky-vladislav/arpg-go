@@ -1,0 +1,36 @@
+{
+  "frameDefaults": { "directions": 4, "fps": 7 },
+  "packs": [
+    { "src": "mobs/enemies/beholder",  "group": "enemies", "type": "beholder",  "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/demon",     "group": "enemies", "type": "demon",     "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/ents",      "group": "enemies", "type": "ent",       "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/ghost",     "group": "enemies", "type": "ghost",     "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/gnoll",     "group": "enemies", "type": "gnoll",     "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/goblin",    "group": "enemies", "type": "goblin",    "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/golem",     "group": "enemies", "type": "golem",     "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/imp",       "group": "enemies", "type": "imp",       "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/lizardmen", "group": "enemies", "type": "lizardman", "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/mushrums",  "group": "enemies", "type": "mushroom",  "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/orc",       "group": "enemies", "type": "orc",       "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/plants",    "group": "enemies", "type": "plant",     "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/rats",      "group": "enemies", "type": "rat",       "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/skeleton_1","group": "enemies", "type": "skeleton",  "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/skeleton_2","group": "enemies", "type": "lich",      "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/vampire",   "group": "enemies", "type": "vampire",   "category": "enemy", "scheme": "rank" },
+    { "src": "mobs/enemies/zombie",    "group": "enemies", "type": "zombie",    "category": "enemy", "scheme": "rank" },
+
+    { "src": "mobs/enemies/slime_1", "group": "enemies", "type": "slime", "category": "enemy", "scheme": "named",
+      "names": { "Slime1": "green", "Slime2": "arcane", "Slime3": "ember" } },
+    { "src": "mobs/enemies/slime_2", "group": "enemies", "type": "slime", "category": "enemy", "scheme": "named",
+      "names": { "Slime1": "aqua", "Slime2": "gold", "Slime3": "crimson" } },
+    { "src": "mobs/enemies/slime_3", "group": "enemies", "type": "slime", "category": "enemy", "scheme": "named",
+      "names": { "Slime1": "shadow", "Slime2": "lava", "Slime3": "violet" } },
+
+    { "src": "mobs/bosses/slime_bosses", "group": "bosses", "type": "slime_boss", "category": "boss", "scheme": "rank" },
+
+    { "src": "character/male",   "group": "character", "type": "male",   "category": "player", "scheme": "named",
+      "names": { "Sword": "sword", "Unarmed": "unarmed" } },
+    { "src": "character/female", "group": "character", "type": "female", "category": "player", "scheme": "named",
+      "names": { "Sword": "sword", "Unarmed": "unarmed" } }
+  ]
+}
