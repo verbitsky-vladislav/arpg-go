@@ -1,6 +1,8 @@
 # Build artifacts
 /worldgen
 /charview
+/assetnorm
+/spriteanchor
 /out/
 
 # macOS
