@@ -12,35 +12,39 @@
     "down",
     "left",
     "right",
-    "up"
+    "up",
+    "down_right",
+    "down_left",
+    "up_right",
+    "up_left"
   ],
   "animations": {
     "death": {
-      "file": "death.png",
+      "file": "death8.png",
       "frames": 7,
       "fps": 7,
       "loop": false
     },
     "hurt": {
-      "file": "hurt.png",
+      "file": "hurt8.png",
       "frames": 5,
       "fps": 7,
       "loop": false
     },
     "idle": {
-      "file": "idle.png",
+      "file": "idle8.png",
       "frames": 12,
       "fps": 7,
       "loop": true
     },
     "run": {
-      "file": "run.png",
+      "file": "run8.png",
       "frames": 8,
       "fps": 7,
       "loop": true
     },
     "walk": {
-      "file": "walk.png",
+      "file": "walk8.png",
       "frames": 6,
       "fps": 7,
       "loop": true

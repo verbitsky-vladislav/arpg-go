@@ -453,10 +453,10 @@ func (p *Player) face(in Input) {
 	switch {
 	case in.HasAim:
 		if d := in.Aim.Sub(p.Pos); d.Len() > 1 {
-			p.dir = sprite.DirFrom(d)
+			p.dir = sprite.DirFrom8(d)
 		}
 	case in.Move.Len() > 0:
-		p.dir = sprite.DirFrom(in.Move)
+		p.dir = sprite.DirFrom8(in.Move)
 	}
 }
 
@@ -466,18 +466,7 @@ func (p *Player) face(in Input) {
 func (p *Player) FaceVec() engine.Vec2 { return p.faceVec() }
 
 // faceVec — направление взгляда единичным вектором (для сектора удара).
-func (p *Player) faceVec() engine.Vec2 {
-	switch p.dir {
-	case sprite.Up:
-		return engine.Vec2{X: 0, Y: -1}
-	case sprite.Left:
-		return engine.Vec2{X: -1, Y: 0}
-	case sprite.Right:
-		return engine.Vec2{X: 1, Y: 0}
-	default:
-		return engine.Vec2{X: 0, Y: 1}
-	}
-}
+func (p *Player) faceVec() engine.Vec2 { return p.dir.Vec() }
 
 // knock задаёт отброс от точки from.
 func (p *Player) knock(from engine.Vec2) {

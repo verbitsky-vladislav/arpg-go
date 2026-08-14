@@ -26,9 +26,11 @@ import (
 	"github.com/vladislav/game/internal/engine"
 )
 
-// Dir — направление взгляда. Порядок совпадает с порядком строк в листах
-// (down, up, left, right), но привязка идёт по именам из манифеста, а не по
-// номеру строки, — пак с другим порядком тоже загрузится верно.
+// Dir — направление взгляда. Привязка к строкам листа идёт по именам из
+// манифеста, а не по номеру строки, — пак с другим порядком загрузится верно.
+//
+// Четыре стороны света идут первыми и в прежнем порядке: диагонали
+// дописаны в хвост, чтобы паки и сохранения со старой нумерацией не поехали.
 type Dir uint8
 
 const (
@@ -36,10 +38,42 @@ const (
 	Up
 	Left
 	Right
-	DirCount = 4
+	DownRight
+	DownLeft
+	UpRight
+	UpLeft
+	DirCount = 8
 )
 
-var dirNames = [DirCount]string{"down", "up", "left", "right"}
+var dirNames = [DirCount]string{
+	"down", "up", "left", "right",
+	"down_right", "down_left", "up_right", "up_left",
+}
+
+// dirVecs — единичный вектор взгляда. Диагонали нормированы, иначе сектор
+// удара по диагонали был бы длиннее, чем по стороне света.
+var dirVecs = [DirCount]engine.Vec2{
+	Down:      {X: 0, Y: 1},
+	Up:        {X: 0, Y: -1},
+	Left:      {X: -1, Y: 0},
+	Right:     {X: 1, Y: 0},
+	DownRight: {X: diag, Y: diag},
+	DownLeft:  {X: -diag, Y: diag},
+	UpRight:   {X: diag, Y: -diag},
+	UpLeft:    {X: -diag, Y: -diag},
+}
+
+const diag = math.Sqrt2 / 2
+
+// fallback — чем заменить направление, которого в паке нет. Сначала
+// боковое: сбоку персонаж нарисован в развороте примерно на 45°, и из
+// четырёх сторон света именно оно ближе всего к диагонали.
+var fallback = [DirCount][]Dir{
+	DownRight: {Right, Down},
+	DownLeft:  {Left, Down},
+	UpRight:   {Right, Up},
+	UpLeft:    {Left, Up},
+}
 
 func (d Dir) String() string {
 	if int(d) >= DirCount {
@@ -48,8 +82,17 @@ func (d Dir) String() string {
 	return dirNames[d]
 }
 
-// DirFrom переводит вектор движения в направление взгляда: что больше по
-// модулю, то и решает. Нулевой вектор — Down (поза «лицом к камере»).
+// Vec — направление взгляда единичным вектором.
+func (d Dir) Vec() engine.Vec2 {
+	if int(d) >= DirCount {
+		return dirVecs[Down]
+	}
+	return dirVecs[d]
+}
+
+// DirFrom переводит вектор движения в одну из четырёх сторон света: что
+// больше по модулю, то и решает. Нулевой вектор — Down (поза «лицом к
+// камере»). Для тех, у кого в паке четыре ряда, — то есть для всех мобов.
 func DirFrom(v engine.Vec2) Dir {
 	if v.X == 0 && v.Y == 0 {
 		return Down
@@ -64,6 +107,22 @@ func DirFrom(v engine.Vec2) Dir {
 		return Up
 	}
 	return Down
+}
+
+// DirFrom8 переводит вектор движения в одно из восьми направлений: круг
+// делится на октанты по 45°, границы посередине между направлениями.
+//
+// Отдельно от DirFrom, потому что переводить на восемь сторон всех разом
+// нельзя: у мобов в паках четыре ряда, и диагональ у них подменялась бы
+// боковым видом — движение вниз-чуть-вправо разворачивало бы их боком.
+func DirFrom8(v engine.Vec2) Dir {
+	if v.X == 0 && v.Y == 0 {
+		return Down
+	}
+	// Октант от «вниз» против часовой стрелки; +0.5 сдвигает границы на
+	// середину между направлениями, чтобы точное «вниз» не дрожало.
+	oct := int(math.Floor(math.Atan2(-v.X, v.Y)/(math.Pi/4) + 0.5))
+	return [8]Dir{Down, DownLeft, Left, UpLeft, Up, UpRight, Right, DownRight}[((oct%8)+8)%8]
 }
 
 // Size — размер кадра в пикселях.
@@ -147,6 +206,21 @@ func Load(l *assets.Loader, dir string) (*Pack, error) {
 		for d, dn := range dirNames {
 			if name == dn {
 				p.rowOf[d] = row
+			}
+		}
+	}
+	// Пак с четырьмя рядами обязан отвечать и на диагональный запрос:
+	// решать, чем заменить недостающее, тут дешевле, чем в каждом
+	// вызывающем. Мобы диагоналей не просят, но бестиарий и charview
+	// перебирают все направления подряд.
+	for d, chain := range fallback {
+		if p.rowOf[d] >= 0 {
+			continue
+		}
+		for _, alt := range chain {
+			if p.rowOf[alt] >= 0 {
+				p.rowOf[d] = p.rowOf[alt]
+				break
 			}
 		}
 	}

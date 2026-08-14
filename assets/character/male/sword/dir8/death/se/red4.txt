@@ -1,0 +1,15 @@
+@ 27 31
+...........rrrrrr...
+..........rrrrrrrr..
+.........rrrrrrrrrr.
+.........rrrrrrrrrrr
+........rrrrrrrrrrrr
+........rrrrrrrrrrrr
+........rrrrrrrrrrrr
+.....rrrrrrrrrrrrrrr
+...rrrrrrrrrrrrrrrrr
+.rrrrrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrrrrr.
+..rrrrrrrrrrr.rrrr..
+....r...............

@@ -1,0 +1,14 @@
+# бег, кадр 5 — низшая точка
+@ 26 32
+....ooo....
+...ohhho...
+...ohhhho..
+..osehhho..
+.osehshho..
+osSoessSoo.
+osooeeSSoeo
+.oohsseohho
+..oossSSoo.
+..ohoSLoho.
+...o.oohheo
+......oooo.

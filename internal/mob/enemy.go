@@ -923,18 +923,7 @@ func (e *Enemy) faceTo(p engine.Vec2) {
 	}
 }
 
-func (e *Enemy) faceVec() engine.Vec2 {
-	switch e.dir {
-	case sprite.Up:
-		return engine.Vec2{X: 0, Y: -1}
-	case sprite.Left:
-		return engine.Vec2{X: -1, Y: 0}
-	case sprite.Right:
-		return engine.Vec2{X: 1, Y: 0}
-	default:
-		return engine.Vec2{X: 0, Y: 1}
-	}
-}
+func (e *Enemy) faceVec() engine.Vec2 { return e.dir.Vec() }
 
 // step двигает врага. Скольжение вдоль стен и смену этажа берёт на себя поле;
 // здесь остаётся заметить, что шаг не удался, и передумать.

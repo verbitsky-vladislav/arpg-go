@@ -1,0 +1,15 @@
+# бег, кадр 2
+@ 26 31
+...oooo...
+...oehho..
+..oseeeho.
+.osssesSo.
+oseshsSLSo
+.osSoesSeo
+.oSSoeeso.
+..oosSsso.
+..osSSSoho
+..oSSLohho
+.osSoohoo.
+..osSoo...
+...ooo....

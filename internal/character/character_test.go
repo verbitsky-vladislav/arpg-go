@@ -127,3 +127,43 @@ func TestOnMoveHasClips(t *testing.T) {
 		}
 	}
 }
+
+// TestEightDirections — у каждой пары все восемь направлений нарисованы
+// по-настоящему, а не подменены ближайшей стороной света.
+//
+// Проверка на подмену идёт по кадрам: у отката диагональ и боковое
+// направление указывали бы на один и тот же кусок атласа. Без неё тест
+// прошёл бы и на четырёхрядном паке — Clip там возвращает не nil, а
+// запасной клип, и разницы по указателю не видно.
+func TestEightDirections(t *testing.T) {
+	cat, ps := packs(t)
+	pairs := [][2]sprite.Dir{
+		{sprite.DownRight, sprite.Right},
+		{sprite.DownLeft, sprite.Left},
+		{sprite.UpRight, sprite.Right},
+		{sprite.UpLeft, sprite.Left},
+	}
+	for _, bid := range cat.BodyIDs() {
+		for _, lid := range cat.LoadoutIDs() {
+			key := bid + "/" + lid
+			p := ps[key]
+			for _, n := range p.Anims() {
+				for _, pair := range pairs {
+					diag, side := p.Clip(n, pair[0]), p.Clip(n, pair[1])
+					if diag == nil {
+						t.Errorf("%s/%s: нет клипа для %v", key, n, pair[0])
+						continue
+					}
+					if len(diag.Frames) == 0 || len(side.Frames) == 0 {
+						t.Errorf("%s/%s: пустой клип", key, n)
+						continue
+					}
+					if diag.Frames[0] == side.Frames[0] {
+						t.Errorf("%s/%s: %v подменено на %v — диагональ не нарисована",
+							key, n, pair[0], pair[1])
+					}
+				}
+			}
+		}
+	}
+}
