@@ -9,7 +9,7 @@
 
 | | о чём |
 |---|---|
-| [worldgen/worldgen.spec.md](worldgen/worldgen.spec.md) | что на самом деле лежит в купленном тайлсете и что из этого следует для генератора |
+| [worldgen/worldgen.spec.md](worldgen/worldgen.spec.md) | что на самом деле лежит в тайлсете и что из этого следует для генератора |
 | [worldgen/autotiling.md](worldgen/autotiling.md) | угловая dual-grid разметка: почему не blob-47 и как считается стык |
 | [worldgen/layers_and_plateau.md](worldgen/layers_and_plateau.md) | три уровня высоты, обрыв, лестницы, лианы и тени |
 | [worldgen/manifest.schema.md](worldgen/manifest.schema.md) | манифест биома: чем тайл является, какие роли обязательны |
