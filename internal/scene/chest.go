@@ -8,6 +8,7 @@ package scene
 import (
 	"encoding/json"
 	"fmt"
+	"image/color"
 	"io/fs"
 	"math"
 	"math/rand/v2"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/vladislav/game/internal/assets"
 	"github.com/vladislav/game/internal/atlas"
+	"github.com/vladislav/game/internal/audio"
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/engine"
 	"github.com/vladislav/game/internal/item"
@@ -32,11 +34,13 @@ const (
 	// chestReach — с какого расстояния сундук можно открыть. Чуть больше
 	// радиуса тела: тянуться к сундуку вплотную неудобно.
 	chestReach = 30
-	// Сундук ставится за краем экрана: половина диагонали кадра — это самая
-	// дальняя точка, которую видно, поэтому ближе неё он бы просто торчал в
-	// углу. Дальше верхней границы искать бессмысленно — до него не дойдут.
-	chestNear = 380
-	chestFar  = 560
+	// Сундук ставится в поле зрения героя: игрок должен увидеть его сразу, а
+	// не искать по карте. Верхняя граница меньше половины высоты экрана
+	// (360/2 = 180), поэтому сундук виден с точки старта в любую сторону, а не
+	// только вбок, где экран шире. Ближняя граница — чтобы он не стоял у героя
+	// под ногами.
+	chestNear = 80
+	chestFar  = 160
 	// chestTries — сколько точек перебрать: на карте с водой и обрывами
 	// годных мест меньше, чем кажется.
 	chestTries = 600
@@ -97,6 +101,9 @@ type chest struct {
 	tick    int
 	opening bool
 	opened  bool // крышка уже поднята
+
+	pulse int  // счётчик для мерцания подсветки
+	near  bool // герой рядом: подсветка ярче
 }
 
 // newChest готовит сундук: грузит его пак, катает добычу и ищет место рядом с
@@ -270,7 +277,25 @@ func (c *chest) update() bool {
 	return false
 }
 
-// draw рисует сундук: точка pos — его основание, как у зверей.
+// Подсветка сундука. Ореол рисуется самим спрайтом, размноженным по восьми
+// сторонам со сложением цвета: у пиксель-арта это дешевле и честнее отдельной
+// маски — контур повторяет силуэт кадра, каким бы он ни был.
+var chestGlowDirs = [8]engine.Vec2{
+	{X: 1}, {X: -1}, {Y: 1}, {Y: -1},
+	{X: 1, Y: 1}, {X: 1, Y: -1}, {X: -1, Y: 1}, {X: -1, Y: -1},
+}
+
+// chestGlow — цвет ореола (тёплое золото) и его сила в трёх положениях.
+var chestGlow = color.RGBA{0xff, 0xd2, 0x6a, 0xff}
+
+const (
+	chestGlowIdle   = 0.30 // просто стоит и зовёт
+	chestGlowNear   = 0.85 // герой рядом — можно открывать
+	chestGlowOpened = 0.10 // уже вскрыт: тлеет, чтобы не терялся на карте
+)
+
+// draw рисует сундук: точка pos — его основание, как у зверей. Перед самим
+// спрайтом кладётся ореол, иначе сундук теряется среди травы и камней.
 func (c *chest) draw(dst *ebiten.Image, at engine.Vec2) {
 	if c == nil {
 		return
@@ -280,9 +305,35 @@ func (c *chest) draw(dst *ebiten.Image, at engine.Vec2) {
 		return
 	}
 	b := img.Bounds()
+	x := math.Round(at.X - float64(b.Dx())/2)
+	y := math.Round(at.Y - float64(b.Dy()))
+
+	if k := c.glow(); k > 0 {
+		for _, d := range chestGlowDirs {
+			op := &ebiten.DrawImageOptions{Blend: ebiten.BlendLighter}
+			op.GeoM.Translate(x+d.X, y+d.Y)
+			op.ColorScale.ScaleWithColor(chestGlow)
+			op.ColorScale.ScaleAlpha(float32(k))
+			dst.DrawImage(img, op)
+		}
+	}
+
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(math.Round(at.X-float64(b.Dx())/2), math.Round(at.Y-float64(b.Dy())))
+	op.GeoM.Translate(x, y)
 	dst.DrawImage(img, op)
+}
+
+// glow — сила подсветки в этот кадр. Мерцание медленное и неглубокое: сундук
+// должен притягивать взгляд, а не мигать как аварийка.
+func (c *chest) glow() float64 {
+	k := chestGlowIdle
+	switch {
+	case c.opened:
+		k = chestGlowOpened
+	case c.near:
+		k = chestGlowNear
+	}
+	return k * (0.8 + 0.2*math.Sin(float64(c.pulse)/18))
 }
 
 // depth — глубина для сортировки с прочими телами.
@@ -295,6 +346,8 @@ func (g *Game) useChest() Scene {
 	if c == nil {
 		return nil
 	}
+	c.pulse++
+	c.near = g.pl.Alive() && c.nearPlayer(g.pl.Pos)
 	show := c.update() // крышка поднялась именно в этот тик
 	if g.pl.Alive() && c.nearPlayer(g.pl.Pos) &&
 		inpututil.IsKeyJustPressed(settings.Key(settings.ActUse)) {
@@ -302,6 +355,7 @@ func (g *Game) useChest() Scene {
 			show = true // уже открыт — просто заглянуть снова
 		} else {
 			c.begin()
+			g.sfx.at(audio.ChestOpen, c.pos)
 		}
 	}
 	if !show {

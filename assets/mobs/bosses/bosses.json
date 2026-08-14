@@ -42,9 +42,9 @@
       "_power": "Как и у обычных слизней, отбирать нечего: в parts только тело и тень, отдельного слоя-эффекта нет. Босс даёт корону, а не силу.",
       "notes": "Единственный готовый босс: три тира — это три его версии по силе, а не три разных существа.",
       "tiers": {
-        "t1": { "title": { "ru": "Королевский слизень", "en": "Slime king" }, "hp": 260, "damage": 18, "speed": { "walk": 22, "run": 52 }, "xp": { "min": 167, "max": 260 }, "drop_rolls": 2 },
-        "t2": { "title": { "ru": "Королева слизней", "en": "Slime queen" }, "hp": 420, "damage": 24, "speed": { "walk": 23, "run": 56 }, "xp": { "min": 338, "max": 528 }, "drop_rolls": 3 },
-        "t3": { "title": { "ru": "Прародитель слизи", "en": "Ooze progenitor" }, "hp": 640, "damage": 32, "speed": { "walk": 24, "run": 60 }, "xp": { "min": 724, "max": 1131 }, "drop_rolls": 4 }
+        "t1": { "title": { "ru": "Королевский слизень", "en": "Slime king" }, "hp": 260, "damage": 18, "speed": { "walk": 22, "run": 52 }, "xp": { "min": 108, "max": 170 }, "drop_rolls": 2 },
+        "t2": { "title": { "ru": "Королева слизней", "en": "Slime queen" }, "hp": 420, "damage": 24, "speed": { "walk": 23, "run": 56 }, "xp": { "min": 159, "max": 248 }, "drop_rolls": 3 },
+        "t3": { "title": { "ru": "Прародитель слизи", "en": "Ooze progenitor" }, "hp": 640, "damage": 32, "speed": { "walk": 24, "run": 60 }, "xp": { "min": 222, "max": 347 }, "drop_rolls": 4 }
       }
     }
   }

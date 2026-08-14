@@ -1,7 +1,6 @@
 package scene
 
 import (
-	"math"
 	"math/rand/v2"
 	"os"
 	"testing"
@@ -96,13 +95,24 @@ func TestChestSpotRules(t *testing.T) {
 	}
 }
 
-// TestChestOffScreen — «за пределом экрана» проверяется не на глаз: ближняя
-// граница обязана быть дальше половины диагонали кадра, иначе сундук видно с
-// самого старта и идти к нему незачем.
-func TestChestOffScreen(t *testing.T) {
-	half := math.Hypot(config.ScreenW/2, config.ScreenH/2)
-	if chestNear <= half {
-		t.Errorf("сундук ставится в %d px, а видно до %.0f px", chestNear, half)
+// TestChestInView — «в поле зрения» проверяется не на глаз. Дальняя граница
+// обязана быть меньше половины высоты экрана: по вертикали кадр у́же, чем по
+// горизонтали, и сундук, поставленный строго над героем, иначе окажется за
+// краем — а он должен быть виден с точки старта в любую сторону.
+//
+// Раньше правило было ровно обратным (сундук прятали за экран, чтобы к нему
+// шли), и на игре это читалось как «сундука нет».
+func TestChestInView(t *testing.T) {
+	halfH := float64(config.ScreenH) / 2
+	if chestFar >= halfH {
+		t.Errorf("сундук ставится до %d px, а по вертикали видно только %.0f px", chestFar, halfH)
+	}
+	if chestNear <= chestReach {
+		t.Errorf("ближняя граница %d px не дальше вытянутой руки (%d px) — сундук встанет под ногами",
+			chestNear, chestReach)
+	}
+	if chestNear >= chestFar {
+		t.Errorf("кольцо постановки пустое: %d..%d", chestNear, chestFar)
 	}
 }
 
@@ -160,5 +170,52 @@ func TestRunHasChest(t *testing.T) {
 	}
 	if !g.chest.inv.Empty() {
 		t.Error("после переноса в пустую сумку в сундуке что-то осталось")
+	}
+}
+
+// TestChestGlow — подсветка говорит игроку три разные вещи и не гаснет там, где
+// должна звать: закрытый сундук светится всегда, рядом с героем ярче, вскрытый
+// едва тлеет.
+//
+// Меряется среднее по полному циклу мерцания: сравнивать мгновенные значения
+// нельзя — они зависят от фазы.
+func TestChestGlow(t *testing.T) {
+	mean := func(c *chest) float64 {
+		var sum float64
+		const cycle = 240
+		for i := range cycle {
+			c.pulse = i
+			sum += c.glow()
+		}
+		return sum / cycle
+	}
+
+	idle := mean(&chest{})
+	near := mean(&chest{near: true})
+	opened := mean(&chest{opened: true})
+
+	if idle <= 0 {
+		t.Error("закрытый сундук не подсвечен вовсе — его не найти в траве")
+	}
+	if near <= idle {
+		t.Errorf("рядом с героем подсветка %.2f не ярче обычной %.2f", near, idle)
+	}
+	if opened >= idle {
+		t.Errorf("вскрытый сундук светится как закрытый (%.2f против %.2f)", opened, idle)
+	}
+	if opened <= 0 {
+		t.Error("вскрытый сундук погас совсем — на карте его будет не найти")
+	}
+
+	// Мерцание должно быть заметным, но не мельканием: размах в пределах
+	// четверти от силы.
+	c := &chest{}
+	lo, hi := 1.0, 0.0
+	for i := range 240 {
+		c.pulse = i
+		lo, hi = min(lo, c.glow()), max(hi, c.glow())
+	}
+	if hi-lo > idle*0.5 {
+		t.Errorf("подсветка мигает слишком сильно: размах %.2f при силе %.2f", hi-lo, idle)
 	}
 }

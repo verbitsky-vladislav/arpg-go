@@ -103,6 +103,7 @@ func (g *Generator) Run() {
 func (g *Generator) ToMapV1(seed int64) *MapV1 {
 	mp := &MapV1{
 		Format:      "map_format v1",
+		Rev:         MapRev,
 		Biome:       g.Manifest.ID,
 		Seed:        seed,
 		Width:       g.P.Width,
@@ -266,9 +267,13 @@ func (g *Generator) markPropCells(cells []uint8, sw, sh int) {
 		// Форма — приплюснутый овал: смотрим на мир сверху под углом, и то, чем
 		// объект занимает ЗЕМЛЮ, по вертикали короче, чем по горизонтали. Центр —
 		// середина нарисованной клетки якоря, то есть основание спрайта.
-		sub := float64(g.Manifest.TileSize) / navScale
-		cxp := float64(x*g.Manifest.TileSize + g.Manifest.TileSize)
-		cyp := float64(y*g.Manifest.TileSize + g.Manifest.TileSize)
+		// Точка опоры объекта в мире. Рендер ставит спрайт так, что опора его
+		// РИСУНКА (p.Base) попадает сюда же, поэтому горизонтальной поправки не
+		// нужно: смещение рисунка внутри холста уже учтено при отрисовке.
+		ts := g.Manifest.TileSize
+		sub := float64(ts) / navScale
+		baseX := float64(x*ts + ts)        // центр нарисованной клетки
+		baseY := float64(y*ts + ts + ts/2) // её низ — линия, по которой объект стоит
 		rx := float64(p.Body) / 2
 		if rx < sub {
 			rx = sub // минимум — прежняя клетка под якорем
@@ -289,6 +294,10 @@ func (g *Generator) markPropCells(cells []uint8, sw, sh int) {
 		if iry < sub/2 {
 			iry = sub / 2
 		}
+		// Овал прижат НИЗОМ к линии опоры: ниже нарисованного объект землю не
+		// занимает. Раньше он центрировался по клетке и половиной свисал ниже
+		// рисунка — у лежащего бревна это было заметнее всего.
+		cxp, cyp := baseX, baseY-ry
 		s0, s1 := int((cxp-rx)/sub), int((cxp+rx)/sub)
 		t0, t1 := int((cyp-ry)/sub), int((cyp+ry)/sub)
 		for s := s0; s <= s1; s++ {

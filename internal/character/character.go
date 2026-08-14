@@ -19,6 +19,7 @@ import (
 	"sort"
 
 	"github.com/vladislav/game/internal/assets"
+	"github.com/vladislav/game/internal/combat"
 	"github.com/vladislav/game/internal/sprite"
 )
 
@@ -32,8 +33,11 @@ type Title struct {
 // домножают, поэтому «сколько у героя здоровья» — это одно число здесь, а не
 // четыре по вариантам.
 type Base struct {
-	HP    int `json:"hp"`
-	Speed struct {
+	HP int `json:"hp"`
+	// Damage — базовый урон героя: то, что он наносит вообще без оружия.
+	// Оружие не заменяет его, а прибавляется к нему (см. Player.Power).
+	Damage combat.Rolls `json:"damage"`
+	Speed  struct {
 		Walk float64 `json:"walk"`
 		Run  float64 `json:"run"`
 	} `json:"speed"`
@@ -61,12 +65,16 @@ type Body struct {
 	ID string `json:"-"` // ключ записи, проставляется загрузчиком
 }
 
-// Attack — как бьёт лоадаут. Сектор перед персонажем: reach — его радиус, arc —
-// раствор в градусах.
+// Attack — как бьёт лоадаут: геометрия и темп замаха, но не его сила. Сектор
+// перед персонажем: reach — его радиус, arc — раствор в градусах.
+//
+// Урона здесь нет намеренно. Лоадаут — это набор анимаций: насколько широко
+// герой машет и на каком кадре достаёт. Сколько от этого больно, решают
+// базовый урон персонажа и вещь в руке (internal/combat, item.Item.Weapon), —
+// иначе два разных клинка с одними анимациями били бы одинаково.
 type Attack struct {
-	Damage int     `json:"damage"`
-	Reach  float64 `json:"reach"`
-	Arc    float64 `json:"arc"`
+	Reach float64 `json:"reach"`
+	Arc   float64 `json:"arc"`
 	// SwingTicks — длительность замаха в тиках. Клип удара растягивается под
 	// неё: fps в manifest.json один на весь пак (его ставит assetnorm) и к
 	// скорости боя отношения не имеет.
@@ -80,10 +88,13 @@ type Attack struct {
 	HitAt map[string]int `json:"hit_at"`
 }
 
-// CanStrike — умеет ли лоадаут бить. Нулевой урон означает «оружия нет, драться
-// нечем»: безоружный герой не атакует вообще, а не бьёт слабо. Это свойство
-// данных, а не кода, — вооружившись, тот же герой начнёт бить без правок.
-func (l *Loadout) CanStrike() bool { return l != nil && l.Attack.Damage > 0 }
+// CanStrike — есть ли у лоадаута замах. Нулевой размах означает «этим не бьют
+// вовсе»: не «бьёт слабо», а не атакует. Голыми руками герой драться умеет —
+// у unarmed размах свой, короткий, — но лоадаут без размаха остаётся законным
+// состоянием, и код обязан его пережить.
+func (l *Loadout) CanStrike() bool {
+	return l != nil && l.Attack.Reach > 0 && l.Attack.SwingTicks > 0
+}
 
 // Loadout — чем персонаж вооружён: подкаталог тела со своим набором анимаций.
 type Loadout struct {
@@ -191,6 +202,7 @@ func (c *Catalog) Validate() []string {
 	if c.Base.AttackMoveScale <= 0 || c.Base.AttackMoveScale > 1 {
 		add("base.attack_move_scale=%.2f вне (0..1]", c.Base.AttackMoveScale)
 	}
+	probs = append(probs, c.Base.Damage.Problems("base.damage")...)
 	if len(c.Bodies) == 0 {
 		add("не задано ни одного тела")
 	}
@@ -224,18 +236,14 @@ func (c *Catalog) Validate() []string {
 		}
 		a := l.Attack
 		switch {
-		case a.Damage < 0:
-			add("%s: attack.damage=%d отрицателен", id, a.Damage)
 		case !l.CanStrike():
-			// Лоадаут без удара — законное состояние (безоружный). Тогда и
-			// остального удара быть не должно: половина заполненных полей
-			// означала бы, что кто-то выключил урон и забыл про прочее.
+			// Лоадаут без замаха — законное состояние. Тогда и остального удара
+			// быть не должно: половина заполненных полей означала бы, что
+			// кто-то выключил размах и забыл про прочее.
 			if a.Reach != 0 || a.Arc != 0 || a.SwingTicks != 0 ||
 				a.CooldownTicks != 0 || a.Knockback != 0 || a.OnMove || len(a.HitAt) > 0 {
-				add("%s: attack.damage=0 (лоадаут не бьёт), но остальные поля удара заполнены", id)
+				add("%s: у лоадаута нет размаха (attack.reach/swing_ticks), но остальные поля удара заполнены", id)
 			}
-		case a.Reach <= 0:
-			add("%s: attack.reach <= 0", id)
 		case a.Arc <= 0 || a.Arc > 360:
 			add("%s: attack.arc=%.0f вне 0..360", id, a.Arc)
 		case a.SwingTicks <= 0:

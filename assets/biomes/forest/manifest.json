@@ -1075,20 +1075,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 26,
+   "base": [
+    13,
+    30
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "open",
-    "mid",
-    "dense",
     "plateau"
    ],
    "weight": 18,
@@ -1103,20 +1101,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 13,
+   "base": [
+    13,
+    24
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20,
@@ -1135,16 +1131,14 @@
     2
    ],
    "body": 17,
+   "base": [
+    16,
+    24
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20,
@@ -1160,18 +1154,17 @@
    ],
    "anchor": [
     2,
-    4
+    3
    ],
    "body": 26,
+   "base": [
+    34,
+    48
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "open",
-    "mid",
     "plateau"
    ],
    "weight": 14,
@@ -1186,20 +1179,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 16,
+   "base": [
+    15,
+    26
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20,
@@ -1218,16 +1209,14 @@
     1
    ],
    "body": 9,
+   "base": [
+    6,
+    14
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20,
@@ -1242,20 +1231,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 16,
+   "base": [
+    14,
+    23
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20,
@@ -1270,20 +1257,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 17,
+   "base": [
+    15,
+    26
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20,
@@ -1302,16 +1287,14 @@
     1
    ],
    "body": 9,
+   "base": [
+    7,
+    12
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20,
@@ -1326,19 +1309,19 @@
     8
    ],
    "anchor": [
-    4,
-    8
+    3,
+    6
    ],
    "body": 72,
+   "base": [
+    58,
+    82
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -1352,18 +1335,18 @@
    ],
    "anchor": [
     2,
-    4
+    3
    ],
    "body": 35,
+   "base": [
+    32,
+    46
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -1376,19 +1359,19 @@
     4
    ],
    "anchor": [
-    2,
-    4
+    1,
+    3
    ],
    "body": 31,
+   "base": [
+    30,
+    43
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -1401,19 +1384,19 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 28,
+   "base": [
+    15,
+    30
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -1426,20 +1409,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 20,
+   "base": [
+    14,
+    31
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20
@@ -1453,19 +1434,19 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 24,
+   "base": [
+    14,
+    27
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -1478,20 +1459,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 14,
+   "base": [
+    13,
+    26
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20
@@ -1505,20 +1484,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 24,
+   "base": [
+    15,
+    29
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20
@@ -1532,20 +1509,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 23,
+   "base": [
+    14,
+    26
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20
@@ -1563,15 +1538,14 @@
     4
    ],
    "body": 34,
+   "base": [
+    33,
+    49
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "open",
-    "mid",
     "plateau"
    ],
    "weight": 14,
@@ -1590,16 +1564,14 @@
     2
    ],
    "body": 25,
+   "base": [
+    17,
+    30
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "open",
-    "mid",
-    "dense",
     "plateau"
    ],
    "weight": 18,
@@ -1618,16 +1590,14 @@
     2
    ],
    "body": 19,
+   "base": [
+    16,
+    24
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20
@@ -1641,20 +1611,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 25,
+   "base": [
+    15,
+    28
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "open",
-    "mid",
-    "dense",
     "plateau"
    ],
    "weight": 18,
@@ -1673,16 +1641,14 @@
     1
    ],
    "body": 11,
+   "base": [
+    7,
+    13
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20,
@@ -1697,20 +1663,19 @@
     4
    ],
    "anchor": [
-    2,
+    1,
     4
    ],
    "body": 32,
+   "base": [
+    31,
+    49
+   ],
    "collides": false,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open"
    ],
    "weight": 24
   },
@@ -1727,16 +1692,14 @@
     1
    ],
    "body": 15,
+   "base": [
+    8,
+    16
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20
@@ -1750,20 +1713,19 @@
     4
    ],
    "anchor": [
-    2,
+    1,
     4
    ],
    "body": 35,
+   "base": [
+    30,
+    51
+   ],
    "collides": false,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open"
    ],
    "weight": 24
   },
@@ -1776,20 +1738,19 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 21,
+   "base": [
+    15,
+    27
+   ],
    "collides": false,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open"
    ],
    "weight": 24
   },
@@ -1802,20 +1763,19 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 28,
+   "base": [
+    15,
+    32
+   ],
    "collides": false,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open"
    ],
    "weight": 24
   },
@@ -1828,20 +1788,19 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 25,
+   "base": [
+    14,
+    29
+   ],
    "collides": false,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open"
    ],
    "weight": 24
   },
@@ -1854,20 +1813,19 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 27,
+   "base": [
+    15,
+    30
+   ],
    "collides": false,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open"
    ],
    "weight": 24
   },
@@ -1880,20 +1838,19 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 29,
+   "base": [
+    15,
+    31
+   ],
    "collides": false,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open"
    ],
    "weight": 24
   },
@@ -1906,20 +1863,19 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 24,
+   "base": [
+    14,
+    27
+   ],
    "collides": false,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open"
    ],
    "weight": 24
   },
@@ -1936,16 +1892,14 @@
     1
    ],
    "body": 13,
+   "base": [
+    8,
+    15
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20
@@ -1959,20 +1913,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 16,
+   "base": [
+    15,
+    25
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20
@@ -1990,16 +1942,14 @@
     1
    ],
    "body": 13,
+   "base": [
+    7,
+    15
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20
@@ -2013,20 +1963,19 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 30,
+   "base": [
+    14,
+    32
+   ],
    "collides": false,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open"
    ],
    "weight": 24
   },
@@ -2039,19 +1988,18 @@
     4
    ],
    "anchor": [
-    2,
+    1,
     4
    ],
    "body": 49,
+   "base": [
+    31,
+    63
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "open",
-    "mid",
     "plateau"
    ],
    "weight": 14,
@@ -2070,15 +2018,14 @@
     4
    ],
    "body": 37,
+   "base": [
+    32,
+    55
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "open",
-    "mid",
     "plateau"
    ],
    "weight": 14,
@@ -2093,19 +2040,18 @@
     4
    ],
    "anchor": [
-    2,
+    1,
     4
    ],
    "body": 30,
+   "base": [
+    31,
+    49
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "open",
-    "mid",
     "plateau"
    ],
    "weight": 14,
@@ -2120,20 +2066,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 16,
+   "base": [
+    15,
+    25
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20,
@@ -2148,20 +2092,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 18,
+   "base": [
+    15,
+    28
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20
@@ -2175,20 +2117,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 20,
+   "base": [
+    14,
+    28
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20
@@ -2206,16 +2146,14 @@
     2
    ],
    "body": 13,
+   "base": [
+    16,
+    25
+   ],
    "collides": false,
    "on_trail": true,
    "on": [
     "ground_a",
-    "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid",
-    "open",
     "plateau"
    ],
    "weight": 20
@@ -2229,18 +2167,18 @@
     8
    ],
    "anchor": [
-    4,
+    3,
     8
    ],
    "body": 88,
+   "base": [
+    56,
+    118
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a"
-   ],
-   "zone": [
-    "open",
-    "mid"
    ],
    "weight": 4,
    "prefab": true
@@ -2254,18 +2192,18 @@
     8
    ],
    "anchor": [
-    4,
-    8
+    3,
+    7
    ],
    "body": 53,
+   "base": [
+    52,
+    101
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a"
-   ],
-   "zone": [
-    "open",
-    "mid"
    ],
    "weight": 4,
    "prefab": true
@@ -2279,18 +2217,18 @@
     8
    ],
    "anchor": [
-    4,
-    8
+    3,
+    6
    ],
    "body": 57,
+   "base": [
+    63,
+    96
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a"
-   ],
-   "zone": [
-    "open",
-    "mid"
    ],
    "weight": 4,
    "prefab": true
@@ -2308,14 +2246,14 @@
     4
    ],
    "body": 34,
+   "base": [
+    32,
+    56
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a"
-   ],
-   "zone": [
-    "open",
-    "mid"
    ],
    "weight": 4,
    "prefab": true
@@ -2329,18 +2267,18 @@
     4
    ],
    "anchor": [
-    2,
-    4
+    1,
+    3
    ],
    "body": 33,
+   "base": [
+    31,
+    48
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a"
-   ],
-   "zone": [
-    "open",
-    "mid"
    ],
    "weight": 4,
    "prefab": true
@@ -2354,18 +2292,18 @@
     8
    ],
    "anchor": [
-    4,
+    3,
     8
    ],
    "body": 88,
+   "base": [
+    55,
+    118
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a"
-   ],
-   "zone": [
-    "open",
-    "mid"
    ],
    "weight": 4,
    "prefab": true
@@ -2379,18 +2317,18 @@
     8
    ],
    "anchor": [
-    4,
-    8
+    3,
+    7
    ],
    "body": 51,
+   "base": [
+    52,
+    100
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a"
-   ],
-   "zone": [
-    "open",
-    "mid"
    ],
    "weight": 4,
    "prefab": true
@@ -2404,18 +2342,18 @@
     4
    ],
    "anchor": [
-    2,
+    1,
     4
    ],
    "body": 58,
+   "base": [
+    30,
+    64
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a"
-   ],
-   "zone": [
-    "open",
-    "mid"
    ],
    "weight": 4,
    "prefab": true
@@ -2429,18 +2367,18 @@
     4
    ],
    "anchor": [
-    2,
+    1,
     4
    ],
    "body": 36,
+   "base": [
+    30,
+    56
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a"
-   ],
-   "zone": [
-    "open",
-    "mid"
    ],
    "weight": 4,
    "prefab": true
@@ -2454,18 +2392,18 @@
     2
    ],
    "anchor": [
-    1,
+    0,
     2
    ],
    "body": 32,
+   "base": [
+    15,
+    32
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a"
-   ],
-   "zone": [
-    "open",
-    "mid"
    ],
    "weight": 4,
    "prefab": true
@@ -2480,18 +2418,18 @@
    ],
    "anchor": [
     4,
-    8
+    7
    ],
    "body": 59,
+   "base": [
+    64,
+    101
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -2508,15 +2446,15 @@
     4
    ],
    "body": 31,
+   "base": [
+    32,
+    51
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -2529,19 +2467,19 @@
     8
    ],
    "anchor": [
-    4,
-    8
+    3,
+    6
    ],
    "body": 44,
+   "base": [
+    61,
+    96
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30,
    "anim": {
@@ -2562,15 +2500,15 @@
     4
    ],
    "body": 31,
+   "base": [
+    34,
+    55
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30,
    "anim": {
@@ -2587,19 +2525,19 @@
     4
    ],
    "anchor": [
-    2,
+    1,
     4
    ],
    "body": 37,
+   "base": [
+    28,
+    63
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -2612,19 +2550,19 @@
     4
    ],
    "anchor": [
-    2,
+    1,
     4
    ],
    "body": 24,
+   "base": [
+    30,
+    50
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -2637,19 +2575,19 @@
     8
    ],
    "anchor": [
-    4,
-    8
+    3,
+    7
    ],
    "body": 42,
+   "base": [
+    62,
+    103
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -2663,18 +2601,18 @@
    ],
    "anchor": [
     4,
-    8
+    7
    ],
    "body": 49,
+   "base": [
+    65,
+    103
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -2687,19 +2625,19 @@
     4
    ],
    "anchor": [
-    2,
+    1,
     4
    ],
    "body": 35,
+   "base": [
+    31,
+    53
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -2712,19 +2650,19 @@
     8
    ],
    "anchor": [
-    4,
-    8
+    3,
+    7
    ],
    "body": 61,
+   "base": [
+    62,
+    102
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30,
    "anim": {
@@ -2741,19 +2679,19 @@
     8
    ],
    "anchor": [
-    4,
-    8
+    3,
+    7
    ],
    "body": 40,
+   "base": [
+    61,
+    101
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -2766,19 +2704,19 @@
     4
    ],
    "anchor": [
-    2,
+    1,
     4
    ],
    "body": 55,
+   "base": [
+    30,
+    63
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -2795,15 +2733,15 @@
     4
    ],
    "body": 35,
+   "base": [
+    33,
+    61
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30
   },
@@ -2820,15 +2758,15 @@
     4
    ],
    "body": 43,
+   "base": [
+    35,
+    64
+   ],
    "collides": true,
    "on_trail": false,
    "on": [
     "ground_a",
     "plateau"
-   ],
-   "zone": [
-    "dense",
-    "mid"
    ],
    "weight": 30,
    "anim": {

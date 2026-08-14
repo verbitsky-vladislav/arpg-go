@@ -46,14 +46,15 @@ func (b *bagPane) aim(mx, my float64) {
 // hovered — есть ли вообще что-то под курсором.
 func (b *bagPane) hovered() bool { return b.slot >= 0 || b.worn != "" }
 
-// note — подпись про то, на что наведён курсор.
+// note — подпись про то, на что наведён курсор. У оружия к имени добавляются
+// его боевые свойства: сравнить две находки, не примерив обе, иначе нечем.
 func (b *bagPane) note(g *Game) string {
 	switch {
 	case b.slot >= 0:
-		return b.w.nameAt(g.bag, b.slot)
+		return g.itemNote(g.bag.At(b.slot).ID)
 	case b.worn != "":
-		if n := g.wornName(b.worn); n != "" {
-			return n
+		if s := g.eq.At(b.worn); !s.Empty() {
+			return g.itemNote(s.ID)
 		}
 		return equipTitle(b.worn)
 	}
@@ -108,6 +109,7 @@ func newEquipView(g *Game) *equipView {
 func (v *equipView) Update() (Scene, error) {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) ||
 		inpututil.IsKeyJustPressed(settings.Key(settings.ActBag)) {
+		uiCancel()
 		return v.g, nil
 	}
 	mx, my := ebiten.CursorPosition()

@@ -310,14 +310,16 @@ func (v *viewer) drawLive(dst *ebiten.Image) {
 			float32(v.p.Radius()), 1, color.RGBA{0x00, 0xff, 0xff, 0xaa}, false)
 	}
 
-	a := v.p.Loadout.Attack
+	// Просмотрщик показывает голого героя: вещей у него нет, поэтому урон —
+	// базовый. Числа оружия видно в игре, здесь важна геометрия замаха.
+	a, pow := v.p.Loadout.Attack, v.p.Power()
 	lines := []string{
 		fmt.Sprintf("%s / %s%s", v.p.Body.ID, v.p.Loadout.ID, pausedMark(v.pause)),
 		fmt.Sprintf("состояние %-7s клип %-12s взгляд %s", v.p.State(), v.p.Clip(), v.p.Dir()),
 		fmt.Sprintf("hp %d/%d%s   скорость %.0f/%.0f", v.p.HP, v.p.MaxHP,
 			invulnMark(v.p.Invulnerable()), v.p.Speed(false), v.p.Speed(true)),
-		fmt.Sprintf("удар: урон %d  радиус %.0f  сектор %.0f°  замах %d т.  откат %d т.  на ходу %v",
-			a.Damage, a.Reach, a.Arc, a.SwingTicks, a.CooldownTicks, a.OnMove),
+		fmt.Sprintf("удар: урон %s  радиус %.0f  сектор %.0f°  замах %d т.  откат %d т.  на ходу %v",
+			pow.Damage, a.Reach, a.Arc, a.SwingTicks, a.CooldownTicks, a.OnMove),
 	}
 	for i, s := range lines {
 		ui.DrawText(dst, s, 8, float64(8+i*12), color.White)

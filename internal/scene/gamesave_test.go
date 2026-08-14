@@ -1,8 +1,11 @@
 package scene
 
 import (
+	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/vladislav/game/internal/assets"
@@ -120,6 +123,132 @@ func TestRunSurvivesSave(t *testing.T) {
 	g2.persist()
 	if n := st.Load().At(0).Kills[save.KillAnimal("black_grouse")]; n != 3 {
 		t.Errorf("после второго забега тетеревов %d, ожидалось 3", n)
+	}
+}
+
+// TestWorldSurvivesSave — мир возвращается своим: та же карта, те же звери и
+// враги на тех же местах и с тем же здоровьем, та же добыча на земле.
+//
+// Это главное отличие от «пересобрать по сиду»: карта проверяется не по сиду, а
+// по содержимому, потому что сид одинаковый и у пересобранной.
+func TestWorldSurvivesSave(t *testing.T) {
+	l := assets.NewLoader(os.DirFS("../../assets"))
+	st := save.New(filepath.Join(t.TempDir(), "chars.json"))
+
+	g, err := NewSavedGame(l, nil, st, 0, NewChar("ХОЗЯИН", "male"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := st.LoadMap(0); !ok {
+		t.Fatal("карта нового персонажа не легла на диск")
+	}
+	if len(g.sp.Animals()) == 0 || len(g.es.Enemies()) == 0 {
+		t.Fatal("новый мир пуст — сохранять нечего")
+	}
+
+	// Мир, поживший своей жизнью: раненый зверь, раненый враг, вещь на земле.
+	beast := g.sp.Animals()[0]
+	beast.Hit(1)
+	foe := g.es.Enemies()[0]
+	foe.Hurt(1, foe.Pos)
+	g.dropStack(g.pl.Pos, g.pl.Floor(), "coin", 3)
+
+	want := worldCensus(g)
+	g.persist()
+
+	c := st.Load().At(0)
+	if len(c.Beasts) != len(want.beasts) || len(c.Foes) != len(want.foes) {
+		t.Fatalf("сохранено %d зверей и %d врагов, на карте было %d и %d",
+			len(c.Beasts), len(c.Foes), len(want.beasts), len(want.foes))
+	}
+
+	g2, err := NewSavedGame(l, nil, st, 0, c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := worldCensus(g2)
+
+	// Карта — та же самая, а не «такая же»: сравниваются сами клетки.
+	a, b := g.m.Source(), g2.m.Source()
+	if !slices.Equal(a.Layers.Ground, b.Layers.Ground) || !slices.Equal(a.Layers.Plateau, b.Layers.Plateau) {
+		t.Error("карта вернулась другой")
+	}
+	if len(a.Props) != len(b.Props) {
+		t.Errorf("объектов на карте %d, было %d", len(b.Props), len(a.Props))
+	}
+	if a.Seed != b.Seed || g.m.Spawn() != g2.m.Spawn() {
+		t.Error("сид или точка старта разошлись")
+	}
+
+	if !maps.Equal(want.beasts, got.beasts) {
+		t.Errorf("звери вернулись другими:\nбыло %v\nстало %v", want.beasts, got.beasts)
+	}
+	if !maps.Equal(want.foes, got.foes) {
+		t.Errorf("враги вернулись другими:\nбыло %v\nстало %v", want.foes, got.foes)
+	}
+	if len(g2.drops) != 1 || g2.drops[0].id != "coin" || g2.drops[0].n != 3 {
+		t.Errorf("добыча на земле не вернулась: %d штук", len(g2.drops))
+	}
+	if len(g2.drops) == 1 && g2.drops[0].pos != g.drops[0].pos {
+		t.Errorf("вещь легла в %v вместо %v", g2.drops[0].pos, g.drops[0].pos)
+	}
+}
+
+// census — перепись живого мира: кто где стоит и с каким здоровьем.
+type census struct {
+	beasts map[string]int // «вид@x,y» → здоровье
+	foes   map[string]int
+}
+
+func worldCensus(g *Game) census {
+	c := census{beasts: map[string]int{}, foes: map[string]int{}}
+	for _, a := range g.sp.Animals() {
+		if a.Alive() {
+			c.beasts[fmt.Sprintf("%s@%.0f,%.0f/%d", a.Species.ID, a.Pos.X, a.Pos.Y, a.Floor())] = a.HP
+		}
+	}
+	for _, e := range g.es.Enemies() {
+		if e.Alive() {
+			c.foes[fmt.Sprintf("%s/%s@%.0f,%.0f/%d/%v", e.Type.ID, e.Tier.ID, e.Pos.X, e.Pos.Y, e.Floor(), e.Elite)] = e.HP
+		}
+	}
+	return c
+}
+
+// TestNewCharGetsOwnWorld — новый персонаж в том же слоте получает свой мир, а
+// не наследство прежнего жильца.
+func TestNewCharGetsOwnWorld(t *testing.T) {
+	l := assets.NewLoader(os.DirFS("../../assets"))
+	st := save.New(filepath.Join(t.TempDir(), "chars.json"))
+
+	first := NewChar("ПЕРВЫЙ", "male")
+	g1, err := NewSavedGame(l, nil, st, 0, first)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g1.persist()
+
+	// Слот освобождён и занят заново — ровно то, что делает экран персонажей.
+	book := st.Load()
+	book.Delete(0)
+	st.DeleteMap(0)
+	if err := st.Save(book); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := st.LoadMap(0); ok {
+		t.Fatal("карта удалённого персонажа осталась на диске")
+	}
+
+	second := NewChar("ВТОРОЙ", "male")
+	g2, err := NewSavedGame(l, nil, st, 0, second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if second.Seed == first.Seed {
+		t.Skip("сиды совпали случайно — сравнивать миры бессмысленно")
+	}
+	if slices.Equal(g1.m.Source().Layers.Ground, g2.m.Source().Layers.Ground) {
+		t.Error("новый персонаж получил карту прежнего жильца слота")
 	}
 }
 

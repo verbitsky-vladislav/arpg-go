@@ -18,6 +18,9 @@ type Squad struct {
 	slotOf    map[*Enemy]int
 	takenBy   map[int]*Enemy
 	roleOf    map[*Enemy]Role
+	gapOf     map[*Enemy]int64 // кто занял узкое место
+	gapBy     map[int64]*Enemy
+	searchOf  map[*Enemy]int // сектор поиска
 }
 
 // Role — что особь делает в группе. Роль назначается один раз и держится:
@@ -47,6 +50,9 @@ func NewSquad() *Squad {
 		slotOf:    map[*Enemy]int{},
 		takenBy:   map[int]*Enemy{},
 		roleOf:    map[*Enemy]Role{},
+		gapOf:     map[*Enemy]int64{},
+		gapBy:     map[int64]*Enemy{},
+		searchOf:  map[*Enemy]int{},
 	}
 }
 
@@ -76,6 +82,8 @@ func (s *Squad) Prune() {
 func (s *Squad) forget(e *Enemy) {
 	delete(s.attacking, e)
 	delete(s.roleOf, e)
+	delete(s.searchOf, e)
+	s.LeaveGap(e)
 	if slot, ok := s.slotOf[e]; ok {
 		if s.takenBy[slot] == e {
 			delete(s.takenBy, slot)
@@ -164,16 +172,86 @@ func (s *Squad) RoleOf(e *Enemy) Role { return s.roleOf[e] }
 
 // ClaimAttack — просьба ударить. Разрешение даётся, пока бьющих меньше, чем
 // позволяет профиль просящего: у гуманоидов строй шире, у зверей уже.
-func (s *Squad) ClaimAttack(e *Enemy) bool {
+//
+// urgent расширяет очередь на одного: цель на последнем издыхании, и держать
+// строй уже не за чем — добивание должно ощущаться как добивание.
+func (s *Squad) ClaimAttack(e *Enemy, urgent bool) bool {
 	if s.attacking[e] {
 		return true
 	}
-	if len(s.attacking) >= max(1, e.Bhv.Combat.AttackSlots) {
+	slots := max(1, e.Bhv.Combat.AttackSlots)
+	if urgent {
+		slots++
+	}
+	if len(s.attacking) >= slots {
 		return false
 	}
 	s.attacking[e] = true
 	return true
 }
+
+// MeleePressure — сколько своих держат цель в ближнем бою. Стрелку это нужно,
+// чтобы понимать, занят ли игрок: пара «держит и расстреливает» опаснее двух
+// одиночек, а стрелять в того, кто свободен и идёт на тебя, — так себе план.
+func (s *Squad) MeleePressure(target engine.Vec2) int {
+	n := 0
+	for _, o := range s.members {
+		if !o.Alive() || o.Bhv.Combat.PreferRange > 0 {
+			continue
+		}
+		if engine.Dist(o.Pos, target) <= o.Type.Threat.Reach+o.Radius()+12 {
+			n++
+		}
+	}
+	return n
+}
+
+// TakeGap просит узкое место (дверь, мост, тропу между скалами) себе. Ключ —
+// клетка навигации, приведённая к целому.
+//
+// Без очереди толпа лезет в проход всем скопом и выпихивает друг друга в воду:
+// расталкивание работает, а договориться некому.
+func (s *Squad) TakeGap(e *Enemy, key int64) bool {
+	if cur, ok := s.gapBy[key]; ok && cur != e && cur.Alive() {
+		return false
+	}
+	s.LeaveGap(e)
+	s.gapOf[e], s.gapBy[key] = key, e
+	return true
+}
+
+// LeaveGap освобождает занятое узкое место.
+func (s *Squad) LeaveGap(e *Enemy) {
+	if key, ok := s.gapOf[e]; ok {
+		if s.gapBy[key] == e {
+			delete(s.gapBy, key)
+		}
+		delete(s.gapOf, e)
+	}
+}
+
+// SearchSlot — свой сектор при обыске местности. Все, кто ищет одну и ту же
+// точку, идут в разные стороны от неё, а не толкутся в ней втроём.
+func (s *Squad) SearchSlot(e *Enemy, n int) int {
+	if v, ok := s.searchOf[e]; ok {
+		return v
+	}
+	used := map[int]bool{}
+	for _, v := range s.searchOf {
+		used[v] = true
+	}
+	for i := range n {
+		if !used[i] {
+			s.searchOf[e] = i
+			return i
+		}
+	}
+	s.searchOf[e] = 0
+	return 0
+}
+
+// DropSearch забывает сектор поиска: цель нашлась или искать больше незачем.
+func (s *Squad) DropSearch(e *Enemy) { delete(s.searchOf, e) }
 
 // ReleaseAttack освобождает очередь после замаха.
 func (s *Squad) ReleaseAttack(e *Enemy) { delete(s.attacking, e) }

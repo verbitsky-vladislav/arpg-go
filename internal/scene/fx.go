@@ -46,6 +46,7 @@ type slash struct {
 	face   engine.Vec2
 	reach  float64
 	arc    float64 // раствор в градусах
+	col    color.RGBA
 	ttl    int
 }
 
@@ -70,9 +71,12 @@ type effects struct {
 	tick    int
 }
 
-// swing запоминает замах: сектор живёт несколько кадров и тает.
-func (e *effects) swing(center, face engine.Vec2, reach, arc float64) {
-	e.slashes = append(e.slashes, slash{center: center, face: face, reach: reach, arc: arc, ttl: slashTicks})
+// swing запоминает замах: сектор живёт несколько кадров и тает. Цвет говорит,
+// чей это был удар: свой светлый, украденная сила — цвета своей стихии.
+func (e *effects) swing(center, face engine.Vec2, reach, arc float64, col color.RGBA) {
+	e.slashes = append(e.slashes, slash{
+		center: center, face: face, reach: reach, arc: arc, col: col, ttl: slashTicks,
+	})
 }
 
 // pop добавляет число урона над точкой pos.
@@ -201,7 +205,11 @@ func (e *effects) drawSlashes(dst *ebiten.Image, cam *engine.Camera) {
 		}
 
 		op := &vector.DrawPathOptions{AntiAlias: true}
-		op.ColorScale.ScaleWithColor(fxSlash)
+		col := s.col
+		if col == (color.RGBA{}) {
+			col = fxSlash
+		}
+		op.ColorScale.ScaleWithColor(col)
 		// Прозрачность задаётся только через ScaleAlpha: цвет с «сырой» альфой
 		// Ebiten считает premultiplied и рисует почти непрозрачным.
 		op.ColorScale.ScaleAlpha(float32(s.ttl) / slashTicks * 0.9)

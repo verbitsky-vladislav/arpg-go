@@ -73,6 +73,7 @@ func NewHeroes(l *assets.Loader, back Scene, pick func(bodyID string) (Scene, er
 
 func (h *Heroes) Update() (Scene, error) {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		uiCancel()
 		return h.backScene(), nil
 	}
 	if len(h.cards) == 0 {

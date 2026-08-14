@@ -8,6 +8,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
+	"github.com/vladislav/game/internal/audio"
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/ui"
 )
@@ -87,9 +88,15 @@ func itemRect(i int) (x, y, w, h float32) {
 
 func (m *Menu) Update() (Scene, error) {
 	if m.Resume != nil && inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		uiCancel()
 		return m.Resume, nil
 	}
+	// В главном меню музыка биома уходит: она принадлежит забегу, а не игре
+	// вообще. Возврат в забег включит её обратно тем же кроссфейдом.
+	audio.Shared().Music("")
+
 	items := m.items()
+	prev := m.sel
 
 	// Мышь: наведение перекладывает выбор на пункт под курсором.
 	mx, my := ebiten.CursorPosition()
@@ -109,12 +116,14 @@ func (m *Menu) Update() (Scene, error) {
 	if keyPressed(ebiten.KeyUp, ebiten.KeyW) {
 		m.sel = (m.sel - 1 + len(items)) % len(items)
 	}
+	uiMove(prev, m.sel)
 
 	activate := keyPressed(ebiten.KeyEnter, ebiten.KeyNumpadEnter, ebiten.KeySpace)
 	if hovered >= 0 && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		activate = true
 	}
 	if activate {
+		uiConfirm()
 		if act := items[m.sel].act; act != nil {
 			return act()
 		}

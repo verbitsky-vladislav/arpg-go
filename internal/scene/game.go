@@ -12,6 +12,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
 	"github.com/vladislav/game/internal/assets"
+	"github.com/vladislav/game/internal/audio"
 	"github.com/vladislav/game/internal/character"
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/engine"
@@ -65,6 +66,7 @@ type Game struct {
 	l      *assets.Loader
 
 	fx    effects             // числа урона, тряска экрана, свечение края
+	sfx   *gameSound          // звук забега; nil — играем молча (см. gamesound.go)
 	bars  map[*mob.Animal]int // сколько ещё показывать полоску здоровья зверя
 	ebars map[*mob.Enemy]int  // то же для врагов
 	hp    int                 // здоровье героя в прошлом тике — так ловится урон
@@ -92,6 +94,11 @@ type Game struct {
 	drops []*groundItem // что уже лежит на карте
 	lrng  *rand.Rand    // своё зерно на добычу
 
+	// skills — украденные умения: три ячейки внизу справа. Живут в сцене, а не
+	// в персонаже: заряды тратит игровой слой, а персонаж только машет.
+	skills   skillBar
+	castTint color.RGBA // цвет следа начатого удара чужой силой
+
 	// Каталог и тело нужны после старта: надел оружие — сменился лоадаут, а
 	// значит и пак анимаций пары «тело × лоадаут».
 	chars *character.Catalog
@@ -111,24 +118,22 @@ func NewGame(l *assets.Loader, back Scene, bodyID string) (*Game, error) {
 	return NewSavedGame(l, back, nil, -1, NewChar("", bodyID))
 }
 
-// NewSavedGame готовит забег персонажа c: собирает его мир по сохранённому
-// сиду, заселяет карту и возвращает герою всё нажитое (см. restore). Забег
-// сохраняется в слот slot книги st; st == nil — не сохраняется вовсе.
+// NewSavedGame готовит забег персонажа c: поднимает его мир, заселяет карту и
+// возвращает герою всё нажитое (см. restore). Забег сохраняется в слот slot
+// книги st; st == nil — не сохраняется вовсе.
 //
-// Мир — это сид: карта, звери, враги и содержимое сундука собираются из него
-// заново и получаются теми же, поэтому в файле их нет.
+// Мир у персонажа один и тот же от забега к забегу: карта берётся из его
+// сохранения целиком (loadMap), а не выводится заново из сида. Новому
+// персонажу карта генерируется один раз — здесь, и тут же ложится на диск.
 func NewSavedGame(l *assets.Loader, back Scene, st *save.Store, slot int, c *save.Char) (*Game, error) {
 	if c == nil {
 		return nil, fmt.Errorf("scene: забег без персонажа")
 	}
-	biome := c.Biome
-	if biome == "" {
-		biome = gameBiome
-	}
-	// Короткий сид: его видно в журнале, и по нему карта повторяется (шум всё
-	// равно перемешивает его splitmix-хешем, качество не теряется).
+	// Короткий сид: его видно в журнале, и по нему карта воспроизводится, если
+	// сохранённой не оказалось (шум всё равно перемешивает его splitmix-хешем,
+	// качество не теряется).
 	seed := uint64(c.Seed)
-	m, err := world.Generate(l, biome, seed, gameSize)
+	m, err := loadMap(l, st, slot, c)
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +165,7 @@ func NewSavedGame(l *assets.Loader, back Scene, st *save.Store, slot int, c *sav
 		store:  st,
 		slot:   slot,
 		char:   c,
+		sfx:    newGameSound(),
 	}
 	g.hp = g.pl.HP
 
@@ -171,9 +177,10 @@ func NewSavedGame(l *assets.Loader, back Scene, st *save.Store, slot int, c *sav
 	if err != nil {
 		return nil, err
 	}
-	// Звери сеются от сида карты: одна и та же карта заселяется одинаково.
+	// Звери сеются от сида карты: одна и та же карта заселяется одинаково. Само
+	// заселение — в restoreWorld: в мир, где уже жили, возвращаются те самые
+	// звери, каких игрок там оставил, и досыпать к ним случайных нельзя.
 	g.sp = mob.NewSpawner(cfg, species, m, g.pack, rand.New(rand.NewPCG(seed, 0x9E3779B97F4A7C15)))
-	g.sp.Populate()
 
 	// Враги: своя таблица, свои профили поведения и свой бюджет опасности.
 	// Ночи в забеге пока нет, поэтому заселяем дневным бюджетом.
@@ -183,7 +190,6 @@ func NewSavedGame(l *assets.Loader, back Scene, st *save.Store, slot int, c *sav
 	}
 	g.es = es
 	g.es.Guard(m.Spawn()) // на старте игрока никто не ждёт
-	g.es.Populate(false)
 
 	// Предметы: каталог один на забег, сумка героя пуста, и где-то рядом со
 	// стартом стоит сундук. Своё зерно, чтобы добыча и место сундука не
@@ -252,6 +258,11 @@ func (g *Game) Update() (Scene, error) {
 
 	g.pl.Update(g.input(), g.m.Field())
 	g.strike()
+	// Замах сбили — цвет украденного следа не должен достаться следующему
+	// удару, уже своему.
+	if g.pl.State() != character.Attacking {
+		g.castTint = color.RGBA{}
+	}
 	g.sp.Update(g.pl.Pos, g.pl.Alive(), false)
 	g.es.Update(g.target(), g.pl.Alive(), g.pl.Floor(), false)
 	g.animalHits()
@@ -274,6 +285,9 @@ func (g *Game) Update() (Scene, error) {
 	if g.pl.HP < g.hp {
 		g.fx.hurt()
 		g.fx.pop(engine.Vec2{X: g.pl.Pos.X, Y: g.pl.Pos.Y - 34}, g.hp-g.pl.HP, fxHurt)
+		// Не PlayAt: собственный урон — единственное, что обязано пробиться
+		// через кашу боя, и приглушать его дистанцией нечем — он всегда здесь.
+		g.sfx.play(audio.Hurt)
 	}
 	g.hp = g.pl.HP
 
@@ -286,6 +300,9 @@ func (g *Game) Update() (Scene, error) {
 	w, h := g.m.Size()
 	g.cam.Follow(g.pl.Pos, w, h)
 	g.cam.Pos = g.cam.Pos.Add(g.fx.offset()) // тряска — поверх слежения за героем
+	// Звук — последним: шаги считаются по итоговому положению героя, а уши
+	// стоят там же, где он закончил кадр.
+	g.sfx.tick(g)
 	return g, nil
 }
 
@@ -331,15 +348,25 @@ func (g *Game) input() character.Input {
 	in.Run = ebiten.IsKeyPressed(settings.Key(settings.ActRun))
 	in.Attack = inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) ||
 		inpututil.IsKeyJustPressed(settings.Key(settings.ActAttack))
+	// Ячейки умений: нажатие сразу тратит заряд, поэтому просьба собирается
+	// здесь, а не в Draw или в отдельном проходе, — тик один, и списание с
+	// ударом обязаны случиться в нём же (см. castRequest).
+	in.Cast = g.castRequest()
 
-	// Прицел мышью не передаём: герой смотрит туда, куда идёт, и бьёт туда же
-	// (сектор удара берётся из направления взгляда). Мышь остаётся кнопкой
-	// удара и наведением на зверя, но развернуть героя не может.
+	// Прицел мышью: герой смотрит туда, где курсор, и бьёт туда же — сектор
+	// удара берётся из направления взгляда. Ходьба от этого не зависит: идти
+	// можно в любую сторону, хоть спиной вперёд, отступая от того, кого бьёшь.
+	mx, my := ebiten.CursorPosition()
+	in.Aim = g.cam.ScreenToWorld(engine.Vec2{X: float64(mx), Y: float64(my)})
+	in.HasAim = true
 	return in
 }
 
 // strike раздаёт урон удара героя: сектор отдаёт автомат персонажа, а кого он
 // задел — решает игровой слой (у персонажа нет списка целей).
+//
+// Одиночное оружие (h.Single) достаётся одной цели — ближайшей из накрытых:
+// палкой нельзя задеть троих одним взмахом. Площадное бьёт всех, кого накрыло.
 func (g *Game) strike() {
 	h, ok := g.pl.Strike()
 	if !ok {
@@ -347,24 +374,73 @@ func (g *Game) strike() {
 	}
 	// След замаха рисуется всегда, попал герой или нет: промах должно быть видно
 	// так же ясно, как попадание, а лоадаут может не иметь клипа удара вовсе.
-	g.fx.swing(h.Center, h.Face, h.Reach, h.Arc)
+	// Цвет говорит, чем ударили: украденная сила светится своей стихией.
+	g.fx.swing(h.Center, h.Face, h.Reach, h.Arc, g.takeCastTint())
+	// Замах слышен всегда, как и виден: промах — тоже событие, и без звука
+	// непонятно, случился ли удар вообще.
+	g.sfx.at(g.swingSound(), h.Center)
+	if h.Single {
+		g.strikeNearest(h)
+		return
+	}
+	for _, a := range g.sp.Animals() {
+		if a.Alive() && h.Covers(a.Pos, a.Radius()) {
+			g.hitAnimal(a, h)
+		}
+	}
+	g.strikeEnemies(h)
+}
+
+// strikeNearest бьёт одну цель — ближайшую к герою из накрытых сектором. Звери
+// и враги перебираются вместе: удар не знает, кто перед ним, и выбирать между
+// оленем и гоблином по списку, в котором они лежат, было бы случайностью.
+func (g *Game) strikeNearest(h character.Hit) {
+	var (
+		best   = math.Inf(1)
+		animal *mob.Animal
+		enemy  *mob.Enemy
+	)
 	for _, a := range g.sp.Animals() {
 		if !a.Alive() || !h.Covers(a.Pos, a.Radius()) {
 			continue
 		}
-		if a.Hit(h.Damage) {
-			// Добил — с туши падает добыча. У зверя нет тиров, поэтому бросок
-			// один: сколько раз кидать кости, сказано только у врагов.
-			g.dropLoot(a.Pos, a.Floor(), a.Species.Drops, 1, false)
-			// Число опыта заменяет собой число урона: добил — и всё.
-			g.reward(g.headOf(a), a.Level, a.XP)
-			g.count(save.KillAnimal(a.Species.ID))
-		} else {
-			g.fx.pop(g.headOf(a), h.Damage, fxDamage)
+		if d := engine.Dist(h.Center, a.Pos); d < best {
+			best, animal, enemy = d, a, nil
 		}
-		g.bars[a] = barShow
 	}
-	g.strikeEnemies(h)
+	for _, e := range g.es.Enemies() {
+		if !e.Alive() || !h.Covers(e.Pos, e.Radius()) {
+			continue
+		}
+		if d := engine.Dist(h.Center, e.Pos); d < best {
+			best, animal, enemy = d, nil, e
+		}
+	}
+	switch {
+	case animal != nil:
+		g.hitAnimal(animal, h)
+	case enemy != nil:
+		g.hitEnemy(enemy, h)
+	}
+}
+
+// hitAnimal проводит попадание по зверю: урон, добыча с туши, опыт.
+func (g *Game) hitAnimal(a *mob.Animal, h character.Hit) {
+	dmg := h.Damage.Total()
+	// По зверю звучит плоть независимо от оружия: брони на нём нет, и звон
+	// металла здесь означал бы попадание не туда.
+	g.sfx.at(audio.HitFlesh, a.Pos)
+	if a.Hit(dmg) {
+		// Добил — с туши падает добыча. У зверя нет тиров, поэтому бросок
+		// один: сколько раз кидать кости, сказано только у врагов.
+		g.dropLoot(a.Pos, a.Floor(), a.Species.Drops, 1, false)
+		// Число опыта заменяет собой число урона: добил — и всё.
+		g.reward(g.headOf(a), a.Level, a.XP)
+		g.count(save.KillAnimal(a.Species.ID))
+	} else {
+		g.fx.pop(g.headOf(a), dmg, fxDamage)
+	}
+	g.bars[a] = barShow
 }
 
 // animalHits — ответный урон: зверь в состоянии Attack бьёт того, до кого
@@ -539,6 +615,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.fx.drawPopups(screen, g.cam)
 	g.fx.drawFlash(screen)
 	g.drawHUD(screen)
+	g.drawSkills(screen)
 	if g.bigMap {
 		g.drawBigMap(screen)
 	}
@@ -573,7 +650,7 @@ func (g *Game) drawBeastBar(dst *ebiten.Image, a *mob.Animal, named bool) {
 	vector.FillRect(dst, x-1, y-1, w+2, h+2, hudBack, false)
 	vector.FillRect(dst, x, y, w*frac, h, col, false)
 	if named {
-		ui.PixelTextCentered(dst, a.Species.Title.RU, head.X, float64(y)-9, 1, hudText)
+		g.drawTargetName(dst, a.Species.Title.RU, a.Level, head.X, float64(y)-9)
 	}
 }
 
@@ -601,6 +678,7 @@ var (
 	hudDim       = color.RGBA{0x9a, 0xa6, 0xc4, 0xff}
 	hudBeast     = color.RGBA{0xe8, 0xd0, 0x70, 0xff}
 	hudXP        = color.RGBA{0x5c, 0xa8, 0xe0, 0xff}
+	hudShadow    = color.RGBA{0x00, 0x00, 0x00, 0xc0} // подложка под подписи в мире
 	hudBeastCalm = color.RGBA{0x9a, 0xc8, 0x70, 0xff}
 	hudSelf      = color.RGBA{0xff, 0xff, 0xff, 0xff}
 	hudView      = color.RGBA{0xff, 0xff, 0xff, 0x88}

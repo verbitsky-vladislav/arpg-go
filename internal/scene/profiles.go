@@ -68,6 +68,7 @@ func newProfiles(l *assets.Loader, back Scene, st *save.Store) *Profiles {
 
 func (p *Profiles) Update() (Scene, error) {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		uiCancel()
 		if p.confirm {
 			p.confirm = false // сначала отменяется удаление, и только потом выход
 			return p, nil
@@ -146,6 +147,9 @@ func (p *Profiles) create(i int) Scene {
 			c := NewChar(name, bodyID)
 			c.Touch(time.Now())
 			p.book.Put(i, c)
+			// Мир прежнего жильца слота стирается до первого шага нового: иначе
+			// он получил бы в наследство чужую карту (файл именуется слотом).
+			p.store.DeleteMap(i)
 			if err := p.store.Save(p.book); err != nil {
 				log.Println("сохранение:", err)
 			}
@@ -154,9 +158,11 @@ func (p *Profiles) create(i int) Scene {
 	})
 }
 
-// remove стирает персонажа из слота. Насовсем: другой жизни у него не было.
+// remove стирает персонажа из слота вместе с его миром. Насовсем: другой жизни
+// у него не было.
 func (p *Profiles) remove(i int) {
 	p.book.Delete(i)
+	p.store.DeleteMap(i)
 	p.confirm = false
 	if err := p.store.Save(p.book); err != nil {
 		log.Println("сохранение:", err)

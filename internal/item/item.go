@@ -20,6 +20,7 @@ import (
 
 	"github.com/vladislav/game/internal/assets"
 	"github.com/vladislav/game/internal/atlas"
+	"github.com/vladislav/game/internal/combat"
 )
 
 // Kind — род предмета.
@@ -27,6 +28,10 @@ const (
 	KindMaterial = "material"
 	KindValuable = "valuable"
 	KindGear     = "gear"
+	// KindSkill — камень умения: в сумку не ложится, только в ячейку умений.
+	// Что в нём заперто, каталог не знает: сила снимается с убитого врага и
+	// живёт в самом камне (internal/mob, steal.go).
+	KindSkill = "skill"
 )
 
 // Item — запись каталога.
@@ -44,6 +49,10 @@ type Item struct {
 	// вещи с гнездом означает «надеть можно, но драться этим ещё нечем»:
 	// анимаций для неё в паке персонажа нет.
 	Loadout string `json:"loadout,omitempty"`
+	// Weapon — боевые свойства: урон, скорость, форма удара, состояния. Здесь
+	// они и живут — не у лоадаута: лоадаут отвечает за то, как герой машет, а
+	// сколько от этого больно, решает вещь в руке (см. internal/combat).
+	Weapon *combat.Weapon `json:"weapon,omitempty"`
 }
 
 // Wearable — можно ли вещь надеть.
@@ -82,6 +91,9 @@ func Load(fsys fs.FS, p string) (*Catalog, error) {
 		if it.Stack < 1 {
 			return nil, fmt.Errorf("item: %q: у %q стопка %d, должна быть хотя бы 1", p, it.ID, it.Stack)
 		}
+		if probs := it.Weapon.Problems(it.ID); len(probs) > 0 {
+			return nil, fmt.Errorf("item: %q: %s", p, strings.Join(probs, "; "))
+		}
 		c.byID[it.ID] = it
 	}
 	return &c, nil
@@ -91,6 +103,17 @@ func Load(fsys fs.FS, p string) (*Catalog, error) {
 func (c *Catalog) Get(id string) (*Item, bool) {
 	it, ok := c.byID[id]
 	return it, ok
+}
+
+// Weapon — боевые свойства предмета (nil, если это не оружие или предмета нет).
+func (c *Catalog) Weapon(id string) *combat.Weapon {
+	if c == nil {
+		return nil
+	}
+	if it, ok := c.byID[id]; ok {
+		return it.Weapon
+	}
+	return nil
 }
 
 // Name — имя предмета для показа. Незнакомый id не прячется: лучше увидеть в

@@ -17,6 +17,7 @@
 | **что** падает с конкретного моба и с каким шансом | `species.json` / `enemies.json` / `bosses.json` → `drops[]` |
 | **сколько раз** кидать кости за редкое | `enemies.json` → `tiers.*.drop_rolls` |
 | **что такое** выпавший id (имя, стопка, иконка) | [`items/items.json`](../../assets/items/items.json) |
+| **что вещь делает в бою** (урон, скорость, форма удара) | `items/items.json` → `weapon`, см. [combat.md](../character/combat.md) |
 | **как** вещь долетает до земли и до сумки | `items/loot.json` (этот файл) |
 
 ---

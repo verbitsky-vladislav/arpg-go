@@ -68,6 +68,12 @@ type Map struct {
 	tick  int
 
 	mini map[int]*ebiten.Image // обзорные картинки мини-карты по стороне
+
+	// src — карта в исходном формате, из которой всё это собрано. Держится
+	// целиком, потому что мир персонажа сохраняется как есть (см. Source):
+	// вывести его заново из сида нельзя — правка генератора сделала бы из того
+	// же сида другую карту, и сохранённый герой очнулся бы в чужом мире.
+	src *worldgen.MapV1
 }
 
 // animCell — анимированный тайл разрежённого слоя.
@@ -98,12 +104,19 @@ func New(l *assets.Loader, mv *worldgen.MapV1) (*Map, error) {
 	if mv.Width <= 0 || mv.Height <= 0 || mv.TileSize <= 0 {
 		return nil, fmt.Errorf("world: пустая карта")
 	}
+	// Карта из сохранения могла быть испечена прежней геометрией. Собрать её
+	// новым кодом хуже, чем не собрать вовсе: она выглядит целой, но объекты в
+	// ней стоят отдельно от своих барьеров. Пусть лучше пересоберётся из сида.
+	if mv.Rev != worldgen.MapRev {
+		return nil, fmt.Errorf("world: карта ревизии %d, нужна %d", mv.Rev, worldgen.MapRev)
+	}
 	field, err := navField(mv)
 	if err != nil {
 		return nil, err
 	}
 
 	m := &Map{
+		src:     mv,
 		biome:   mv.Biome,
 		seed:    mv.Seed,
 		w:       mv.Width,
@@ -355,6 +368,11 @@ func (m *Map) Biome() string { return m.biome }
 
 // Seed — сид, на котором сгенерирована карта: по нему её можно повторить.
 func (m *Map) Seed() int64 { return m.seed }
+
+// Source — карта в исходном формате (map_format v1), из которой она собрана.
+// Ею мир персонажа и сохраняется: тайлы, объекты, сетка физики и точка старта —
+// всё, что делает мир этим миром, а не другим на том же сиде.
+func (m *Map) Source() *worldgen.MapV1 { return m.src }
 
 // Size — размеры мира в пикселях.
 func (m *Map) Size() (float64, float64) {

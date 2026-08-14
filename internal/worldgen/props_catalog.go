@@ -66,12 +66,14 @@ func scanProps(biomeDir string) []Prop {
 		if w == 0 {
 			continue
 		}
+		body, bp := propFoot(path)
 		p := Prop{
 			ID:        base,
 			File:      prefix + n,
 			Footprint: [2]int{w, h},
-			Anchor:    [2]int{w / 2, h},
-			Body:      propBodyWidth(path),
+			Anchor:    propAnchorCell(bp, w, h),
+			Body:      body,
+			Base:      bp,
 			On:        []string{"ground_a"},
 			Weight:    10,
 		}
@@ -137,37 +139,65 @@ func classifyProp(lower, base string, fileset map[string]bool, prefix string, p 
 	}
 }
 
-// propBodyWidth — ширина рисунка у самой земли: самая широкая строка в нижней
-// трети спрайта. Это и есть то, обо что игрок стукается, в отличие от габарита
-// картинки (у дерева крона вчетверо шире ствола).
-func propBodyWidth(path string) int {
+// propAnchorCell — клетка футпринта, которой объект СТОИТ на земле: та, куда
+// попала точка опоры рисунка.
+//
+// Раньше якорем считался низ-центр холста, и для лежащего бревна это было на три
+// клетки ниже самого бревна: генератор проверял землю, тропу и лестницу под
+// пустотой, а сортировал объект по глубине так, будто он стоит там, где его не
+// видно. Якорь по рисунку возвращает всем этим проверкам смысл.
+//
+// Соглашение прежнее: контактная клетка — (X+Anchor[0], Y+Anchor[1]-1), поэтому
+// по вертикали хранится номер строки плюс один.
+func propAnchorCell(base [2]int, w, h int) [2]int {
+	const ts = 16
+	ax := base[0] / ts
+	ay := (base[1]-1)/ts + 1
+	if ax < 0 {
+		ax = 0
+	}
+	if ax > w-1 {
+		ax = w - 1
+	}
+	if ay < 1 {
+		ay = 1
+	}
+	if ay > h {
+		ay = h
+	}
+	return [2]int{ax, ay}
+}
+
+// propFoot — пятно, которым объект стоит на земле, замеренное по самому рисунку:
+// его ширина (body) и точка опоры внутри спрайта (base).
+//
+// Меряется САМАЯ ШИРОКАЯ строка нижней трети рисунка — это и есть то, обо что
+// игрок стукается, в отличие от габарита картинки (у дерева крона вчетверо шире
+// ствола). Её ширина даёт body, её середина — X опоры, а низ рисунка — Y опоры.
+//
+// Два прежних промаха, оба видны на лежащем бревне:
+//   - холст врёт. Рисунок почти никогда не доходит до его низа (у Broken_tree1 —
+//     на 46 px выше и на 5 px левее центра), и барьер по низу-центру холста
+//     уезжал ниже и правее самого бревна;
+//   - нижние строки рисунка тоже врут. У лежащего наискось бревна ниже всех
+//     оказывается один его конец, и барьер, выстроенный по нему, съезжал вбок с
+//     толстой части ствола. Широкая строка — это ствол целиком.
+func propFoot(path string) (body int, base [2]int) {
 	f, err := os.Open(path)
 	if err != nil {
-		return 0
+		return 0, [2]int{}
 	}
 	defer f.Close()
 	src, _, err := image.Decode(f)
 	if err != nil {
-		return 0
+		return 0, [2]int{}
 	}
 	b := src.Bounds()
+	// границы строк рисунка
+	rowLo := make([]int, b.Dy())
+	rowHi := make([]int, b.Dy())
 	top, bottom := -1, -1
 	for y := b.Min.Y; y < b.Max.Y; y++ {
-		for x := b.Min.X; x < b.Max.X; x++ {
-			if _, _, _, a := src.At(x, y).RGBA(); a > 0 {
-				if top < 0 {
-					top = y
-				}
-				bottom = y
-				break
-			}
-		}
-	}
-	if top < 0 {
-		return 0
-	}
-	best := 0
-	for y := bottom - (bottom-top)/3; y <= bottom; y++ {
 		lo, hi := b.Max.X, -1
 		for x := b.Min.X; x < b.Max.X; x++ {
 			if _, _, _, a := src.At(x, y).RGBA(); a > 0 {
@@ -179,11 +209,26 @@ func propBodyWidth(path string) int {
 				}
 			}
 		}
-		if hi >= 0 && hi-lo+1 > best {
-			best = hi - lo + 1
+		rowLo[y-b.Min.Y], rowHi[y-b.Min.Y] = lo, hi
+		if hi >= 0 {
+			if top < 0 {
+				top = y
+			}
+			bottom = y
 		}
 	}
-	return best
+	if top < 0 {
+		return 0, [2]int{b.Dx() / 2, b.Dy()}
+	}
+	bestW, bestMid := 0, (b.Dx())/2
+	for y := bottom - (bottom-top)/3; y <= bottom; y++ {
+		lo, hi := rowLo[y-b.Min.Y], rowHi[y-b.Min.Y]
+		if hi < 0 || hi-lo+1 <= bestW {
+			continue
+		}
+		bestW, bestMid = hi-lo+1, (lo+hi)/2-b.Min.X
+	}
+	return bestW, [2]int{bestMid, bottom - b.Min.Y + 1}
 }
 
 // pngSize — размер PNG в пикселях.

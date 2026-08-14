@@ -20,21 +20,37 @@ const (
 	ActMap
 	ActUse
 	ActBag
+	// Ячейки умений: на каждую вешается своя клавиша, потому что умение в
+	// ячейке меняется, а привычка нажимать — нет.
+	ActSkill1
+	ActSkill2
+	ActSkill3
 	ActCount
 )
+
+// SkillActions — действия ячеек умений по порядку ячеек.
+var SkillActions = [3]Action{ActSkill1, ActSkill2, ActSkill3}
 
 // Идентификаторы для файла настроек и подписи для экрана. Порядок — как у
 // констант: это одна и та же таблица, разложенная по трём массивам.
 var (
-	actionID = [ActCount]string{"up", "down", "left", "right", "run", "attack", "map", "use", "bag"}
+	actionID = [ActCount]string{"up", "down", "left", "right", "run", "attack", "map", "use", "bag",
+		"skill1", "skill2", "skill3"}
 
-	actionTitle = [ActCount]string{"ВВЕРХ", "ВНИЗ", "ВЛЕВО", "ВПРАВО", "БЕГ", "УДАР", "КАРТА", "ОТКРЫТЬ", "СУМКА"}
+	actionTitle = [ActCount]string{"ВВЕРХ", "ВНИЗ", "ВЛЕВО", "ВПРАВО", "БЕГ", "УДАР", "КАРТА", "ОТКРЫТЬ", "СУМКА",
+		"УМЕНИЕ 1", "УМЕНИЕ 2", "УМЕНИЕ 3"}
 
 	// Клавиши по умолчанию: ходьба на WASD, бег на пробеле (удобнее, чем
 	// шифт, когда вторая рука на мыши), удар дублирует ЛКМ.
+	//
+	// Умения заняли привычные для жанра Q, E, R, поэтому «открыть» переехало с
+	// E на V, а дубль удара — с F на C: три ячейки под большим пальцем важнее,
+	// чем сундук на самой удобной клавише, а дублем удара всё равно почти никто
+	// не пользуется — бьют мышью.
 	actionKey = [ActCount]ebiten.Key{
 		ebiten.KeyW, ebiten.KeyS, ebiten.KeyA, ebiten.KeyD,
-		ebiten.KeySpace, ebiten.KeyF, ebiten.KeyTab, ebiten.KeyE, ebiten.KeyI,
+		ebiten.KeySpace, ebiten.KeyC, ebiten.KeyTab, ebiten.KeyV, ebiten.KeyI,
+		ebiten.KeyQ, ebiten.KeyE, ebiten.KeyR,
 	}
 )
 

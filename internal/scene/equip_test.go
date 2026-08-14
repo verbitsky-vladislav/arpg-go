@@ -10,10 +10,11 @@ import (
 	"github.com/vladislav/game/internal/ui"
 )
 
-// TestChestAlwaysHasSword — первый клинок обязан находиться в сундуке при любом
-// броске. Он не украшение: без оружия герой не бьёт вообще, и забег, в котором
-// клинок не выпал, играть нечем.
-func TestChestAlwaysHasSword(t *testing.T) {
+// TestChestAlwaysHasWeapon — оружие обязано находиться в сундуке при любом
+// броске. Оно не украшение: голыми руками герой снимает 1-2, и забег, в котором
+// оружие не выпало, играть нечем. Ищется не конкретный предмет, а любая вещь с
+// боевыми свойствами: чем именно игра начинается — дело таблицы.
+func TestChestAlwaysHasWeapon(t *testing.T) {
 	l := assets.NewLoader(os.DirFS(testAssets))
 	cat, err := item.Load(l.FS(), itemsFile)
 	if err != nil {
@@ -27,31 +28,46 @@ func TestChestAlwaysHasSword(t *testing.T) {
 	for i := range 60 {
 		c := &chest{kind: kind, inv: item.NewInventory(cat, chestSlots)}
 		c.fill(rand.New(rand.NewPCG(uint64(i), 0x9E3779B9)))
-		if n := c.inv.Count("rusty_blade"); n < 1 {
-			t.Fatalf("бросок %d: в сундуке нет клинка", i)
+		armed := false
+		for s := range chestSlots {
+			if id := c.inv.At(s).ID; id != "" && cat.Weapon(id) != nil {
+				armed = true
+				break
+			}
+		}
+		if !armed {
+			t.Fatalf("бросок %d: в сундуке нет ни одного оружия", i)
 		}
 	}
 }
 
-// TestEquipSwordArmsHero — главное правило боя: без оружия герой не атакует, с
-// надетым клинком атакует, снял — снова не может. Проверяется через Armed(),
-// потому что именно на нём стоит запрет удара.
-func TestEquipSwordArmsHero(t *testing.T) {
+// TestEquipWeaponRaisesDamage — главное правило боя: надетое оружие бьёт своим
+// уроном, снятое возвращает героя к базовому. Голые руки при этом остаются
+// рабочими: бить герой умеет всегда, вопрос только в числах.
+func TestEquipWeaponRaisesDamage(t *testing.T) {
 	l := assets.NewLoader(os.DirFS(testAssets))
 	g, err := NewGame(l, nil, "male")
 	if err != nil {
 		t.Fatalf("забег не собрался: %v", err)
 	}
-	if g.pl.Armed() {
-		t.Fatal("герой вооружён с самого начала — драться должно быть нечем")
+	base := g.pl.Power().Damage
+	if base != g.chars.Base.Damage {
+		t.Fatalf("герой начинает не с базового урона: %+v вместо %+v", base, g.chars.Base.Damage)
+	}
+	if !g.pl.Armed() {
+		t.Error("герою нечем замахнуться даже голыми руками")
 	}
 
 	g.bag.Add("rusty_blade", 1)
 	if note := g.equipFromBag(0); note == "СУМКА ПОЛНА" || note == "ЭТО НЕ НАДЕТЬ" || note == "НЕТ АНИМАЦИЙ" {
 		t.Fatalf("клинок не надевается: %s", note)
 	}
-	if !g.pl.Armed() {
-		t.Error("клинок надет, а бить всё ещё нечем")
+	blade := g.items.Weapon("rusty_blade")
+	if blade == nil {
+		t.Fatal("у клинка нет боевых свойств")
+	}
+	if got := g.pl.Power().Damage; got != blade.Damage {
+		t.Errorf("с клинком урон %+v вместо его собственного %+v", got, blade.Damage)
 	}
 	if got := g.pl.Loadout.Art; got != "sword" {
 		t.Errorf("лоадаут героя %q, ожидался sword", got)
@@ -66,8 +82,8 @@ func TestEquipSwordArmsHero(t *testing.T) {
 	if note := g.unequip(item.SlotWeapon); note == "СУМКА ПОЛНА" {
 		t.Fatal("снять оружие некуда, хотя сумка почти пуста")
 	}
-	if g.pl.Armed() {
-		t.Error("оружие снято, а герой всё ещё может бить")
+	if got := g.pl.Power().Damage; got != base {
+		t.Errorf("оружие снято, а урон остался %+v вместо базового %+v", got, base)
 	}
 	if g.bag.Count("rusty_blade") != 1 {
 		t.Error("снятый клинок не вернулся в сумку")
@@ -81,6 +97,7 @@ func TestEquipRejectsPlainItem(t *testing.T) {
 	if err != nil {
 		t.Fatalf("забег не собрался: %v", err)
 	}
+	base := g.pl.Power().Damage
 	g.bag.Add("bone", 3)
 	if note := g.equipFromBag(0); note != "ЭТО НЕ НАДЕТЬ" {
 		t.Errorf("кость надели, ответ: %q", note)
@@ -88,8 +105,8 @@ func TestEquipRejectsPlainItem(t *testing.T) {
 	if g.bag.Count("bone") != 3 {
 		t.Error("кости пропали из сумки при попытке надеть")
 	}
-	if g.pl.Armed() {
-		t.Error("кость вооружила героя")
+	if got := g.pl.Power().Damage; got != base {
+		t.Errorf("кость вооружила героя: урон %+v вместо %+v", got, base)
 	}
 }
 

@@ -3,14 +3,16 @@ package scene
 // Снаряжение героя: надеть вещь из сумки, снять обратно и переключить на неё
 // боевой лоадаут.
 //
-// Оружие тут — не число урона, а лоадаут персонажа: у каждого свой набор
-// анимаций и свой удар (см. assets/character/character.json). Поэтому «надел
-// клинок» означает «переключил героя на лоадаут sword», и безоружный герой,
-// у которого damage=0, наконец начинает бить.
+// Надеть оружие — это две разные вещи разом. Лоадаут персонажа (см.
+// assets/character/character.json) даёт анимации и геометрию замаха: «надел
+// палку» означает «переключил героя на лоадаут stick». Числа удара — урон,
+// скорость, форма поражения — приходят от самой вещи (см. internal/combat),
+// поэтому два клинка с одними анимациями бьют по-разному.
 
 import (
 	"fmt"
 
+	"github.com/vladislav/game/internal/audio"
 	"github.com/vladislav/game/internal/character"
 )
 
@@ -46,6 +48,7 @@ func (g *Game) equipFromBag(i int) string {
 	if err := g.applyLoadout(); err != nil {
 		return "НЕТ АНИМАЦИЙ"
 	}
+	g.sfx.play(audio.UIEquip)
 	return "НАДЕТО: " + it.Name
 }
 
@@ -62,12 +65,19 @@ func (g *Game) unequip(slot string) string {
 	if err := g.applyLoadout(); err != nil {
 		return "НЕТ АНИМАЦИЙ"
 	}
+	g.sfx.play(audio.UIEquip)
 	return "СНЯТО: " + g.items.Name(worn.ID)
 }
 
-// applyLoadout приводит героя в соответствие с надетым оружием. Без оружия
-// герой возвращается к безоружному лоадауту — тому, с которым он начинал.
+// applyLoadout приводит героя в соответствие с надетым оружием: и анимации, и
+// числа удара. Без оружия герой возвращается к безоружному лоадауту — тому, с
+// которым он начинал, и бьёт одним своим базовым уроном.
+//
+// Числа ставятся до лоадаута и без всяких условий: два клинка могут делить один
+// набор анимаций и при этом бить по-разному, и «лоадаут тот же — делать нечего»
+// про них неверно.
 func (g *Game) applyLoadout() error {
+	g.pl.SetWeapon(g.eq.Weapon())
 	id := g.eq.Loadout()
 	if id == "" {
 		id = gameLoadout
@@ -87,12 +97,17 @@ func (g *Game) applyLoadout() error {
 	return nil
 }
 
-// wornName — имя надетого в гнезде (пусто, если гнездо пустое).
-func (g *Game) wornName(slot string) string {
-	if s := g.eq.At(slot); !s.Empty() {
-		return g.items.Name(s.ID)
+// itemNote — строка о предмете для подписи под курсором: имя, а у оружия ещё и
+// то, что оно делает («ПАЛКА — 2-4 ФИЗ»). Пустой id даёт пустую строку.
+func (g *Game) itemNote(id string) string {
+	if id == "" {
+		return ""
 	}
-	return ""
+	name := g.items.Name(id)
+	if w := g.items.Weapon(id).Note(); w != "" {
+		return name + " — " + w
+	}
+	return name
 }
 
 // bagWearable — можно ли надеть то, что лежит в ячейке сумки.

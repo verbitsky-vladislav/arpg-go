@@ -7,6 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
 	"github.com/vladislav/game/internal/assets"
+	"github.com/vladislav/game/internal/audio"
 	"github.com/vladislav/game/internal/character"
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/engine"
@@ -14,7 +15,6 @@ import (
 	"github.com/vladislav/game/internal/physics"
 	"github.com/vladislav/game/internal/save"
 	"github.com/vladislav/game/internal/sprite"
-	"github.com/vladislav/game/internal/ui"
 )
 
 // Враги в забеге: подключение популяции к сцене.
@@ -75,6 +75,10 @@ func (g *Game) target() mob.Target {
 		Pos:    g.pl.Pos,
 		Radius: g.pl.Radius(),
 		Alive:  g.pl.Alive(),
+		// Доля здоровья: ниже порога враги перестают осторожничать и идут
+		// добивать. Скрывать её незачем — раненого видно и так, по тому, как он
+		// дерётся и отступает.
+		HPFrac: float64(g.pl.HP) / float64(max(g.pl.MaxHP, 1)),
 	}
 	switch g.pl.State() {
 	case character.Walk:
@@ -96,20 +100,29 @@ func (g *Game) target() mob.Target {
 // сектором, что и по зверям: цель одна — попасть по всему, что в нём стоит.
 func (g *Game) strikeEnemies(h character.Hit) {
 	for _, e := range g.es.Enemies() {
-		if !e.Alive() || !h.Covers(e.Pos, e.Radius()) {
-			continue
+		if e.Alive() && h.Covers(e.Pos, e.Radius()) {
+			g.hitEnemy(e, h)
 		}
-		if e.Hurt(h.Damage, h.Center) {
-			// Добил — таблица типа разыгрывается броском его тира; усиленная
-			// особь щедрее (см. items/loot.json).
-			g.dropLoot(e.Pos, e.Floor(), e.Type.Drops, e.Tier.DropRolls, e.Elite)
-			g.reward(g.enemyHead(e), e.Level, e.XP) // добил — всплывает опыт
-			g.count(save.KillEnemy(e.Type.ID, e.Tier.ID))
-		} else {
-			g.fx.pop(g.enemyHead(e), h.Damage, fxDamage)
-		}
-		g.ebars[e] = barShow
 	}
+}
+
+// hitEnemy проводит попадание по врагу: урон, добыча и опыт с добитого.
+func (g *Game) hitEnemy(e *mob.Enemy, h character.Hit) {
+	dmg := h.Damage.Total()
+	g.sfx.at(g.hitSound(), e.Pos)
+	if e.Hurt(dmg, h.Center) {
+		// Добил — таблица типа разыгрывается броском его тира; усиленная
+		// особь щедрее (см. items/loot.json).
+		g.dropLoot(e.Pos, e.Floor(), e.Type.Drops, e.Tier.DropRolls, e.Elite)
+		g.stealFrom(e) // и, если повезло, камень с его силой
+
+		g.sfx.at(audio.EnemyDeath, e.Pos)
+		g.reward(g.enemyHead(e), e.Level, e.XP) // добил — всплывает опыт
+		g.count(save.KillEnemy(e.Type.ID, e.Tier.ID))
+	} else {
+		g.fx.pop(g.enemyHead(e), dmg, fxDamage)
+	}
+	g.ebars[e] = barShow
 }
 
 // enemyHits — ответный урон: сектор врага отдаёт его автомат, а попал ли он по
@@ -120,7 +133,10 @@ func (g *Game) enemyHits() {
 		if !ok {
 			continue
 		}
-		g.fx.swing(h.Center, h.Face, h.Reach, h.Arc)
+		g.fx.swing(h.Center, h.Face, h.Reach, h.Arc, fxSlash)
+		// Замах врага слышен, даже если он промахнулся: по звуку сбоку игрок
+		// узнаёт, что его достают, раньше, чем увидит сектор.
+		g.sfx.at(audio.SwingLight, h.Center)
 		if !g.pl.Alive() || g.pl.Floor() != e.Floor() {
 			continue
 		}
@@ -207,6 +223,6 @@ func (g *Game) drawEnemyBars(dst *ebiten.Image) {
 		if e.Elite {
 			name = "★ " + name
 		}
-		ui.PixelTextCentered(dst, name, head.X, float64(y)-9, 1, hudText)
+		g.drawTargetName(dst, name, e.Level, head.X, float64(y)-9)
 	}
 }

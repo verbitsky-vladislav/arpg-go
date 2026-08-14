@@ -67,6 +67,19 @@ type Target struct {
 	WindupFace  engine.Vec2
 	WindupReach float64
 	WindupArc   float64
+
+	// HPFrac — доля здоровья цели (1 — целая). Ниже порога врагам незачем
+	// осторожничать: они перестают кружить и лезут добивать. Ноль означает
+	// «неизвестно» и читается как «цела».
+	HPFrac float64
+}
+
+// hpFrac — доля здоровья цели с поправкой на «неизвестно».
+func (t Target) hpFrac() float64 {
+	if t.HPFrac <= 0 {
+		return 1
+	}
+	return t.HPFrac
 }
 
 // EnemyCtx — окружение одного тика.
@@ -107,6 +120,29 @@ func (h Hit) Covers(p engine.Vec2, radius float64) bool {
 	}
 	return d.Normalized().Dot(h.Face) >= math.Cos(h.Arc/2*math.Pi/180)
 }
+
+// Пороги сторожа застревания, в тиках. Полсекунды на «может, дорога устарела»,
+// секунда на «обойди», три с половиной на «уходи отсюда».
+const (
+	stuckStep     = 0.4 // меньше этого за тик — считай, стоишь
+	stuckRepath   = 30
+	stuckSidestep = 60
+	stuckGiveUp   = 210
+	unstickTicks  = 24
+)
+
+// cutoffLook — как далеко отрезающий ищет узкое место вокруг цели. Дальше
+// половины экрана искать нечего: перекрытый выход должен быть виден игроку,
+// иначе он не поймёт, почему его встретили.
+const cutoffLook = 220
+
+// searchSpread — на каком радиусе от последней точки расходится веер поиска.
+const searchSpread = 90
+
+// pathHold — сколько тиков жить найденному пути, прежде чем пересчитать.
+// Полторы секунды: карта не меняется, а цель, к которой идут этим путём,
+// стоит на месте по определению.
+const pathHold = 90
 
 const (
 	enemyHurtTicks = 20 // оцепенение от удара без клипа hurt
@@ -174,9 +210,34 @@ type Enemy struct {
 	flanker  bool // заходит сбоку, а не в лоб
 	circleCW bool // в какую сторону кружит
 
+	// Сторож застревания: враг, который хочет идти и не идёт, обязан это
+	// заметить сам. Мир полон углов, и упереться в них не стыдно — стыдно
+	// толкаться в них вечно.
+	lastPos  engine.Vec2
+	stuck    int
+	unstick  int
+	sidestep engine.Vec2
+
+	// Рывок за отрывающейся целью.
+	dash   int
+	dashCD int
+
+	// Оценка скорости цели: по ней бьют с упреждением. Считаем сами, чтобы не
+	// требовать её от игрового слоя.
+	tgtSeen engine.Vec2
+	tgtVel  engine.Vec2
+	hasSeen bool
+
 	wait    int // стоять столько тиков (патруль)
 	goal    engine.Vec2
 	hasGoal bool
+
+	// Личный путь: к последней известной точке, домой, к своему месту в круге.
+	// Общей волны для этого нет — цели у всех разные.
+	path     []engine.Vec2
+	pathAt   int
+	pathTo   engine.Vec2
+	pathLeft int
 
 	flash int
 	fade  int
@@ -266,6 +327,9 @@ func (e *Enemy) Speed() float64 {
 			v = s.Run
 		}
 	}
+	if e.dash > 0 && e.Bhv.Combat.DashScale > 1 {
+		v *= e.Bhv.Combat.DashScale
+	}
 	return v
 }
 
@@ -290,6 +354,7 @@ func (e *Enemy) Hurt(dmg int, from engine.Vec2) bool {
 	e.HP -= dmg
 	e.knows, e.lastSeen = true, from
 	e.memory = e.Bhv.Perception.MemoryTicks
+	e.search = e.Bhv.Perception.SearchTicks
 	e.react = 0 // по боли реагируют мгновенно
 	if e.HP <= 0 {
 		e.HP = 0
@@ -359,6 +424,9 @@ func (e *Enemy) tickTimers() {
 	dec(&e.wait)
 	dec(&e.dodge)
 	dec(&e.dodgeCD)
+	dec(&e.dash)
+	dec(&e.dashCD)
+	dec(&e.unstick)
 	if e.memory == 0 {
 		e.knows = false
 	}
@@ -389,6 +457,15 @@ func (e *Enemy) perceive(c EnemyCtx) {
 		e.lastSeen = c.Player.Pos
 		e.memory = p.MemoryTicks
 		e.search = p.SearchTicks
+		// Скорость цели считаем сами: игровому слою незачем её объявлять, а
+		// упреждение без неё невозможно.
+		if e.hasSeen {
+			e.tgtVel = c.Player.Pos.Sub(e.tgtSeen).Scale(config.TPS)
+		}
+		e.tgtSeen, e.hasSeen = c.Player.Pos, true
+		if c.Squad != nil {
+			c.Squad.DropSearch(e) // нашёл — сектор поиска больше не нужен
+		}
 		return
 	}
 
@@ -400,7 +477,7 @@ func (e *Enemy) perceive(c EnemyCtx) {
 		// Недостижимое не слышно вовсе: если обхода нет, значит и звуку
 		// пройти негде. Без этого за глухой стеной слышимость чудом
 		// возвращалась к прямой линии.
-		if nd, ok := c.Nav.Dist(e.Pos, e.floor); ok {
+		if nd, ok := c.Nav.Dist(e.Pos, e.floor, 0); ok {
 			heard = nd
 		} else {
 			heard = math.Inf(1)
@@ -477,6 +554,28 @@ func (e *Enemy) flies() bool { return e.Type.Locomotion.Air }
 func (e *Enemy) decide(c EnemyCtx) {
 	e.commit = e.Bhv.Combat.CommitTicks
 
+	// Застрял намертво — бросить цель и уйти домой. Дорога отсюда есть всегда:
+	// пришёл же он как-то сюда.
+	if e.stuck > stuckGiveUp {
+		e.stuck = 0
+		e.knows = false
+		e.dropPath()
+		e.enter(EReturn)
+		return
+	}
+	// Цель недостижима для тела такого размера (узкий мост, проход в скале,
+	// макушка плато без лестницы). Идти напрямик в этом случае — это и есть
+	// «тупит у обрыва»: надо либо бить с дистанции, либо разворачиваться.
+	if e.knows && e.unreachable(c) {
+		if e.Bhv.Combat.PreferRange > 0 && e.seen &&
+			engine.Dist(e.Pos, e.target(c)) <= e.Bhv.Combat.PreferRange+e.Bhv.Combat.KeepBand {
+			e.enter(EKeep)
+			return
+		}
+		e.enter(EReturn)
+		return
+	}
+
 	// Ранен и труслив — выходит из боя, но не убегает с карты: отступает и
 	// возвращается, когда отдышится.
 	if e.wantsRetreat() {
@@ -489,16 +588,20 @@ func (e *Enemy) decide(c EnemyCtx) {
 		return
 	}
 
-	if e.knows && e.react == 0 && (e.seen || e.lose > 0 || e.memory > 0) {
+	// Видим цель (или только что видели) — деремся.
+	if e.knows && e.react == 0 && (e.seen || e.lose > 0) {
 		e.engage(c)
+		return
+	}
+	// Не видим, но помним где — ищем. Раньше здесь стояло «помню → дерусь с
+	// точкой», и поиск не включался почти никогда: память живёт дольше, чем
+	// он, и группа просто стояла в последней точке, глядя в пустоту.
+	if e.knows && (e.memory > 0 || e.search > 0) {
+		e.enter(ESearch)
 		return
 	}
 	if e.suspect > 0 {
 		e.enter(ESuspect)
-		return
-	}
-	if e.knows && e.search > 0 {
-		e.enter(ESearch)
 		return
 	}
 	if engine.Dist(e.Pos, e.home) > e.Bhv.Patrol.Radius {
@@ -512,19 +615,71 @@ func (e *Enemy) decide(c EnemyCtx) {
 	e.enter(EPatrol)
 }
 
+// unreachable — есть ли вообще дорога до цели для этого тела. Летающих не
+// касается: им карта не указ.
+func (e *Enemy) unreachable(c EnemyCtx) bool {
+	if e.flies() || c.Nav == nil || !c.HasPlayer {
+		return false
+	}
+	if engine.Dist(c.Nav.Goal(), e.target(c)) > 120 {
+		return false // волна не про эту точку — судить не по чему
+	}
+	_, ok := c.Nav.Dist(e.Pos, e.floor, e.Radius())
+	return !ok
+}
+
+// watchStuck следит, двигается ли враг, когда хочет двигаться.
+//
+// Три ступени: сбросить путь (может, дорога устарела), шагнуть вбок (обойти
+// то, во что упёрлись), сдаться и уйти домой (решает decide). Без этого враг
+// толкается в дерево бесконечно: обстановка не меняется, значит и решение
+// каждый раз то же самое.
+func (e *Enemy) watchStuck(c EnemyCtx) {
+	moved := engine.Dist(e.Pos, e.lastPos)
+	e.lastPos = e.Pos
+	if e.vel.Len() == 0 || moved > stuckStep {
+		e.stuck = 0
+		return
+	}
+	e.stuck++
+	switch e.stuck {
+	case stuckRepath:
+		e.dropPath()
+		e.commit = 0
+	case stuckSidestep:
+		// Вбок и чуть назад: строго вбок можно упереться в ту же стену.
+		side := engine.Vec2{X: -e.vel.Y, Y: e.vel.X}.Normalized()
+		if e.rng.IntN(2) == 0 {
+			side = side.Scale(-1)
+		}
+		e.sidestep = side.Sub(e.vel.Normalized().Scale(0.3)).Normalized()
+		e.unstick = unstickTicks
+	}
+}
+
 // engage выбирает боевое состояние: бить, держать дистанцию, кружить или идти.
 func (e *Enemy) engage(c EnemyCtx) {
 	dist := engine.Dist(e.Pos, e.target(c))
 	reach := e.reach(c)
 	cb := e.Bhv.Combat
+	// Раненая цель снимает осторожность: не кружим, лезем и бьём.
+	finish := c.HasPlayer && c.Player.hpFrac() < cb.FinishHP
 
 	// Стрелок: подошли ближе полосы — пятится, дальше полосы — подходит.
 	if cb.PreferRange > 0 {
+		// Бить выгоднее, когда цель связана ближним боем: пока свои держат её,
+		// стрелок работает спокойно. Свободную цель он предпочтёт сначала
+		// отодвинуть — иначе она просто дойдёт до него.
+		held := c.Squad != nil && c.Squad.MeleePressure(e.target(c)) > 0
 		switch {
 		case dist < cb.PreferRange-cb.KeepBand, dist > cb.PreferRange+cb.KeepBand:
+			if held && e.seen && e.cooldown == 0 && dist <= cb.PreferRange*1.4 && e.claim(c, finish) {
+				e.startAttack(c) // держат — можно и с неудобной дистанции
+				return
+			}
 			e.enter(EKeep)
 			return
-		case e.seen && e.cooldown == 0 && e.claim(c):
+		case e.seen && e.cooldown == 0 && e.claim(c, finish):
 			e.startAttack(c)
 			return
 		default:
@@ -535,22 +690,50 @@ func (e *Enemy) engage(c EnemyCtx) {
 
 	if dist <= reach {
 		// Вплотную, но бить можно не всем сразу: очередь держит отряд.
-		if e.cooldown == 0 && e.claim(c) {
+		if e.cooldown == 0 && e.claim(c, finish) {
 			e.startAttack(c)
 			return
 		}
 		e.enter(ECircle)
 		return
 	}
-	if dist <= reach*2.2 && e.rng.Float64() < cb.Strafe {
+	// Цель отрывается — рывок. Иначе от быстрого врага можно просто уходить
+	// спиной, изредка отмахиваясь.
+	if e.tryDash(c, dist) {
+		return
+	}
+	if !finish && dist <= reach*2.2 && e.rng.Float64() < cb.Strafe {
 		e.enter(ECircle)
 		return
 	}
 	e.enter(EChase)
 }
 
+// tryDash — короткое ускорение за целью, которая разрывает дистанцию.
+func (e *Enemy) tryDash(c EnemyCtx, dist float64) bool {
+	cb := e.Bhv.Combat
+	if cb.Dash <= 0 || e.dash > 0 || e.dashCD > 0 || !e.seen {
+		return false
+	}
+	if dist < e.reach(c)*1.6 || dist > e.Type.Threat.Sight*0.8 {
+		return false
+	}
+	// Рывок нужен вдогонку, а не навстречу: если цель идёт на нас, она и так
+	// придёт.
+	if away := e.target(c).Sub(e.Pos).Normalized().Dot(e.tgtVel.Normalized()); away < 0.2 {
+		return false
+	}
+	if e.rng.Float64() >= cb.Dash {
+		return false
+	}
+	e.dash = max(1, cb.DashTicks)
+	e.dashCD = e.dash + cb.CommitTicks*2
+	e.enter(EChase)
+	return true
+}
+
 // claim просит у отряда право ударить. Без отряда бьёт кто хочет.
-func (e *Enemy) claim(c EnemyCtx) bool {
+func (e *Enemy) claim(c EnemyCtx, urgent bool) bool {
 	if e.token {
 		return true
 	}
@@ -558,7 +741,7 @@ func (e *Enemy) claim(c EnemyCtx) bool {
 		e.token = true
 		return true
 	}
-	e.token = c.Squad.ClaimAttack(e)
+	e.token = c.Squad.ClaimAttack(e, urgent)
 	return e.token
 }
 
@@ -592,6 +775,12 @@ func (e *Enemy) act(c EnemyCtx) {
 	case EIdle:
 		e.vel = engine.Vec2{}
 	case EPatrol:
+		// Засадник не бродит: он ждёт. Пока цель не замечена, он часть
+		// пейзажа — и в этом весь смысл засады.
+		if e.Bhv.Combat.Ambush {
+			e.vel = engine.Vec2{}
+			break
+		}
 		e.wander(c)
 	case ESuspect:
 		e.moveTo(c, e.suspectAt, 1)
@@ -619,7 +808,13 @@ func (e *Enemy) act(c EnemyCtx) {
 			e.enter(EIdle)
 		}
 	}
+	// Обход того, во что упёрлись, важнее выбранного направления: пока он идёт,
+	// враг движется вбок, а не давит в стену.
+	if e.unstick > 0 && e.vel.Len() > 0 {
+		e.vel = e.sidestep.Scale(e.Speed())
+	}
 	e.step(c)
+	e.watchStuck(c)
 }
 
 // approachPoint — куда именно идти к цели. Роль решает, откуда заходить: в лоб,
@@ -631,11 +826,16 @@ func (e *Enemy) approachPoint(c EnemyCtx) engine.Vec2 {
 			e.role = c.Squad.AssignRole(e)
 		}
 		if e.role == RoleCutoff {
-			// Отрезающий встаёт с той стороны, куда цель побежит: напротив
-			// того места, откуда пришла группа.
+			// Отрезающий встаёт на пути отхода — с той стороны, куда цель
+			// побежит, то есть напротив того места, откуда пришла группа.
 			away := t.Sub(c.Squad.Center()).Normalized()
 			if away.Len() == 0 {
-				away = engine.Vec2{X: 1}
+				away = e.faceVec().Scale(-1)
+			}
+			// В коридоре перекрывать надо дверь, а не пятачок рядом с целью:
+			// точку у выхода обойти нельзя, а точку в чистом поле — можно.
+			if p, ok := c.Nav.Choke(t, away, e.floor, e.Radius(), cutoffLook); ok {
+				return p
 			}
 			return t.Add(away.Scale(e.reach(c) * 1.4))
 		}
@@ -673,7 +873,7 @@ func (e *Enemy) circle(c EnemyCtx) {
 	// Немного «дышит» по радиусу, иначе орбита выглядит механической.
 	want := e.reach(c) * 1.1
 	radial := d.Normalized().Scale((want - d.Len()) * 0.02)
-	e.vel = tangent.Add(radial).Normalized().Scale(e.Speed() * 0.75)
+	e.vel = tangent.Add(radial).Add(e.crowd(c)).Normalized().Scale(e.Speed() * 0.75)
 	e.faceTo(t)
 }
 
@@ -694,11 +894,22 @@ func (e *Enemy) keepRange(c EnemyCtx) {
 	e.faceTo(t)
 }
 
-// searchAround — обыск у последней известной точки: дошёл и оглядывается по
-// сторонам, а не стоит лицом в стену.
+// searchAround — обыск местности у последней известной точки.
+//
+// Идут не в саму точку, а каждый в свой сектор вокруг неё: втроём топтаться в
+// одном месте бессмысленно, а веером они накрывают площадь, и спрятаться за
+// углом становится трудно.
 func (e *Enemy) searchAround(c EnemyCtx) {
-	if engine.Dist(e.Pos, e.lastSeen) > 20 {
-		e.moveTo(c, e.lastSeen, 1)
+	spot := e.lastSeen
+	if c.Squad != nil {
+		const sectors = 6
+		i := c.Squad.SearchSlot(e, sectors)
+		ang := 2 * math.Pi * float64(i) / sectors
+		r := searchSpread * (0.6 + 0.4*float64(i%2))
+		spot = e.lastSeen.Add(engine.Vec2{X: math.Cos(ang) * r, Y: math.Sin(ang) * r})
+	}
+	if engine.Dist(e.Pos, spot) > 20 {
+		e.moveTo(c, spot, 1)
 		return
 	}
 	e.vel = engine.Vec2{}
@@ -739,19 +950,117 @@ func (e *Enemy) moveTo(c EnemyCtx, to engine.Vec2, scale float64) {
 		return
 	}
 	dir := d.Normalized()
-	// Порог щедрый: точка подхода у фланкёра и отрезающего смещена от цели на
-	// корпус-другой, но дорога к ней та же самая.
-	if !e.flies() && c.Nav != nil && engine.Dist(c.Nav.Goal(), to) < 120 {
-		if nd, ok := c.Nav.Step(e.Pos, e.floor); ok {
-			dir = nd
+	if !e.flies() && c.Nav != nil {
+		switch {
+		// Идём к игроку — берём общую волну: она уже посчитана на всех, и
+		// полоса выбирается под ширину этого тела. Порог щедрый: точка подхода
+		// у фланкёра и отрезающего смещена на корпус-другой, дорога та же.
+		case engine.Dist(c.Nav.Goal(), to) < 120:
+			if nd, ok := c.Nav.Step(e.Pos, e.floor, e.Radius()); ok {
+				dir = nd
+			}
+		// Идём куда-то ещё (последняя точка, дом) — считаем свой путь. Волна
+		// от игрока тут не помощник: она ведёт не туда.
+		case d.Len() > 64:
+			if nd, ok := e.follow(c, to); ok {
+				dir = nd
+			}
 		}
 	}
-	dir = dir.Add(e.separation(c)).Add(e.avoid(c, dir))
+	if e.waitGap(c, dir) {
+		e.vel = engine.Vec2{} // впереди узкое место, и оно занято своим
+		return
+	}
+	dir = dir.Add(e.crowd(c)).Add(e.avoid(c, dir))
 	if dir.Len() == 0 {
 		dir = d.Normalized()
 	}
 	e.vel = dir.Normalized().Scale(e.Speed() * scale)
 	e.faceTo(to)
+}
+
+// follow ведёт по личному пути к точке to. Путь считается редко: карта не
+// меняется, а цель стоит на месте — пересчитывать его каждый тик значило бы
+// гонять A* на всю толпу без нужды.
+func (e *Enemy) follow(c EnemyCtx, to engine.Vec2) (engine.Vec2, bool) {
+	if e.pathLeft--; e.pathLeft <= 0 || len(e.path) == 0 || engine.Dist(e.pathTo, to) > 48 {
+		e.path = c.Nav.Path(e.Pos, to, e.floor, e.Radius())
+		e.pathAt, e.pathTo, e.pathLeft = 0, to, pathHold
+	}
+	// Пройденные точки снимаются: иначе враг возвращается к первой из них.
+	for e.pathAt < len(e.path) && engine.Dist(e.Pos, e.path[e.pathAt]) < 20 {
+		e.pathAt++
+	}
+	if e.pathAt >= len(e.path) {
+		return engine.Vec2{}, false
+	}
+	return e.path[e.pathAt].Sub(e.Pos).Normalized(), true
+}
+
+// dropPath забывает найденную дорогу: цель сменилась, идти по старой незачем.
+func (e *Enemy) dropPath() { e.path, e.pathAt, e.pathLeft = nil, 0, 0 }
+
+// waitGap пропускает своего через узкое место вперёд себя.
+//
+// Мост в один тайл, дверь, тропа между скалами: расталкивание там работает
+// против всех — двое выпихивают друг друга в воду. Проходит тот, кто занял
+// место первым, остальные ждут в шаге позади.
+func (e *Enemy) waitGap(c EnemyCtx, dir engine.Vec2) bool {
+	if c.Nav == nil || c.Squad == nil || e.unstick > 0 {
+		return false
+	}
+	ahead := e.Pos.Add(dir.Scale(e.Radius() + c.Nav.CellSize()))
+	if c.Nav.Width(ahead, dir, e.floor, e.Radius()) > 2*e.Radius()*2 {
+		c.Squad.LeaveGap(e) // впереди простор — держать место незачем
+		return false
+	}
+	return !c.Squad.TakeGap(e, gapKey(c.Nav, ahead))
+}
+
+// gapKey — клетка навигации как ключ: соседние точки внутри одной клетки
+// должны считаться одним и тем же проходом.
+func gapKey(n *NavField, p engine.Vec2) int64 {
+	s := n.CellSize()
+	return int64(math.Floor(p.X/s))<<32 | int64(int32(math.Floor(p.Y/s)))
+}
+
+// crowd — всё, что толкает врага в сторону от своих: расталкивание тел и уход
+// с линии чужого удара.
+func (e *Enemy) crowd(c EnemyCtx) engine.Vec2 {
+	return e.separation(c).Add(e.clearOfAllies(c))
+}
+
+// clearOfAllies уводит из сектора замаха своего же соседа.
+//
+// Очередь удара разводит атаки по времени, но не по месту: пока один бьёт,
+// второй спокойно стоит там, куда придётся удар. На экране это читается как
+// «они бьют друг друга», даже если урона по своим нет. Уходить надо вбок —
+// назад из сектора не выйти.
+func (e *Enemy) clearOfAllies(c EnemyCtx) engine.Vec2 {
+	if c.Squad == nil {
+		return engine.Vec2{}
+	}
+	var push engine.Vec2
+	for _, o := range c.Squad.Members() {
+		if o == e || !o.Alive() || o.state != EAttack {
+			continue
+		}
+		d := e.Pos.Sub(o.Pos)
+		dist := d.Len()
+		reach := o.Type.Threat.Reach + o.Radius() + e.Radius()
+		if dist == 0 || dist > reach {
+			continue
+		}
+		if d.Normalized().Dot(o.atkFace) < math.Cos(enemyArc/2*math.Pi/180) {
+			continue // не на линии удара
+		}
+		side := engine.Vec2{X: -o.atkFace.Y, Y: o.atkFace.X}
+		if side.Dot(d) < 0 {
+			side = side.Scale(-1) // выходим в ту сторону, к которой уже ближе
+		}
+		push = push.Add(side.Scale(1.2))
+	}
+	return push
 }
 
 // separation — расталкивание своих: без него группа сходится в одну точку и
@@ -811,7 +1120,9 @@ func (e *Enemy) avoid(c EnemyCtx, dir engine.Vec2) engine.Vec2 {
 func (e *Enemy) startAttack(c EnemyCtx) {
 	e.state = EAttack
 	e.vel = engine.Vec2{}
-	e.faceTo(e.target(c))
+	// Бьём туда, где цель окажется к кадру попадания, а не туда, где она
+	// сейчас: по бегущему иначе не попасть никогда.
+	e.faceTo(e.aimPoint(c))
 	e.atkFace = e.faceVec()
 	e.struck = false
 	e.pending = nil
@@ -824,6 +1135,23 @@ func (e *Enemy) startAttack(c EnemyCtx) {
 	if clip.Valid() {
 		e.atkFrame = len(clip.Frames) / 2
 	}
+}
+
+// aimPoint — точка прицеливания с упреждением: цель плюс её скорость за время
+// до попадания, взвешенное профилем (lead).
+//
+// Без этого враг всегда бьёт туда, где цель была в начале замаха, и по бегущему
+// не попадает никогда — а игрок быстро понимает, что достаточно не стоять.
+func (e *Enemy) aimPoint(c EnemyCtx) engine.Vec2 {
+	t := e.target(c)
+	lead := e.Bhv.Combat.Lead
+	if lead <= 0 || !e.seen || e.tgtVel.Len() == 0 {
+		return t
+	}
+	// Время до попадания: половина выдержки решения — достаточная оценка,
+	// кадр удара обычно приходится примерно туда.
+	dt := float64(max(1, e.Bhv.Combat.CommitTicks)) / 2 / config.TPS
+	return t.Add(e.tgtVel.Scale(dt * lead))
 }
 
 func (e *Enemy) updateAttack(c EnemyCtx) {
@@ -863,6 +1191,11 @@ func (e *Enemy) enter(s EnemyState) {
 	}
 	if s != EPatrol {
 		e.hasGoal = false
+	}
+	// Смена занятия — смена цели: старая дорога больше не туда.
+	switch s {
+	case EIdle, EPatrol, EAttack, EHurt, EDead:
+		e.dropPath()
 	}
 	e.state = s
 	e.play(e.clipFor(s))
@@ -938,6 +1271,12 @@ func (e *Enemy) step(c EnemyCtx) {
 		return
 	}
 	delta = delta.Scale(c.Field.SpeedScale(e.Pos)) // мелководье вязкое
+	// Не помещаемся там, где стоим, — этаж разошёлся с местом (толкнули у
+	// обрыва, сошли с лестницы боком). Перечитать его дешевле, чем всю дорогу
+	// выдавливаться из стены по пикселю.
+	if !c.Field.Fits(e.Pos, e.Body()) {
+		e.Land(c.Field)
+	}
 	before := e.Pos
 	e.Pos, e.floor = c.Field.Move(e.Pos, delta, e.Body())
 	if engine.Dist(before, e.Pos) < delta.Len()*0.25 {

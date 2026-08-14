@@ -2,10 +2,12 @@ package character
 
 import (
 	"math"
+	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/vladislav/game/internal/anim"
+	"github.com/vladislav/game/internal/combat"
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/engine"
 	"github.com/vladislav/game/internal/physics"
@@ -38,9 +40,10 @@ func (s State) String() string {
 // игрока от того места, куда его звали, уже нельзя.
 const placeSearch = 256
 
-// playerCaps — что герой умеет в смысле физики: заходит в мелководье (медленно),
-// но не плавает — клипа swim в паках нет, и по глубокой воде он бы «шёл стоя».
-var playerCaps = physics.Caps{Wade: true}
+// playerCaps — что герой умеет в смысле физики: ничего сверх ходьбы по суше.
+// Ни плавать, ни бродить: клипа swim в паках нет, и по воде он бы «шёл стоя».
+// Вода — граница, а не медленная дорога.
+var playerCaps = physics.Caps{}
 
 // Input — намерения игрока за один тик. Персонаж не знает про клавиши и мышь:
 // раскладку держит тот, кто его обновляет (сцена, просмотрщик, тест). Ровно та
@@ -52,21 +55,44 @@ type Input struct {
 	Run bool
 	// Attack — удар нажат в этом тике (фронт нажатия, не удержание).
 	Attack bool
+	// Cast — просьба ударить чужой силой в этом тике (nil — не просят). Своего
+	// оружия она не отменяет: удар складывается из обоих, см. startCast.
+	Cast *Spell
 	// Aim/HasAim — куда смотреть (мировая точка под курсором). Без прицела
 	// персонаж смотрит туда, куда идёт.
 	Aim    engine.Vec2
 	HasAim bool
 }
 
+// Spell — чужая сила в руках героя: украденное умение врага. Персонаж не знает,
+// откуда она взялась и сколько ей осталось, — заряды считает игровой слой
+// (internal/mob, ячейки умений). Здесь только то, что нужно для замаха.
+//
+// Своё оружие сила не отменяет: её урон складывается с уроном героя. Тем она и
+// отличается от смены оружия — это удар поверх удара.
+type Spell struct {
+	Attack Attack       // размах, угол, темп и отброс — чужие
+	Damage combat.Rolls // добавка к урону героя
+}
+
 // Hit — состоявшийся удар: сектор перед персонажем в момент кадра попадания.
 // Кого он задел, решает игровой слой (у персонажа нет списка целей), поэтому
 // Hit — это описание области, а не событие с уже выбранной жертвой.
+//
+// Урон в нём уже разыгран: бросок один на замах, и все, кого удар накрыл,
+// получают одно и то же число. Иначе площадное оружие било бы по толпе разными
+// числами из одного взмаха.
 type Hit struct {
-	Center    engine.Vec2 // откуда бьют (позиция персонажа)
-	Face      engine.Vec2 // единичный вектор направления удара
-	Reach     float64     // радиус сектора
-	Arc       float64     // раствор сектора, градусы
-	Damage    int
+	Center engine.Vec2 // откуда бьют (позиция персонажа)
+	Face   engine.Vec2 // единичный вектор направления удара
+	Reach  float64     // радиус сектора
+	Arc    float64     // раствор сектора, градусы
+	Damage combat.Damage
+	// Single — оружие бьёт одну цель: игровой слой обязан выбрать из накрытых
+	// одну (ближайшую), а не раздать урон всем. Область бьёт всех, кого накрыла.
+	Single bool
+	// Effects — состояния, которые этим ударом наложились (бросок уже сделан).
+	Effects   []combat.Effect
 	Knockback float64
 }
 
@@ -96,16 +122,18 @@ type Player struct {
 	Cat     *Catalog
 	Body    *Body
 	Loadout *Loadout
-	// Stolen — украденная у врага сила: ею бьют, когда оружия нет. Заглушка
-	// под будущий механизм воровства (у врагов в enemies.json уже описаны
-	// power/steal_chance/charges), выдавать её пока некому. Своих клипов удара
-	// у неё не будет — attackClip в этом случае бьёт из стойки, а замах
-	// рисует игровой слой.
-	Stolen *Loadout
-	Pack   *sprite.Pack
-	Pos    engine.Vec2
-	HP     int
-	MaxHP  int
+	Pack    *sprite.Pack
+	Pos     engine.Vec2
+	HP      int
+	MaxHP   int
+	// Weapon — вещь в руке: урон, скорость удара, форма поражения и состояния.
+	// nil — герой бьёт голыми руками, то есть одним базовым уроном тела.
+	// Ставится снаряжением (item.Equipment.Weapon), не лоадаутом: лоадаут — это
+	// анимации, а урон — свойство вещи.
+	Weapon *combat.Weapon
+	// Rng — чем разыгрывается урон. nil — общий источник случайности; свой
+	// нужен тем, кому важна повторяемость (тесты, запись забега).
+	Rng *rand.Rand
 
 	vel     engine.Vec2
 	floor   uint8 // этаж: 0 — низ, 1 — макушка плато (physics.Floor*)
@@ -115,13 +143,14 @@ type Player struct {
 	clipDir sprite.Dir // направление, для которого клип был заряжен
 	player  *anim.Player
 
-	atk       Attack      // копия удара лоадаута на время замаха
-	atkTicks  int         // тиков до конца замаха
-	atkFrame  int         // кадр, на котором наносится урон
-	atkFace   engine.Vec2 // направление удара, зафиксированное в начале замаха
-	atkMoving bool        // замах на ходу (walk_attack/run_attack)
-	struck    bool        // урон этого замаха уже выдан
-	pending   *Hit        // удар ждёт, пока его заберёт игровой слой
+	atk       Attack        // копия удара лоадаута на время замаха
+	pow       combat.Weapon // копия боевых свойств на время замаха
+	atkTicks  int           // тиков до конца замаха
+	atkFrame  int           // кадр, на котором наносится урон
+	atkFace   engine.Vec2   // направление удара, зафиксированное в начале замаха
+	atkMoving bool          // замах на ходу (walk_attack/run_attack)
+	struck    bool          // урон этого замаха уже выдан
+	pending   *Hit          // удар ждёт, пока его заберёт игровой слой
 
 	cooldown int // тиков до следующего удара
 	invuln   int // тиков неуязвимости
@@ -140,6 +169,33 @@ func NewPlayer(c *Catalog, b *Body, l *Loadout, pack *sprite.Pack, pos engine.Ve
 	p.HP = p.MaxHP
 	p.enter(Idle)
 	return p
+}
+
+// SetWeapon кладёт герою в руку вещь (nil — пустая рука). Замах не прерывает:
+// оружие меняют из окна снаряжения, где времени не идёт, а вот числа удара
+// после этого обязаны быть новыми — их берут в начале следующего замаха.
+func (p *Player) SetWeapon(w *combat.Weapon) { p.Weapon = w }
+
+// Power — чем герой бьёт прямо сейчас.
+//
+// Базовый урон — это урон «без всего»: кулаками. Вещь в руке его не дополняет,
+// а замещает целиком — палка на 2-4 бьёт ровно на 2-4, и число на экране
+// сходится с числом в таблице. Оружие без своего урона (пустой блок damage)
+// базу оставляет: им бьют как рукой, разница только в анимации.
+func (p *Player) Power() combat.Weapon {
+	w := combat.Weapon{Speed: 1, Shape: combat.ShapeSingle, Damage: p.Cat.Base.Damage}
+	if p.Weapon == nil {
+		return w
+	}
+	if !p.Weapon.Damage.Empty() {
+		w.Damage = p.Weapon.Damage
+	}
+	w.Speed = p.Weapon.Rate()
+	if p.Weapon.Shape != "" {
+		w.Shape = p.Weapon.Shape
+	}
+	w.Radius, w.Effects = p.Weapon.Radius, p.Weapon.Effects
+	return w
 }
 
 // Equip меняет лоадаут (оружие) на ходу, сохраняя позицию, здоровье и
@@ -191,23 +247,15 @@ func (p *Player) Radius() float64 { return p.Cat.Base.BodyRadius }
 // Invulnerable — идут ли кадры неуязвимости после полученного удара.
 func (p *Player) Invulnerable() bool { return p.invuln > 0 }
 
-// Armed — есть ли чем бить вообще: оружие в руках или украденная у врага сила.
-// Голыми руками герой не дерётся, поэтому правило одно на всю игру и лежит
-// здесь, а не в сцене.
-func (p *Player) Armed() bool {
-	return p.Loadout.CanStrike() || p.Stolen.CanStrike()
-}
-
-// striker — чем бьём: оружием, а если его нет — украденной силой.
-func (p *Player) striker() *Loadout {
-	if !p.Loadout.CanStrike() && p.Stolen.CanStrike() {
-		return p.Stolen
-	}
-	return p.Loadout
-}
+// Armed — есть ли чем замахнуться. Голыми руками герой драться умеет (у
+// unarmed свой короткий размах), поэтому в игре это почти всегда true; false
+// остаётся лоадаутам без замаха — такие бывают, и код обязан их пережить.
+// Чужая сила сюда не входит: она приходит отдельным намерением (Input.Cast) со
+// своей геометрией, а не подменяет лоадаут.
+func (p *Player) Armed() bool { return p.Loadout.CanStrike() }
 
 // CanAttack — готов ли удар: есть чем бить, перезарядка вышла, персонаж не
-// занят. Без оружия и без украденной силы удара нет — ни замаха, ни сектора.
+// занят. Без замаха удара нет — ни клипа, ни сектора.
 func (p *Player) CanAttack() bool {
 	return p.Armed() &&
 		p.Alive() && p.cooldown == 0 && p.state != Hurt && p.state != Attacking
@@ -295,6 +343,12 @@ func (p *Player) Update(in Input, f *physics.Field) {
 	}
 
 	p.face(in)
+	// Чужая сила идёт впереди своего удара: если игрок нажал и то и другое в
+	// один тик, тратится заряд — он дороже.
+	if in.Cast != nil && p.CanAttack() {
+		p.startCast(in)
+		return
+	}
 	if in.Attack && p.CanAttack() {
 		p.startAttack(in)
 		return
@@ -325,12 +379,21 @@ func (p *Player) move(in Input, f *physics.Field) {
 func (p *Player) updateAttack(in Input, f *physics.Field) {
 	if !p.struck && p.player.Index() >= p.atkFrame {
 		p.struck = true
+		reach, arc := p.atk.Reach+p.Radius(), p.atk.Arc
+		// Площадное оружие бьёт кругом вокруг героя: сектор ему не годится —
+		// молот, обрушенный оземь, не выбирает сторону. Радиус приходит от
+		// вещи, а не от замаха: это её свойство, а не ширина взмаха руками.
+		if p.pow.Area() {
+			reach, arc = p.pow.Radius+p.Radius(), 360
+		}
 		p.pending = &Hit{
 			Center:    p.Pos,
 			Face:      p.atkFace,
-			Reach:     p.atk.Reach + p.Radius(),
-			Arc:       p.atk.Arc,
-			Damage:    p.atk.Damage,
+			Reach:     reach,
+			Arc:       arc,
+			Damage:    p.pow.Damage.Value(p.Rng),
+			Single:    !p.pow.Area(),
+			Effects:   combat.Land(p.pow.Effects, p.Rng),
 			Knockback: p.atk.Knockback,
 		}
 	}
@@ -372,16 +435,45 @@ func (p *Player) updateDead() {
 
 // startAttack начинает замах: клип выбирается по тому, как персонаж двигался.
 func (p *Player) startAttack(in Input) {
-	p.atk = p.striker().Attack
+	a, pow := p.Loadout.Attack, p.Power()
+	// Скорость атаки — свойство оружия, а замах и перезарядка нарисованы у
+	// лоадаута: быстрое оружие сжимает оба срока, медленное растягивает.
+	// Клип поедет за swing_ticks сам (см. swing), поэтому правится только число.
+	if r := pow.Rate(); r != 1 {
+		a.SwingTicks = max(1, int(float64(a.SwingTicks)/r))
+		a.CooldownTicks = max(1, int(float64(a.CooldownTicks)/r))
+	}
+	p.begin(a, pow, in)
+}
+
+// startCast начинает замах чужой силой: размах, темп и отброс у неё свои, а
+// урон складывается с уроном героя — украденное бьёт поверх оружия, а не
+// вместо него. Скорость оружия на чужой замах не влияет: чужая сила не в руке.
+func (p *Player) startCast(in Input) {
+	s := *in.Cast
+	pow := p.Power()
+	pow.Damage = pow.Damage.Add(s.Damage)
+	// Форма чужого удара всегда одиночная: площадных умений в данных врагов
+	// нет, а сектор у них свой — из s.Attack.
+	pow.Shape, pow.Radius = combat.ShapeSingle, 0
+	p.begin(s.Attack, pow, in)
+}
+
+// begin — общая часть замаха: геометрия a, числа pow, клип по намерению.
+func (p *Player) begin(a Attack, pow combat.Weapon, in Input) {
+	p.atk, p.pow = a, pow
 	p.atkFace = p.faceVec()
 	p.cooldown = p.atk.CooldownTicks
 	p.struck = false
 	p.pending = nil
 
+	// Движение в замахе решается намерением, а не тем, нашёлся ли для него
+	// отдельный клип: биться на ходу можно и подменышем. Иначе безоружный, у
+	// которого клипов удара нет вовсе, замирал бы столбом на каждый удар.
 	moving := clampLen(in.Move).Len() > 0 && p.atk.OnMove
 	name, clip := p.attackClip(moving, in.Run)
 	clip = p.swing(clip)
-	p.atkMoving = moving && (name == "walk_attack" || name == "run_attack")
+	p.atkMoving = moving
 	p.state = Attacking
 	p.clip = "" // замах перезапускается с первого кадра, даже если клип тот же
 	p.play(name, clip)

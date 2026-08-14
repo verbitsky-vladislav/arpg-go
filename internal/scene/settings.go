@@ -7,6 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
+	"github.com/vladislav/game/internal/audio"
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/settings"
 	"github.com/vladislav/game/internal/ui"
@@ -21,6 +22,12 @@ const (
 	setRowGap          = 5
 	setColTop          = 84
 	setMsgTicks        = 4 * config.TPS // сколько держится сообщение об обмене клавиш
+	// Колонка клавиш плотнее: действий в ней вдвое больше, чем настроек экрана,
+	// и просторными строками они за экран уезжают. Высота считается от шрифта
+	// (7 px на 2 = 14), а не выбрана на глаз.
+	setKeysCol   = 1
+	setKeyRowH   = 16
+	setKeyRowGap = 2
 )
 
 // setRow — одна строка настройки: подпись, текущее значение и действие по
@@ -48,6 +55,24 @@ type Settings struct {
 	msg      string
 	msgLeft  int
 	lastKeys []ebiten.Key // буфер для опроса нажатых клавиш, без аллокаций
+}
+
+// mutedOff гасит частные громкости, когда выключена общая: крутить их в этом
+// состоянии бессмысленно, и строка должна об этом сказать, а не молчать.
+func mutedOff() string {
+	if settings.Get().Volume == 0 {
+		return "ГРОМКОСТЬ 0%"
+	}
+	return ""
+}
+
+// volumeLabel показывает громкость процентами, а ноль — словом: «0%» игрок
+// прочитает как значение шкалы, а выключенный звук — это состояние.
+func volumeLabel(v int) (string, bool) {
+	if v == 0 {
+		return "ВЫКЛ", false
+	}
+	return fmt.Sprintf("%d%%", v), true
 }
 
 // NewSettings собирает экран настроек.
@@ -87,6 +112,26 @@ func NewSettings(back Scene) *Settings {
 			value: func() (string, bool) { return onOff(settings.Get().ShowFPS) },
 			do:    settings.ToggleFPS,
 		},
+		// Громкость слышно прямо здесь: каждое нажатие — это ещё и щелчок меню
+		// на новой громкости, так что настраивать её можно на слух, не выходя
+		// в забег.
+		{
+			label: "ГРОМКОСТЬ",
+			value: func() (string, bool) { return volumeLabel(settings.Get().Volume) },
+			do:    settings.CycleVolume,
+		},
+		{
+			label: "ЗВУКИ",
+			value: func() (string, bool) { return volumeLabel(settings.Get().SFXVolume) },
+			do:    settings.CycleSFXVolume,
+			off:   mutedOff,
+		},
+		{
+			label: "МУЗЫКА",
+			value: func() (string, bool) { return volumeLabel(settings.Get().MusicVolume) },
+			do:    settings.CycleMusicVolume,
+			off:   mutedOff,
+		},
 	}
 
 	for _, a := range settings.Actions() {
@@ -125,6 +170,7 @@ func (s *Settings) Update() (Scene, error) {
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		uiCancel()
 		if s.back != nil {
 			return s.back, nil
 		}
@@ -132,9 +178,14 @@ func (s *Settings) Update() (Scene, error) {
 	}
 	// Полный экран удобно дёргать и напрямую — F11 привычнее, чем идти в список.
 	if inpututil.IsKeyJustPressed(ebiten.KeyF11) {
+		uiConfirm()
 		settings.ToggleFullscreen()
 		return s, nil
 	}
+
+	// Выбор здесь двумерный, поэтому сравнивать надо и колонку, и строку:
+	// переход через границу колонок — такая же смена пункта, как шаг вниз.
+	prev := s.cursor()
 
 	mx, my := ebiten.CursorPosition()
 	hovered := false
@@ -156,6 +207,7 @@ func (s *Settings) Update() (Scene, error) {
 		s.col = 1 - s.col
 		s.sel[s.col] = min(s.sel[s.col], len(s.cols[s.col])-1)
 	}
+	uiMove(prev, s.cursor())
 
 	act := keyPressed(ebiten.KeyEnter, ebiten.KeyNumpadEnter, ebiten.KeySpace)
 	if hovered && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
@@ -165,10 +217,19 @@ func (s *Settings) Update() (Scene, error) {
 		return s, nil
 	}
 	if r := s.cols[s.col][s.sel[s.col]]; r.off == nil || r.off() == "" {
+		// Звук до действия: строка громкости меняет её же, и щелчок должен
+		// прозвучать на той громкости, с которой игрок уходит, а не приходит.
+		uiConfirm()
 		r.do()
+	} else {
+		// Недоступную строку нажали — отказ слышен так же, как в забеге.
+		audio.Shared().Play(audio.UIDenied)
 	}
 	return s, nil
 }
+
+// cursor — положение выбора одним числом: колонка и строка вместе.
+func (s *Settings) cursor() int { return s.col<<8 | s.sel[s.col] }
 
 // captureKey ждёт клавишу для выбранного действия. ESC отменяет: иначе выйти из
 // ожидания можно было бы только назначив что-нибудь.
@@ -251,7 +312,7 @@ func (s *Settings) drawRow(dst *ebiten.Image, c, i int) {
 		vector.FillRect(dst, p[0], p[1], 1, 1, menuBG, false)
 	}
 
-	ty := float64(y) + (setRowH-ui.PixelTextHeight(2))/2
+	ty := float64(y) + (float64(h)-ui.PixelTextHeight(2))/2
 	ui.PixelText(dst, r.label, float64(x)+8, ty, 2, label)
 
 	text, on := r.value()
@@ -272,5 +333,9 @@ func (s *Settings) drawRow(dst *ebiten.Image, c, i int) {
 // rowRect — рамка i-й строки колонки c.
 func (s *Settings) rowRect(c, i int) (x, y, w, h float32) {
 	x = float32(config.ScreenW-2*setColW-setColGap)/2 + float32(c)*(setColW+setColGap)
-	return x, setColTop + float32(i*(setRowH+setRowGap)), setColW, setRowH
+	h, gap := float32(setRowH), float32(setRowGap)
+	if c == setKeysCol {
+		h, gap = setKeyRowH, setKeyRowGap
+	}
+	return x, setColTop + float32(i)*(h+gap), setColW, h
 }

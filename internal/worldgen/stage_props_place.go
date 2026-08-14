@@ -218,9 +218,12 @@ func (g *Generator) placePropBody(occ []bool, p Prop, cx, cy int) int {
 	if p.SwapOnGroundB != "" && g.groundBAt(cx, cy) {
 		file = p.SwapOnGroundB
 	}
+	// Футпринт кладётся так, чтобы ОПОРНАЯ клетка спрайта попала в (cx,cy) —
+	// именно её проверял propCellOK и по ней же считается глубина.
 	inst := PropInst{
-		ID: p.ID, File: file, X: cx - w/2, Y: cy - h + 1, W: w, H: h,
-		Anchor: [2]int{w / 2, h}, SortY: cy, Collides: p.Collides, Body: p.Body,
+		ID: p.ID, File: file, X: cx - p.Anchor[0], Y: cy - p.Anchor[1] + 1, W: w, H: h,
+		Anchor: p.Anchor, SortY: cy, Collides: p.Collides,
+		Body: p.Body, Base: p.Base,
 	}
 	if p.Anim != nil && p.Anim.Frames > 1 {
 		inst.Frames = p.Anim.Frames
@@ -233,7 +236,7 @@ func (g *Generator) placePropBody(occ []bool, p Prop, cx, cy int) int {
 // propSpriteHits — накрывает ли спрайт пропса, поставленного якорем в (cx,cy),
 // хоть одну клетку множества. Спрайт, а не тело: речь про то, что видно.
 func (g *Generator) propSpriteHits(p Prop, cx, cy int, set map[[2]int]bool) bool {
-	x0, y0 := cx-p.Footprint[0]/2, cy-p.Footprint[1]+1
+	x0, y0 := cx-p.Anchor[0], cy-p.Anchor[1]+1
 	for y := y0; y < y0+p.Footprint[1]; y++ {
 		for x := x0; x < x0+p.Footprint[0]; x++ {
 			if set[[2]int{x, y}] {

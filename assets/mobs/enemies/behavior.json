@@ -48,7 +48,18 @@
       "dodge": 0.25,
       "_dodge": "Шанс отскочить вбок, увидев занесённое оружие цели. Ноль — не умеет и стоит под ударом.",
       "dodge_ticks": 18,
-      "_dodge_ticks": "Длина отскока. Короткий рывок вбок, а не бегство."
+      "_dodge_ticks": "Длина отскока. Короткий рывок вбок, а не бегство.",
+      "lead": 0.8,
+      "_lead": "Насколько враг целится с упреждением: бьёт не туда, где цель сейчас, а туда, где она окажется к кадру попадания. 0 — бьёт в текущую точку и мажет по бегущему, 1 — полное упреждение.",
+      "dash": 0.0,
+      "_dash": "Шанс рвануть за целью, когда та разрывает дистанцию. Ноль — не умеет, и от него можно просто уходить спиной.",
+      "dash_ticks": 26,
+      "dash_scale": 1.8,
+      "_dash_scale": "Во сколько раз быстрее бег во время рывка.",
+      "finish_hp": 0.35,
+      "_finish_hp": "Доля здоровья цели, ниже которой враги перестают осторожничать: не кружат, лезут все и очередь удара становится шире на одного. Добивание должно ощущаться как добивание.",
+      "ambush": false,
+      "_ambush": "Стоит неподвижно, пока не заметит цель. Не патрулирует, не бродит — ждёт. Заметив, срывается рывком."
     },
 
     "group": {
@@ -80,7 +91,7 @@
     "aggressive": {
       "_": "Идёт на игрока сам и не отпускает: орк, гнолл, скелет, зомби, демон, импи, гоблин, слизень.",
       "perception": { "fov_deg": 150, "hearing": 260, "reaction_ticks": 10 },
-      "combat": { "strafe": 0.25, "attack_slots": 2, "dodge": 0.3 },
+      "combat": { "strafe": 0.25, "attack_slots": 2, "dodge": 0.3, "dash": 0.35 },
       "group": { "call_radius": 300, "flank": 0.45 },
       "patrol": { "radius": 140, "leash": 900 }
     },
@@ -88,7 +99,7 @@
     "territorial": {
       "_": "Стережёт место и не уходит далеко: энт, голем. Пока не подошли — стоит, погнался — быстро возвращается.",
       "perception": { "fov_deg": 120, "hearing": 190, "reaction_ticks": 20, "search_ticks": 150 },
-      "combat": { "strafe": 0.1, "attack_slots": 2, "commit_ticks": 60, "dodge": 0.1 },
+      "combat": { "strafe": 0.1, "attack_slots": 2, "commit_ticks": 60, "dodge": 0.1, "lead": 0.5 },
       "group": { "call_radius": 180, "flank": 0.15, "cutoff": 0 },
       "patrol": { "radius": 60, "wait_ticks": [120, 400], "leash": 320 }
     },
@@ -96,7 +107,7 @@
     "ambusher": {
       "_": "Ждёт неподвижно и бьёт в упор: призрак, вампир, грибник, хищный цветок. Замечает поздно, но, заметив, срывается сразу.",
       "perception": { "fov_deg": 100, "hearing": 150, "reaction_ticks": 5, "lose_ticks": 60, "memory_ticks": 300 },
-      "combat": { "strafe": 0.15, "attack_slots": 3, "commit_ticks": 30, "dodge": 0.5 },
+      "combat": { "strafe": 0.15, "attack_slots": 3, "commit_ticks": 30, "dodge": 0.5, "ambush": true, "dash": 0.7, "dash_ticks": 30 },
       "group": { "call_radius": 140, "flank": 0.6 },
       "patrol": { "radius": 30, "wait_ticks": [180, 500], "leash": 520 }
     },
@@ -106,7 +117,7 @@
       "perception": { "fov_deg": 170, "hearing": 240, "reaction_ticks": 14 },
       "combat": {
         "prefer_range": 90, "keep_band": 26, "strafe": 0.5,
-        "attack_slots": 3, "regroup_ticks": 120, "dodge": 0.45
+        "attack_slots": 3, "regroup_ticks": 120, "dodge": 0.45, "lead": 1.0
       },
       "group": { "call_radius": 320, "spacing": 34, "flank": 0.2, "surround_slots": 8 },
       "patrol": { "radius": 90, "leash": 800 }
@@ -123,7 +134,7 @@
     },
     "demon": {
       "_": "Ломится напролом: решение держит долго, отступать не умеет.",
-      "combat": { "commit_ticks": 70, "strafe": 0.15, "flinch": false, "dodge": 0.2 },
+      "combat": { "commit_ticks": 70, "strafe": 0.15, "flinch": false, "dodge": 0.2, "dash": 0.3 },
       "patrol": { "leash": 1200 }
     },
     "spirit": {
@@ -134,7 +145,7 @@
     "beast": {
       "_": "Стая: перекликается далеко, обходит с боков и кружит, выбирая момент.",
       "perception": { "hearing": 320, "reaction_ticks": 8 },
-      "combat": { "strafe": 0.45, "dodge": 0.55 },
+      "combat": { "strafe": 0.45, "dodge": 0.55, "dash": 0.6 },
       "group": { "call_radius": 380, "flank": 0.7, "surround_slots": 8 }
     },
     "humanoid": {
@@ -145,7 +156,7 @@
     "construct": {
       "_": "Тяжёлый и прямой: не кружит, не отступает, реагирует с опозданием.",
       "perception": { "reaction_ticks": 30 },
-      "combat": { "strafe": 0.0, "commit_ticks": 90, "flinch": false, "dodge": 0.0 },
+      "combat": { "strafe": 0.0, "commit_ticks": 90, "flinch": false, "dodge": 0.0, "dash": 0.0, "lead": 0.3 },
       "group": { "flank": 0.0, "spacing": 34, "cutoff": 0 }
     },
     "plant": {
@@ -163,7 +174,7 @@
     "ooze": {
       "_": "Глаз нет — видит вокруг себя, но недалеко и без хитростей.",
       "perception": { "fov_deg": 360, "hearing": 120, "reaction_ticks": 18, "memory_ticks": 180 },
-      "combat": { "strafe": 0.0, "dodge": 0.0 },
+      "combat": { "strafe": 0.0, "dodge": 0.0, "lead": 0.2 },
       "group": { "flank": 0.0, "cutoff": 0 }
     },
     "aberration": {

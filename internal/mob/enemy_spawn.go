@@ -51,11 +51,15 @@ type EnemySpawnConfig struct {
 	} `json:"tiers"`
 
 	Rate struct {
-		IntervalTicks int     `json:"interval_ticks"`
-		Attempts      int     `json:"attempts"`
-		PlaceTries    int     `json:"place_tries"`
-		GroupSpread   float64 `json:"group_spread"`
-		MinGroupGap   float64 `json:"min_group_gap"`
+		IntervalTicks int `json:"interval_ticks"`
+		// EmptyIntervalTicks — темп подсева на зачищенной местности,
+		// EmptyShare — доля бюджета у игрока, ниже которой она такой считается.
+		EmptyIntervalTicks int     `json:"empty_interval_ticks"`
+		EmptyShare         float64 `json:"empty_share"`
+		Attempts           int     `json:"attempts"`
+		PlaceTries         int     `json:"place_tries"`
+		GroupSpread        float64 `json:"group_spread"`
+		MinGroupGap        float64 `json:"min_group_gap"`
 	} `json:"rate"`
 
 	Elite struct {
@@ -108,6 +112,11 @@ func (c *EnemySpawnConfig) Validate() error {
 		return fmt.Errorf("mob: не заданы веса тиров")
 	case c.Rate.IntervalTicks <= 0 || c.Rate.Attempts <= 0 || c.Rate.PlaceTries <= 0:
 		return fmt.Errorf("mob: нулевой темп спавна")
+	case c.Rate.EmptyIntervalTicks <= 0 || c.Rate.EmptyIntervalTicks > c.Rate.IntervalTicks:
+		return fmt.Errorf("mob: подсев на зачищенной местности не быстрее обычного: %d против %d",
+			c.Rate.EmptyIntervalTicks, c.Rate.IntervalTicks)
+	case c.Rate.EmptyShare <= 0 || c.Rate.EmptyShare > 1:
+		return fmt.Errorf("mob: empty_share=%.2f вне 0..1", c.Rate.EmptyShare)
 	case c.InitialFill < 0 || c.InitialFill > 1:
 		return fmt.Errorf("mob: initial_fill=%.2f вне 0..1", c.InitialFill)
 	case c.Elite.Chance < 0 || c.Elite.Chance > 1:

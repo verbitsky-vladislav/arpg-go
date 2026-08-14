@@ -18,6 +18,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
+	"github.com/vladislav/game/internal/audio"
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/engine"
 	"github.com/vladislav/game/internal/mob"
@@ -89,6 +90,10 @@ func ticks(ms int) int { return ms * config.TPS / 1000 }
 type groundItem struct {
 	id string
 	n  int
+	// power — украденная сила, если это камень умения. Такой камень падает и
+	// подбирается так же, как всё остальное, но светится и уходит не в сумку,
+	// а в ячейку умений.
+	power *mob.Stolen
 
 	icon  *ebiten.Image
 	pos   engine.Vec2 // куда легла
@@ -105,9 +110,15 @@ func (d *groundItem) depth() float64 { return d.at.Y }
 
 // draw рисует лежащую вещь: тень на земле и иконку над ней. Тень нужна не для
 // красоты — по ней видно, куда вещь ляжет, пока она ещё в прыжке.
+//
+// Камень умения вдобавок светится: он выпадает редко, и потерять его в траве —
+// худшее, что может случиться с добычей за забег.
 func (d *groundItem) draw(dst *ebiten.Image, at engine.Vec2) {
 	x, y := math.Round(at.X), math.Round(at.Y)
 	vector.FillRect(dst, float32(x)-4, float32(y)-1, 8, 2, lootShadow, false)
+	if d.power != nil {
+		d.drawGlow(dst, x, y)
+	}
 	if d.icon == nil {
 		// Предмет без иконки не должен пропадать с карты: он всё ещё лежит и
 		// всё ещё подбирается.
@@ -125,6 +136,28 @@ func (d *groundItem) draw(dst *ebiten.Image, at engine.Vec2) {
 		tx, ty := x+float64(b.Dx())/2-ui.PixelTextWidth(n, 1), y-d.lift-ui.PixelTextHeight(1)
 		ui.PixelText(dst, n, tx+1, ty+1, 1, chestShadow)
 		ui.PixelText(dst, n, tx, ty, 1, chestCount)
+	}
+}
+
+// drawGlow подсвечивает камень умения: ореол из того же спрайта, размноженного
+// по восьми сторонам со сложением цвета, — тем же способом, что у сундука
+// (chest.draw). У пиксель-арта это дешевле и честнее отдельной маски: контур
+// повторяет силуэт кадра, каким бы он ни был.
+func (d *groundItem) drawGlow(dst *ebiten.Image, x, y float64) {
+	if d.icon == nil {
+		return
+	}
+	b := d.icon.Bounds()
+	ix, iy := x-float64(b.Dx())/2, y-d.lift-float64(b.Dy())
+	// Мерцание медленное и неглубокое: камень должен притягивать взгляд, а не
+	// мигать как аварийка.
+	k := 0.55 + 0.25*math.Sin(float64(d.age)/14)
+	for _, dir := range chestGlowDirs {
+		op := &ebiten.DrawImageOptions{Blend: ebiten.BlendLighter}
+		op.GeoM.Translate(ix+dir.X, iy+dir.Y)
+		op.ColorScale.ScaleWithColor(stoneGlow(d.power))
+		op.ColorScale.ScaleAlpha(float32(k))
+		dst.DrawImage(d.icon, op)
 	}
 }
 
@@ -234,9 +267,13 @@ func (g *Game) updateLoot() {
 // grab прячет вещь в сумку. false — влезла не вся: остаток продолжает лежать,
 // добыча не пропадает от того, что сумка полна.
 func (g *Game) grab(d *groundItem) bool {
+	if d.power != nil {
+		return g.grabStone(d) // камень умения идёт не в сумку, а в ячейку
+	}
 	left := g.bag.Add(d.id, d.n)
 	if got := d.n - left; got > 0 {
 		g.fx.text(g.lootHead(d), "+"+strconv.Itoa(got)+" "+g.items.Name(d.id), fxLoot)
+		g.sfx.at(audio.Pickup, d.at)
 		d.full = false
 	}
 	d.n = left
@@ -248,6 +285,7 @@ func (g *Game) grab(d *groundItem) bool {
 	if !d.full {
 		d.full = true
 		g.fx.text(g.lootHead(d), "СУМКА ПОЛНА", fxHurt)
+		g.sfx.play(audio.UIDenied)
 	}
 	return false
 }

@@ -10,9 +10,14 @@ import (
 	"github.com/vladislav/game/internal/physics"
 )
 
-// navStep — сторона клетки навигации в пикселях. Грубее физической сетки:
+// navStep — сторона клетки навигации в пикселях. Грубее физической (8 px):
 // огибать стену надо целиком, а вдоль неё ведёт физика.
-const navStep = 32
+//
+// Шестнадцать, а не тридцать два: на грубой сетке центр клетки не попадает в
+// узкий проход, и тело, которое физически в него пролезает, навигация считает
+// запертым. Перестройка всех трёх полос карты 2048×2048 стоит 1.2 мс раз в 20
+// тиков (см. BenchmarkNavRebuild) — за это можно и заплатить.
+const navStep = 16
 
 // navRebuildTicks — как часто разливать волну от игрока. За треть секунды цель
 // далеко не уходит, а обход сетки стоит дороже одного шага врага.
@@ -137,7 +142,7 @@ func NewEnemySpawner(cfg *EnemySpawnConfig, cat *EnemyCatalog, bhv *BehaviorSet,
 		cfg: cfg, cat: cat, bhv: bhv, world: w, packs: packs, rng: rng,
 		table:  BuildEnemyTable(cat, w.Biome()),
 		squad:  NewSquad(),
-		nav:    NewNav(w.Field(), navStep, 8),
+		nav:    NewNav(w.Field(), navStep),
 		counts: map[string]int{},
 	}
 }
@@ -181,7 +186,7 @@ func (s *EnemySpawner) Populate(night bool) {
 func (s *EnemySpawner) Update(t Target, hasPlayer bool, playerFloor uint8, night bool) {
 	s.tick++
 
-	if hasPlayer && s.tick%s.cfg.Rate.IntervalTicks == 0 {
+	if hasPlayer && s.tick%s.interval(t.Pos) == 0 {
 		s.spawnCycle(t.Pos, night)
 	}
 	if hasPlayer && s.tick%max(s.cfg.DespawnIntervalTicks, 1) == 0 {
@@ -203,6 +208,20 @@ func (s *EnemySpawner) Update(t Target, hasPlayer bool, playerFloor uint8, night
 		e.Update(ctx)
 	}
 	s.collect()
+}
+
+// interval — через сколько тиков следующая попытка подсева.
+//
+// Там, где игрок всех вырезал, мир восстанавливается быстрее: иначе выгодной
+// тактикой становится «выкосить пятачок и жить на нём», а зачищенная местность
+// на полминуты превращается в безопасный коридор. Спокойный темп остаётся там,
+// где и так есть кого встретить.
+func (s *EnemySpawner) interval(player engine.Vec2) int {
+	r := s.cfg.Rate
+	if s.nearDanger(player) < s.cfg.Danger.NearBudget*r.EmptyShare {
+		return max(1, r.EmptyIntervalTicks)
+	}
+	return max(1, r.IntervalTicks)
 }
 
 // collect убирает исчезнувших и освобождает их место в бюджете.

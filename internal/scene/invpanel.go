@@ -87,11 +87,3 @@ func (w invPanel) cell(dst *ebiten.Image, ox, oy float64, sw, sh int, s item.Slo
 		ui.PixelText(dst, n, tx, ty, 1, chestCount)
 	}
 }
-
-// nameAt — как называется предмет в ячейке i (пусто, если ячейка пуста).
-func (w invPanel) nameAt(inv *item.Inventory, i int) string {
-	if s := inv.At(i); !s.Empty() {
-		return w.cat.Name(s.ID)
-	}
-	return ""
-}

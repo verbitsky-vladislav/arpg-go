@@ -17,6 +17,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/vladislav/game/internal/assets"
+	"github.com/vladislav/game/internal/audio"
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/core"
 	"github.com/vladislav/game/internal/scene"
@@ -48,6 +49,13 @@ func main() {
 	if err := ui.InitPanels(loader, "ui/rpg_basic"); err != nil {
 		log.Println("окна интерфейса:", err)
 	}
+	// Звук — один банк на процесс, и он тоже не обязателен: без звуковой карты
+	// (и в отладочных прогонах) игра идёт молча, а не падает.
+	if err := audio.Init(loader.FS(), "audio"); err != nil {
+		log.Println("звук:", err)
+	}
+	s := settings.Get()
+	audio.SetVolume(s.Volume, s.SFXVolume, s.MusicVolume)
 
 	// Экраны за пунктами меню подключаются здесь: сцены знают друг о друге
 	// ровно столько, сколько скажет точка входа.

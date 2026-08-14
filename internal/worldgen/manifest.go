@@ -219,17 +219,22 @@ type Hangers struct {
 // 128 px, а ствол у земли 22-28. Поэтому размещение и столкновения считаются по
 // Body — ширине рисунка у самой земли, замеренной из PNG.
 type Prop struct {
-	ID        string   `json:"id"`
-	File      string   `json:"file"`
-	Group     string   `json:"group"` // группа размещения, см. propGroups
-	Footprint [2]int   `json:"footprint,omitempty"`
-	Anchor    [2]int   `json:"anchor,omitempty"`
-	Body      int      `json:"body"`     // ширина тела у земли в пикселях
-	Collides  bool     `json:"collides"` // непроходим ли (мелочь — нет)
-	OnTrail   bool     `json:"on_trail"` // можно ли ставить на тропу
-	On        []string `json:"on"`
-	Zone      []string `json:"zone,omitempty"`
-	Weight    int      `json:"weight"`
+	ID        string `json:"id"`
+	File      string `json:"file"`
+	Group     string `json:"group"` // группа размещения, см. propGroups
+	Footprint [2]int `json:"footprint,omitempty"`
+	Anchor    [2]int `json:"anchor,omitempty"`
+	Body      int    `json:"body"` // ширина тела у земли в пикселях
+	// Base — точка опоры ВНУТРИ спрайта, в пикселях: середина нижних строк
+	// рисунка. Низ-центр холста опорой считать нельзя — рисунок его почти
+	// никогда не касается: у лежащего бревна он кончается на 46 px выше и на
+	// 5 px левее, и барьер уезжал ниже и правее самого бревна.
+	Base     [2]int   `json:"base"`
+	Collides bool     `json:"collides"` // непроходим ли (мелочь — нет)
+	OnTrail  bool     `json:"on_trail"` // можно ли ставить на тропу
+	On       []string `json:"on"`
+	Zone     []string `json:"zone,omitempty"`
+	Weight   int      `json:"weight"`
 	// Anim — покачивание на ветру: File тогда указывает на вертикальную полосу
 	// кадров, а не на одиночный спрайт.
 	Anim          *PropAnim `json:"anim,omitempty"`

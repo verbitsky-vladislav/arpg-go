@@ -146,12 +146,14 @@ func loadPersons(l *assets.Loader) ([]bestEntry, string) {
 					cat.Base.Speed.Run*b.SpeedScale*lo.SpeedScale),
 			}
 			if lo.CanStrike() {
+				// Урон в карточке базовый: он свойство героя, а не лоадаута —
+				// сколько снимет удар на самом деле, решает вещь в руке.
 				facts = append(facts,
-					fmt.Sprintf("УРОН        %d", lo.Attack.Damage),
+					fmt.Sprintf("УРОН        %s + ОРУЖИЕ", cat.Base.Damage),
 					fmt.Sprintf("РАЗМАХ      %.0f ПКС / %.0f ГРАД", lo.Attack.Reach, lo.Attack.Arc),
 					fmt.Sprintf("ЗАМАХ       %.2f С", float64(lo.Attack.SwingTicks)/config.TPS))
 			} else {
-				facts = append(facts, "БЕЗ ОРУЖИЯ НЕ БЬЁТ")
+				facts = append(facts, "ЭТИМ НЕ БЬЮТ")
 			}
 			e := bestEntry{title: b.Title.RU, sub: lo.Title.RU, facts: facts}
 			p, err := character.LoadPack(l, "character", b, lo)
@@ -277,11 +279,14 @@ func enemyFacts(t *mob.Tier, items *item.Catalog) []string {
 		f = append(f, "ДОБЫЧА      "+strings.Join(out, ", "))
 	}
 	if p := ty.Power; p != nil {
+		// Урон в карточке — как у самого слабого тира: с кого сняли, тем сила и
+		// крепче, а заряды считаются обратно её крепости (mob.PowerCharges).
+		dmg := t.StolenDamage()
 		f = append(f,
-			fmt.Sprintf("СИЛА        %s, УРОН %d", word(bestElement, p.Element), p.Attack.Damage),
+			fmt.Sprintf("СИЛА        %s, УРОН %d", word(bestElement, p.Element), dmg),
 			fmt.Sprintf("            РАЗМАХ %.0f ПКС / %.0f ГРАД", p.Attack.Reach, p.Attack.Arc),
 			fmt.Sprintf("ОТДАЁТ ЕЁ   С ШАНСОМ %d%%, ЗАРЯДОВ %d",
-				int(p.StealChance*100), p.Charges))
+				int(p.StealChance*100), mob.PowerCharges(dmg)))
 	} else {
 		f = append(f, "СИЛЫ НЕ ОСТАВЛЯЕТ")
 	}
@@ -469,6 +474,7 @@ func (b *Bestiary) Update() (Scene, error) {
 	sec := b.section()
 	sec.ensure()
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		uiCancel()
 		if sec.detail >= 0 {
 			sec.detail = -1 // из статьи о виде — обратно к сетке
 			return b, nil

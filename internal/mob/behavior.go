@@ -40,6 +40,17 @@ type CombatBehavior struct {
 	// отскока. Ноль означает «не умеет»: голем стоит под ударом.
 	Dodge      float64 `json:"dodge"`
 	DodgeTicks int     `json:"dodge_ticks"`
+	// Lead — доля упреждения при замахе: 0 — бить в текущую точку цели, 1 — в
+	// ту, где она окажется к кадру попадания.
+	Lead float64 `json:"lead"`
+	// Dash — рывок за отрывающейся целью: шанс, длина и множитель скорости.
+	Dash      float64 `json:"dash"`
+	DashTicks int     `json:"dash_ticks"`
+	DashScale float64 `json:"dash_scale"`
+	// FinishHP — доля здоровья цели, ниже которой перестают осторожничать.
+	FinishHP float64 `json:"finish_hp"`
+	// Ambush — ждёт неподвижно, пока не заметит цель.
+	Ambush bool `json:"ambush"`
 }
 
 // GroupBehavior — как враги договариваются между собой.
@@ -176,6 +187,14 @@ func (s *BehaviorSet) Validate() []string {
 				add("%s: dodge=%.2f вне 0..1", who, b.Combat.Dodge)
 			case b.Combat.Dodge > 0 && b.Combat.DodgeTicks <= 0:
 				add("%s: умеет отскакивать, но длина отскока нулевая", who)
+			case b.Combat.Lead < 0 || b.Combat.Lead > 1:
+				add("%s: lead=%.2f вне 0..1", who, b.Combat.Lead)
+			case b.Combat.Dash < 0 || b.Combat.Dash > 1:
+				add("%s: dash=%.2f вне 0..1", who, b.Combat.Dash)
+			case b.Combat.Dash > 0 && (b.Combat.DashTicks <= 0 || b.Combat.DashScale <= 1):
+				add("%s: умеет рывок, но он не быстрее обычного бега", who)
+			case b.Combat.FinishHP < 0 || b.Combat.FinishHP > 1:
+				add("%s: finish_hp=%.2f вне 0..1", who, b.Combat.FinishHP)
 			}
 		}
 	}

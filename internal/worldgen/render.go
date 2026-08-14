@@ -121,10 +121,13 @@ func drawProps(dst *image.RGBA, mp *MapV1, biomeDir string, ts, scale int) {
 			h := img.Bounds().Dy() / p.Frames
 			img = img.SubImage(image.Rect(0, 0, img.Bounds().Dx(), h)).(*image.RGBA)
 		}
-		// футпримт задан в тайлах, спрайт может быть меньше кратного — выравниваем
-		// по низу-центру футпринта, то есть по якорю, как считает генератор
-		dx := p.X*ts*scale + (p.W*ts*scale-img.Bounds().Dx()*scale)/2
-		dy := (p.Y+p.H)*ts*scale - img.Bounds().Dy()*scale
+		// Геометрия ровно та же, что в игре (internal/world/props.go): опора
+		// РИСУНКА (p.Base) ставится в низ-центр нарисованной клетки якоря, со
+		// сдвигом dual-grid на полтайла. Иначе превью врёт: объект на нём стоит
+		// не там, где стоит в забеге, и по превью не увидеть расхождения с физикой.
+		cx, cy := p.X+p.Anchor[0], p.Y+p.Anchor[1]-1
+		dx := (cx*ts + ts - p.Base[0]) * scale
+		dy := (cy*ts + ts + ts/2 - p.Base[1]) * scale
 		drawTileScaled(dst, img, dx, dy, scale, 0)
 	}
 }

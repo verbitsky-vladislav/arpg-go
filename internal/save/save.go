@@ -75,6 +75,16 @@ type Char struct {
 	Bag   []Slot          `json:"bag"`
 	Worn  map[string]Slot `json:"worn"` // гнездо → надетая вещь
 	Chest *Chest          `json:"chest,omitempty"`
+	// Skills — украденные умения по ячейкам: пустая ячейка — пустая запись.
+	// Порядок важен: игрок помнит, на какой клавише что висело.
+	Skills []Skill `json:"skills,omitempty"`
+
+	// Живой мир на момент выхода: звери, враги и брошенные на землю вещи. Сама
+	// карта лежит отдельным файлом (см. world.go) — она тяжёлая и не меняется,
+	// а эти трое меняются каждый тик и потому живут здесь, рядом с героем.
+	Beasts []Beast `json:"beasts,omitempty"`
+	Foes   []Foe   `json:"foes,omitempty"`
+	Ground []Drop  `json:"ground,omitempty"`
 
 	Playtime int `json:"playtime"` // секунд в забеге
 	Deaths   int `json:"deaths"`

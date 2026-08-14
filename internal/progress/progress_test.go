@@ -141,30 +141,64 @@ func TestMobLevel(t *testing.T) {
 	}
 }
 
-// TestBandFollowsCurve — опыт за ровесника растёт вместе с ценой уровня, и одно
-// с другим сходится: уровень стоит примерно KillsMin..KillsMin+KillsSpan
-// убийств. Без этого поздние уровни были бы недостижимы в принципе.
-func TestBandFollowsCurve(t *testing.T) {
-	for _, l := range []int{1, 2, 5, 10, 25, 50, 99} {
+// TestKillsCurve — цена уровня в убийствах ровесника: опорные точки баланса.
+// Это главное число темпа, и промахи в нём не видны ни по опыту, ни по полосе.
+func TestKillsCurve(t *testing.T) {
+	want := []struct {
+		level int
+		kills float64
+	}{
+		{1, 5},     // первые уровни берутся за пять драк
+		{10, 10},   //
+		{50, 100},  //
+		{99, 1000}, // сотый уровень — тысяча ровесников
+	}
+	for _, w := range want {
+		got := progress.Kills(w.level)
+		if got < w.kills*0.93 || got > w.kills*1.07 {
+			t.Errorf("уровень %d стоит %.0f убийств, а должен ≈%.0f", w.level, got, w.kills)
+		}
+	}
+	for l := 1; l < progress.MaxLevel-1; l++ {
+		if progress.Kills(l+1) <= progress.Kills(l) {
+			t.Fatalf("уровень %d дешевле предыдущего в убийствах", l+1)
+		}
+	}
+}
+
+// TestBandRises — опыт за моба растёт вместе с его уровнем. Это не само собой
+// разумеется: цена уровня в убийствах растёт почти так же быстро, как цена в
+// опыте, и стоит перегнуть — тварь посильнее станет платить меньше слабой.
+func TestBandRises(t *testing.T) {
+	prevLo, prevHi := 0, 0
+	for l := 1; l < progress.MaxLevel; l++ {
 		lo, hi := progress.Band(l)
 		if lo <= 0 || hi <= lo {
 			t.Fatalf("уровень %d: полоса %d..%d", l, lo, hi)
 		}
-		mid := float64(lo+hi) / 2
-		kills := float64(progress.Need(l)) / mid
-		if kills < progress.KillsMin-0.5 || kills > progress.KillsMin+progress.KillsSpan+0.5 {
-			t.Errorf("уровень %d: %.1f убийств ровесника на уровень — вне обещанного", l, kills)
+		if lo < prevLo || hi < prevHi {
+			t.Fatalf("уровень %d платит меньше %d-го: %d..%d против %d..%d",
+				l, l-1, lo, hi, prevLo, prevHi)
 		}
+		prevLo, prevHi = lo, hi
 	}
-	// Первые уровни берутся меньшим числом убийств, чем поздние.
-	first := float64(progress.Need(1)) / midOf(1)
-	last := float64(progress.Need(90)) / midOf(90)
-	if first >= last {
-		t.Errorf("ранние уровни качаются не быстрее: %.1f против %.1f убийств", first, last)
+	// Полоса и кривая убийств — одно и то же соглашение, записанное с двух
+	// сторон: Need = опыт за ровесника × число ровесников.
+	for _, l := range []int{1, 10, 50, 99} {
+		lo, hi := progress.Band(l)
+		got := float64(lo+hi) / 2 * progress.Kills(l)
+		if d := got / float64(progress.Need(l)); d < 0.97 || d > 1.03 {
+			t.Errorf("уровень %d: полоса × убийства = %.0f, а уровень стоит %d",
+				l, got, progress.Need(l))
+		}
 	}
 }
 
-func midOf(l int) float64 {
-	lo, hi := progress.Band(l)
-	return float64(lo+hi) / 2
+// TestEarlyLevelsFaster — ранние уровни берутся много меньшим числом драк, чем
+// поздние. Ради этого кривая убийств и растёт медленнее цены уровня.
+func TestEarlyLevelsFaster(t *testing.T) {
+	if progress.Kills(90) < 50*progress.Kills(1) {
+		t.Errorf("поздний уровень стоит %.0f драк против %.0f на первом — разрыв мал",
+			progress.Kills(90), progress.Kills(1))
+	}
 }

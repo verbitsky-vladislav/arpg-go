@@ -1,0 +1,81 @@
+{
+  "id": "female_stick",
+  "name": "stick",
+  "type": "female",
+  "category": "player",
+  "source_pack": "female",
+  "frame": {
+    "h": 64,
+    "w": 64
+  },
+  "directions": [
+    "down",
+    "left",
+    "right",
+    "up",
+    "down_right",
+    "down_left",
+    "up_right",
+    "up_left"
+  ],
+  "animations": {
+    "attack": {
+      "file": "attack8.png",
+      "frames": 8,
+      "fps": 7,
+      "loop": false
+    },
+    "death": {
+      "file": "death8.png",
+      "frames": 7,
+      "fps": 7,
+      "loop": false
+    },
+    "hurt": {
+      "file": "hurt8.png",
+      "frames": 5,
+      "fps": 7,
+      "loop": false
+    },
+    "idle": {
+      "file": "idle8.png",
+      "frames": 12,
+      "fps": 7,
+      "loop": true
+    },
+    "run": {
+      "file": "run8.png",
+      "frames": 8,
+      "fps": 7,
+      "loop": true
+    },
+    "run_attack": {
+      "file": "run_attack8.png",
+      "frames": 8,
+      "fps": 7,
+      "loop": false
+    },
+    "walk": {
+      "file": "walk8.png",
+      "frames": 6,
+      "fps": 7,
+      "loop": true
+    },
+    "walk_attack": {
+      "file": "walk_attack8.png",
+      "frames": 6,
+      "fps": 7,
+      "loop": false
+    }
+  },
+  "bbox": {
+    "x": 9,
+    "y": 12,
+    "w": 46,
+    "h": 44
+  },
+  "anchor": {
+    "x": 31,
+    "y": 47
+  }
+}

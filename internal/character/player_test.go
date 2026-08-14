@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/vladislav/game/internal/character"
+	"github.com/vladislav/game/internal/combat"
 	"github.com/vladislav/game/internal/engine"
 	"github.com/vladislav/game/internal/physics"
 	"github.com/vladislav/game/internal/sprite"
@@ -202,8 +203,12 @@ func TestAttackStrikesOnce(t *testing.T) {
 			t.Fatalf("%s: за один замах %d ударов, ожидался один", name, len(hits))
 		}
 		h := hits[0]
-		if h.Damage != p.Loadout.Attack.Damage {
-			t.Errorf("%s: урон %d вместо %d", name, h.Damage, p.Loadout.Attack.Damage)
+		want := p.Power().Damage.Physical
+		if h.Damage.Physical < want.Min || h.Damage.Physical > want.Max {
+			t.Errorf("%s: урон %d вне диапазона %s", name, h.Damage.Physical, want)
+		}
+		if h.Damage.Total() != h.Damage.Physical {
+			t.Errorf("%s: удар без оружия нанёс не только физический урон: %+v", name, h.Damage)
 		}
 		front := start.Add(engine.Vec2{X: h.Reach - 1})
 		back := start.Add(engine.Vec2{X: -(h.Reach - 1)})
@@ -220,33 +225,101 @@ func TestAttackStrikesOnce(t *testing.T) {
 	})
 }
 
-// TestUnarmedNeverStrikes — лоадаут без урона не бьёт вовсе: ни замаха, ни
-// сектора, ни остановки на ходу. Это свойство данных (attack.damage=0), а не
-// отсутствия анимации, поэтому проверяется на поведении, а не на клипах.
-func TestUnarmedNeverStrikes(t *testing.T) {
-	each(t, func(t *testing.T, name string, p *character.Player) {
-		if p.Loadout.CanStrike() {
-			t.Skip("лоадаут с ударом")
+// TestWeaponReplacesBaseDamage — базовый урон это урон «без всего»: вещь в руке
+// замещает его целиком, и палка на 2-4 бьёт ровно на 2-4. Иначе число на экране
+// не сходилось бы с числом в таблице.
+func TestWeaponReplacesBaseDamage(t *testing.T) {
+	armed(t, func(t *testing.T, name string, p *character.Player) {
+		base := p.Cat.Base.Damage.Physical
+		bare := hitDamage(t, name, p)
+		if bare.Physical < base.Min || bare.Physical > base.Max {
+			t.Errorf("%s: голыми руками %d, а базовый урон %s", name, bare.Physical, base)
 		}
-		if p.CanAttack() {
-			t.Errorf("%s: готов бить, хотя оружия нет", name)
-		}
-		if hits := run(p, character.Input{Attack: true}, plain, 300); len(hits) != 0 {
-			t.Errorf("%s: без оружия прошло %d ударов", name, len(hits))
-		}
-		p.Update(character.Input{Attack: true}, plain)
-		if p.State() == character.Attacking {
-			t.Errorf("%s: без оружия вошёл в замах", name)
-		}
-		// Ход не должен сбиваться попыткой ударить.
-		at := p.Pos.X
-		for range 10 {
-			p.Update(character.Input{Move: right, Attack: true}, plain)
-		}
-		if p.Pos.X <= at {
-			t.Errorf("%s: попытка удара остановила ход", name)
+
+		stick := combat.Roll{Min: 2, Max: 4}
+		p.SetWeapon(&combat.Weapon{
+			Speed: 1, Shape: combat.ShapeSingle,
+			Damage: combat.Rolls{Physical: stick},
+		})
+		for range 8 {
+			p.Revive(start)
+			got := hitDamage(t, name, p)
+			if got.Physical < stick.Min || got.Physical > stick.Max {
+				t.Fatalf("%s: с оружием %d вне %s — база подмешалась к урону вещи",
+					name, got.Physical, stick)
+			}
 		}
 	})
+}
+
+// TestWeaponWithoutDamageKeepsBase — вещь без своего урона базу не отменяет:
+// ею бьют как рукой, разница только в анимации.
+func TestWeaponWithoutDamageKeepsBase(t *testing.T) {
+	p := player(t, "male", "stick")
+	p.SetWeapon(&combat.Weapon{Speed: 1, Shape: combat.ShapeSingle})
+	if got := p.Power().Damage; got != p.Cat.Base.Damage {
+		t.Errorf("вещь без урона дала %+v вместо базового %+v", got, p.Cat.Base.Damage)
+	}
+}
+
+// TestAreaWeaponHitsAround — площадное оружие бьёт кругом вокруг героя: и за
+// спину достаёт, и сектор лоадаута ему не указ.
+func TestAreaWeaponHitsAround(t *testing.T) {
+	p := player(t, "male", "stick")
+	p.SetWeapon(&combat.Weapon{
+		Speed: 1, Shape: combat.ShapeArea, Radius: 60,
+		Damage: combat.Rolls{Physical: combat.Roll{Min: 1, Max: 1}},
+	})
+	hits := run(p, character.Input{Attack: true, Aim: engine.Vec2{X: 300, Y: 100}, HasAim: true},
+		plain, 120)
+	if len(hits) != 1 {
+		t.Fatalf("за один замах %d ударов, ожидался один", len(hits))
+	}
+	h := hits[0]
+	if h.Single {
+		t.Error("площадное оружие пришло одиночным ударом")
+	}
+	if !h.Covers(start.Add(engine.Vec2{X: -50}), 0) {
+		t.Errorf("цель за спиной не задета кругом reach=%.0f arc=%.0f", h.Reach, h.Arc)
+	}
+	if h.Covers(start.Add(engine.Vec2{X: 200}), 0) {
+		t.Error("цель за пределами радиуса задета")
+	}
+}
+
+// TestAttackSpeedShortensSwing — быстрое оружие сжимает и замах, и перезарядку.
+func TestAttackSpeedShortensSwing(t *testing.T) {
+	slow := player(t, "male", "stick")
+	fast := player(t, "male", "stick")
+	fast.SetWeapon(&combat.Weapon{
+		Speed: 2, Shape: combat.ShapeSingle,
+		Damage: combat.Rolls{Physical: combat.Roll{Min: 1, Max: 1}},
+	})
+	const ticks = 240
+	count := func(p *character.Player) int {
+		n := 0
+		for range ticks {
+			p.Update(character.Input{Attack: true}, plain)
+			if _, ok := p.Strike(); ok {
+				n++
+			}
+		}
+		return n
+	}
+	s, f := count(slow), count(fast)
+	if f <= s {
+		t.Errorf("оружие вдвое быстрее дало %d ударов против %d обычных", f, s)
+	}
+}
+
+// hitDamage — урон одного удара с текущим оружием.
+func hitDamage(t *testing.T, name string, p *character.Player) combat.Damage {
+	t.Helper()
+	hits := run(p, character.Input{Attack: true}, plain, 120)
+	if len(hits) != 1 {
+		t.Fatalf("%s: за один замах %d ударов, ожидался один", name, len(hits))
+	}
+	return hits[0].Damage
 }
 
 // TestAttackRate — удержание удара даёт серию замахов, но не чаще темпа,
@@ -430,8 +503,8 @@ func TestEquipKeepsCharacter(t *testing.T) {
 		t.Errorf("лоадаут не сменился: %s", p.Loadout.ID)
 	}
 	hits := run(p, character.Input{Attack: true}, plain, 120)
-	if len(hits) != 1 || hits[0].Damage != sword.Attack.Damage {
-		t.Errorf("после смены оружия удары %v, ожидался один на %d урона", hits, sword.Attack.Damage)
+	if len(hits) != 1 {
+		t.Errorf("после смены оружия %d ударов, ожидался один", len(hits))
 	}
 	if p.Frame() == nil {
 		t.Error("после смены оружия нечего рисовать")
@@ -460,33 +533,72 @@ func TestSetBodyKeepsHealthShare(t *testing.T) {
 	}
 }
 
-// TestShallowWadesSlower — мелководье проходимо, но вязкое: герой в него
-// заходит и бредёт медленнее, чем по суше. Раньше берег был для него стеной.
-func TestShallowWadesSlower(t *testing.T) {
+// TestWaterBlocksPlayer — вода непроходима: ни мелководье, ни глубина. Герой
+// упирается в берег и остаётся на суше.
+//
+// Раньше мелководье было вязкой дорогой, и это оказалось плохой идеей на игре:
+// вода перестала читаться как граница, и в неё заходили случайно, не понимая,
+// что происходит с управлением.
+func TestWaterBlocksPlayer(t *testing.T) {
 	each(t, func(t *testing.T, name string, p *character.Player) {
 		w := marsh()
 		p.Revive(engine.Vec2{X: 190, Y: 100})
-		run(p, character.Input{Move: right}, w, 60)
-		if p.Pos.X <= 200 {
-			t.Fatalf("%s: не зашёл в мелководье (x=%.1f)", name, p.Pos.X)
+		run(p, character.Input{Move: right, Run: true}, w, 300)
+		if p.Pos.X > 200 {
+			t.Errorf("%s: зашёл в воду (x=%.1f)", name, p.Pos.X)
 		}
-		if p.Pos.X > 280 {
-			t.Errorf("%s: вышел на глубину (x=%.1f)", name, p.Pos.X)
+		if p.Pos.X <= 190 {
+			t.Errorf("%s: упёрся, не дойдя до берега (x=%.1f)", name, p.Pos.X)
 		}
+	})
+}
 
-		// Скорость по суше и по мели за одно и то же время.
-		p.Revive(engine.Vec2{X: 100, Y: 100})
-		run(p, character.Input{Move: right}, w, 20)
-		dry := p.Pos.X - 100
-		p.Revive(engine.Vec2{X: 210, Y: 100})
-		run(p, character.Input{Move: right}, w, 20)
-		wet := p.Pos.X - 210
-		if dry <= 0 || wet <= 0 {
-			t.Fatalf("%s: персонаж не сдвинулся (суша %.2f, мель %.2f)", name, dry, wet)
+// TestAimDrivesStrike — герой бьёт туда, где курсор, а не туда, куда идёт.
+// Одно из двух: смотреть можно в одну сторону, а отступать в другую.
+func TestAimDrivesStrike(t *testing.T) {
+	armed(t, func(t *testing.T, name string, p *character.Player) {
+		// Идём влево, целимся вправо: удар обязан уйти вправо.
+		in := character.Input{
+			Move: engine.Vec2{X: -1}, Attack: true,
+			Aim: start.Add(engine.Vec2{X: 200}), HasAim: true,
 		}
-		if got := wet / dry; got < physics.ShallowSpeed-0.05 || got > physics.ShallowSpeed+0.05 {
-			t.Errorf("%s: по мели %.2f от скорости по суше, ждали %.2f",
-				name, got, physics.ShallowSpeed)
+		hits := run(p, in, plain, 120)
+		if len(hits) != 1 {
+			t.Fatalf("%s: ударов %d вместо одного", name, len(hits))
+		}
+		if hits[0].Face.X <= 0.5 {
+			t.Errorf("%s: удар ушёл в сторону движения (face=%v), а не на прицел",
+				name, hits[0].Face)
+		}
+		if p.Dir() != sprite.Right {
+			t.Errorf("%s: смотрит %v, хотя прицел справа", name, p.Dir())
+		}
+	})
+}
+
+// TestAttackWhileMovingAnyDirection — с ударом на ходу герой продолжает идти, и
+// идти он может куда угодно: хоть от цели, которую бьёт.
+func TestAttackWhileMovingAnyDirection(t *testing.T) {
+	armed(t, func(t *testing.T, name string, p *character.Player) {
+		if !p.Loadout.Attack.OnMove {
+			t.Skip("лоадаут не умеет бить на ходу")
+		}
+		in := character.Input{
+			Move: engine.Vec2{X: -1}, Attack: true,
+			Aim: start.Add(engine.Vec2{X: 200}), HasAim: true,
+		}
+		p.Update(in, plain) // старт замаха
+		in.Attack = false
+		at := p.Pos.X
+		for range 12 {
+			p.Update(in, plain)
+			p.Strike()
+		}
+		if p.State() != character.Attacking {
+			t.Fatalf("%s: замах кончился раньше проверки (%v)", name, p.State())
+		}
+		if p.Pos.X >= at {
+			t.Errorf("%s: в замахе не отступил (был %.1f, стал %.1f)", name, at, p.Pos.X)
 		}
 	})
 }

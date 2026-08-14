@@ -96,7 +96,8 @@ func TestIconsResolve(t *testing.T) {
 func TestCatalogSane(t *testing.T) {
 	_, c := load(t)
 	kinds := map[string]bool{
-		item.KindMaterial: true, item.KindValuable: true, item.KindGear: true,
+		item.KindMaterial: true, item.KindValuable: true,
+		item.KindGear: true, item.KindSkill: true,
 	}
 	for _, id := range c.IDs() {
 		it, _ := c.Get(id)

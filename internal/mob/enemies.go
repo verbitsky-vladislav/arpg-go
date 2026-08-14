@@ -52,10 +52,11 @@ type Power struct {
 	// Нужен рубящим силам: след клинка у всех белый, и без окраски украденный
 	// удар не отличить от собственного взмаха героя. У стихийных сил пусто —
 	// огонь и дым и так говорят за себя.
-	Tint        string      `json:"tint"`
-	StealChance float64     `json:"steal_chance"`
-	Charges     int         `json:"charges"`
-	Attack      PowerAttack `json:"attack"`
+	Tint        string  `json:"tint"`
+	StealChance float64 `json:"steal_chance"`
+	// Зарядов у силы здесь нет: сколько раз ею ударят, зависит не от типа, а от
+	// того, с кого её сняли, — см. PowerCharges (steal.go).
+	Attack PowerAttack `json:"attack"`
 }
 
 // TintColor — разобранный Tint. ok=false, если цвет не задан.
@@ -306,8 +307,6 @@ func (c *EnemyCatalog) Validate() []string {
 				add("%s: power без стихии", id)
 			case p.StealChance <= 0 || p.StealChance > 1:
 				add("%s: power.steal_chance=%.2f вне 0..1", id, p.StealChance)
-			case p.Charges <= 0:
-				add("%s: power.charges <= 0", id)
 			case p.Attack.Damage <= 0:
 				add("%s: power.attack.damage <= 0", id)
 			case p.Attack.Reach <= 0:

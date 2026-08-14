@@ -6,6 +6,8 @@ package item
 // slot, а какие из них показывать, решает разметка окна (panels.json). Так
 // новое гнездо появляется правкой данных, а не кода.
 
+import "github.com/vladislav/game/internal/combat"
+
 // Equipment — надетые вещи по гнёздам.
 type Equipment struct {
 	cat  *Catalog
@@ -86,6 +88,20 @@ func (e *Equipment) Loadout() string {
 		return it.Loadout
 	}
 	return ""
+}
+
+// Weapon — боевые свойства того, что в гнезде оружия (nil — гнездо пусто или
+// вещь в нём боевых свойств не несёт). Ими герой и бьёт: урон, скорость, форма
+// удара и состояния приходят от вещи, а не от лоадаута.
+func (e *Equipment) Weapon() *combat.Weapon {
+	if e == nil {
+		return nil
+	}
+	s := e.worn[SlotWeapon]
+	if s.Empty() {
+		return nil
+	}
+	return e.cat.Weapon(s.ID)
 }
 
 // SlotWeapon — гнездо оружия. Оно единственное, о котором знает код: от него

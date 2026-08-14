@@ -6,6 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
+	"github.com/vladislav/game/internal/audio"
 	"github.com/vladislav/game/internal/engine"
 	"github.com/vladislav/game/internal/progress"
 	"github.com/vladislav/game/internal/ui"
@@ -28,7 +29,41 @@ func (g *Game) reward(at engine.Vec2, lvl, xp int) {
 	g.fx.xp(at, got)
 	if g.prog.Add(got) > 0 {
 		g.fx.level(engine.Vec2{X: g.pl.Pos.X, Y: g.pl.Pos.Y - 46}, g.prog.Level)
+		// Уровень — не про место в мире, а про игрока: звучит по центру и
+		// поверх всего, как и надпись.
+		g.sfx.play(audio.LevelUp)
 	}
+}
+
+// drawTargetName рисует над целью строку «имя  УР N», центрируя её по cx.
+//
+// Уровень стоит рядом с именем, потому что от него зависит, стоит ли драка
+// времени, а узнавать это из бестиария посреди боя игрок не пойдёт. Цвет
+// уровня несёт смысл, и тот же самый, что и везде: голубой — как полоса опыта
+// и как всплывающее «+N», серый — как ноль над трупом. Так «с этого опыта не
+// будет» видно до драки, а не после неё.
+//
+// Имя не гаснет вместе с уровнем: кто именно тебя бьёт, важно независимо от
+// того, платят за него или нет.
+func (g *Game) drawTargetName(dst *ebiten.Image, name string, lvl int, cx, y float64) {
+	// Правило разрыва спрашивается у самого progress.Gain, а не пересчитывается
+	// здесь: показанное на экране и начисленное после удара обязаны совпасть.
+	col := hudXP
+	if progress.Gain(g.prog.Level, lvl, 1) == 0 {
+		col = fxNoXP
+	}
+
+	lv := fmt.Sprintf("УР %d", lvl)
+	nw := ui.PixelTextWidth(name+"  ", 1)
+	x := cx - (nw+ui.PixelTextWidth(lv, 1))/2
+
+	// Тень в пиксель, как под числами урона: подпись висит на чём попало — на
+	// траве, на тропе, на самом мобе. Погашенному уровню она нужнее всех:
+	// тусклый он по замыслу, а нечитаемым быть не должен.
+	ui.PixelText(dst, name, x+1, y+1, 1, hudShadow)
+	ui.PixelText(dst, lv, x+nw+1, y+1, 1, hudShadow)
+	ui.PixelText(dst, name, x, y, 1, hudText)
+	ui.PixelText(dst, lv, x+nw, y, 1, col)
 }
 
 // Полоса опыта под полосой здоровья. Тонкая нарочно: здоровье надо видеть

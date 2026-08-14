@@ -6,6 +6,7 @@ import (
 
 	"github.com/vladislav/game/internal/assets"
 	"github.com/vladislav/game/internal/character"
+	"github.com/vladislav/game/internal/combat"
 	"github.com/vladislav/game/internal/engine"
 	"github.com/vladislav/game/internal/progress"
 )
@@ -15,7 +16,7 @@ import (
 func sweep(from engine.Vec2) character.Hit {
 	return character.Hit{
 		Center: from, Face: engine.Vec2{X: 0, Y: 1},
-		Reach: 1e6, Arc: 360, Damage: 1e6,
+		Reach: 1e6, Arc: 360, Damage: combat.Damage{Physical: 1e6},
 	}
 }
 
@@ -105,7 +106,7 @@ func TestAnimalKillGivesXP(t *testing.T) {
 		if !a.Alive() || !h.Covers(a.Pos, a.Radius()) {
 			continue
 		}
-		if a.Hit(h.Damage) {
+		if a.Hit(h.Damage.Total()) {
 			g.reward(g.headOf(a), a.Level, a.XP)
 		}
 	}

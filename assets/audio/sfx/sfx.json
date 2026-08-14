@@ -1,0 +1,190 @@
+{
+  "sounds": {
+    "chest_open": {
+      "files": [
+        "ui/chest_open_00.wav",
+        "ui/chest_open_01.wav",
+        "ui/chest_open_02.wav"
+      ],
+      "cooldown_ms": 200,
+      "voices": 1,
+      "jitter": 0.06
+    },
+    "enemy_death": {
+      "files": [
+        "combat/enemy_death_00.wav",
+        "combat/enemy_death_01.wav",
+        "combat/enemy_death_02.wav"
+      ],
+      "cooldown_ms": 80,
+      "voices": 3,
+      "jitter": 0.1
+    },
+    "hit_blunt": {
+      "files": [
+        "combat/hit_blunt_00.wav",
+        "combat/hit_blunt_01.wav",
+        "combat/hit_blunt_02.wav"
+      ],
+      "cooldown_ms": 50,
+      "voices": 3,
+      "jitter": 0.12
+    },
+    "hit_flesh": {
+      "files": [
+        "combat/hit_flesh_00.wav",
+        "combat/hit_flesh_01.wav",
+        "combat/hit_flesh_02.wav"
+      ],
+      "cooldown_ms": 45,
+      "voices": 4,
+      "jitter": 0.12
+    },
+    "hit_metal": {
+      "files": [
+        "combat/hit_metal_00.wav",
+        "combat/hit_metal_01.wav",
+        "combat/hit_metal_02.wav"
+      ],
+      "cooldown_ms": 45,
+      "voices": 4,
+      "jitter": 0.12
+    },
+    "hurt": {
+      "files": [
+        "player/hurt_00.wav",
+        "player/hurt_01.wav",
+        "player/hurt_02.wav"
+      ],
+      "cooldown_ms": 120,
+      "voices": 2,
+      "jitter": 0.06
+    },
+    "level_up": {
+      "files": [
+        "player/level_up_00.wav",
+        "player/level_up_01.wav",
+        "player/level_up_02.wav"
+      ],
+      "cooldown_ms": 400,
+      "voices": 1
+    },
+    "pickup": {
+      "files": [
+        "player/pickup_00.wav",
+        "player/pickup_01.wav",
+        "player/pickup_02.wav"
+      ],
+      "cooldown_ms": 60,
+      "voices": 3,
+      "jitter": 0.08
+    },
+    "step_grass": {
+      "files": [
+        "steps/step_grass_00.wav",
+        "steps/step_grass_01.wav",
+        "steps/step_grass_02.wav"
+      ],
+      "cooldown_ms": 90,
+      "voices": 4,
+      "jitter": 0.15
+    },
+    "step_stone": {
+      "files": [
+        "steps/step_stone_00.wav",
+        "steps/step_stone_01.wav",
+        "steps/step_stone_02.wav"
+      ],
+      "cooldown_ms": 90,
+      "voices": 4,
+      "jitter": 0.15
+    },
+    "step_water": {
+      "files": [
+        "steps/step_water_00.wav",
+        "steps/step_water_01.wav",
+        "steps/step_water_02.wav"
+      ],
+      "cooldown_ms": 110,
+      "voices": 3,
+      "jitter": 0.18
+    },
+    "step_wood": {
+      "files": [
+        "steps/step_wood_00.wav",
+        "steps/step_wood_01.wav",
+        "steps/step_wood_02.wav"
+      ],
+      "cooldown_ms": 90,
+      "voices": 4,
+      "jitter": 0.15
+    },
+    "swing_heavy": {
+      "files": [
+        "combat/swing_heavy_00.wav",
+        "combat/swing_heavy_01.wav",
+        "combat/swing_heavy_02.wav"
+      ],
+      "cooldown_ms": 70,
+      "voices": 3,
+      "jitter": 0.1
+    },
+    "swing_light": {
+      "files": [
+        "combat/swing_light_00.wav",
+        "combat/swing_light_01.wav",
+        "combat/swing_light_02.wav"
+      ],
+      "cooldown_ms": 60,
+      "voices": 3,
+      "jitter": 0.1
+    },
+    "ui_cancel": {
+      "files": [
+        "ui/ui_cancel_00.wav",
+        "ui/ui_cancel_01.wav",
+        "ui/ui_cancel_02.wav"
+      ],
+      "cooldown_ms": 60,
+      "voices": 2
+    },
+    "ui_confirm": {
+      "files": [
+        "ui/ui_confirm_00.wav",
+        "ui/ui_confirm_01.wav",
+        "ui/ui_confirm_02.wav"
+      ],
+      "cooldown_ms": 60,
+      "voices": 2
+    },
+    "ui_denied": {
+      "files": [
+        "ui/ui_denied_00.wav",
+        "ui/ui_denied_01.wav",
+        "ui/ui_denied_02.wav"
+      ],
+      "cooldown_ms": 200,
+      "voices": 1,
+      "jitter": 0.05
+    },
+    "ui_equip": {
+      "files": [
+        "ui/ui_equip_00.wav",
+        "ui/ui_equip_01.wav",
+        "ui/ui_equip_02.wav"
+      ],
+      "cooldown_ms": 80,
+      "voices": 2,
+      "jitter": 0.08
+    },
+    "ui_move": {
+      "files": [
+        "ui/ui_move_00.wav",
+        "ui/ui_move_01.wav",
+        "ui/ui_move_02.wav"
+      ],
+      "cooldown_ms": 35,
+      "voices": 2
+    }
+  }
+}

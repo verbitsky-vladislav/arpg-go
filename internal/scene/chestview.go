@@ -67,6 +67,7 @@ func newChestView(g *Game, c *chest) *chestView {
 func (v *chestView) Update() (Scene, error) {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) ||
 		inpututil.IsKeyJustPressed(settings.Key(settings.ActUse)) {
+		uiCancel()
 		return v.g, nil
 	}
 
@@ -75,7 +76,7 @@ func (v *chestView) Update() (Scene, error) {
 	v.hover = v.w.p.SlotAt(fx, fy, v.px, v.py)
 	v.pane.aim(fx, fy)
 	if v.hover >= 0 {
-		if n := v.w.nameAt(v.c.inv, v.hover); n != "" {
+		if n := v.g.itemNote(v.c.inv.At(v.hover).ID); n != "" {
 			v.note = n
 		}
 	} else if n := v.pane.note(v.g); n != "" {

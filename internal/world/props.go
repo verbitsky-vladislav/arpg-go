@@ -25,12 +25,15 @@ import (
 
 // prop — объект, готовый к отрисовке.
 type prop struct {
-	img    *ebiten.Image
-	x, y   float64 // левый верхний угол спрайта в мире
-	depth  float64 // ключ сортировки: низ объекта
-	w, h   int     // размер кадра в пикселях
-	frames int     // кадров покачивания (0/1 — статичный)
-	ticks  int     // тиков на кадр
+	img   *ebiten.Image
+	x, y  float64 // левый верхний угол спрайта в мире
+	depth float64 // ключ сортировки: низ объекта
+	w, h  int     // размер кадра в пикселях
+	// baseX/baseY — точка, которой объект касается земли, в мире. Барьер физики
+	// стоит здесь же; по ней и сверяются картинка с физикой.
+	baseX, baseY float64
+	frames       int // кадров покачивания (0/1 — статичный)
+	ticks        int // тиков на кадр
 }
 
 // loadProps грузит спрайты объектов и раскладывает их по глубине.
@@ -50,18 +53,25 @@ func (m *Map) loadProps(l *assets.Loader, mv *worldgen.MapV1) error {
 		// Без поправки картинка и барьер расходятся: барьер оказывается на тайл
 		// правее и на полтайла ниже ствола и касается спрайта углом.
 		//
-		// Якорь спрайта (низ-центр) обязан встать в низ-центр нарисованной клетки:
-		// по x это +ts (центр квадрата вместо его левого края), по y это +ts/2.
+		// Опора берётся из РИСУНКА (p.Base), а не из края холста: до низа холста
+		// рисунок почти никогда не доходит — у лежащего бревна он кончается на
+		// 46 px выше и на 5 px левее центра. По краю холста барьер уезжал ниже и
+		// правее самого бревна.
+		cx, cy := p.X+p.Anchor[0], p.Y+p.Anchor[1]-1 // клетка, на которой стоит
+		baseX := float64(cx*m.ts + m.ts)             // центр нарисованной клетки
+		baseY := float64(cy*m.ts + m.ts + m.ts/2)    // её низ
 		pr := prop{
 			img: img,
-			x:   float64(p.X*m.ts + m.ts),
-			y:   float64(p.Y*m.ts + m.ts/2),
+			x:   baseX - float64(p.Base[0]),
+			y:   baseY - float64(p.Base[1]),
 			// глубина — низ нарисованной клетки, на которой объект стоит: так
 			// дерево на ряд выше игрока уходит за спину, а на ряд ниже закрывает его
-			depth:  float64((p.SortY+1)*m.ts + m.ts/2),
+			depth:  baseY,
 			w:      w,
 			h:      h,
 			frames: p.Frames,
+			baseX:  baseX,
+			baseY:  baseY,
 		}
 		if p.Frames > 1 {
 			pr.ticks = max(p.MS*config.TPS/1000, 1)
@@ -77,6 +87,10 @@ func (m *Map) PropCount() int { return len(m.props) }
 
 // PropX — левый край спрайта объекта i в мире.
 func (m *Map) PropX(i int) float64 { return m.props[i].x }
+
+// PropBase — точка, которой объект i касается земли (мировые пиксели). Здесь же
+// стоит его барьер в сетке физики.
+func (m *Map) PropBase(i int) (x, y float64) { return m.props[i].baseX, m.props[i].baseY }
 
 // PropDepth — ключ глубины объекта i (мировые пиксели).
 func (m *Map) PropDepth(i int) float64 { return m.props[i].depth }

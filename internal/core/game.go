@@ -5,6 +5,7 @@ package core
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 
+	"github.com/vladislav/game/internal/audio"
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/scene"
 	"github.com/vladislav/game/internal/ui"
@@ -29,6 +30,15 @@ func (g *Game) Update() error {
 		}
 		return ebiten.Termination
 	}
+	// Системный курсор прячется отсюда, а не один раз при старте: до создания
+	// окна прятать нечего, а полный экран и возврат фокуса сбрасывают состояние
+	// (подробности — в ui.KeepCursorHidden). Без этого рядом с нарисованным
+	// курсором ездит второй, системный.
+	ui.KeepCursorHidden(config.ScreenW, config.ScreenH)
+	// Время звука идёт здесь, а не в сцене: голоса надо освобождать и в меню,
+	// где никакой игровой сцены нет (см. audio.Tick).
+	audio.Tick()
+
 	next, err := g.scene.Update()
 	if err != nil {
 		return err

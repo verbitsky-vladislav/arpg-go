@@ -24,7 +24,7 @@
     "layer": "суффикс файла в <пак>/parts (demon1_attack_fire.png → attack_fire)",
     "element": "стихия эффекта; по ней вешаются сопротивления и звук",
     "steal_chance": "шанс, что убитый отдаст силу (0..1)",
-    "charges": "сколько ударов силой даётся за одну добычу",
+    "_charges": "числа зарядов здесь нет: сколько раз ударят украденной силой, зависит от того, с кого её сняли, — сильная сила даётся на считанные удары, слабая надолго, потолок общий (см. mob.PowerCharges)",
     "attack": "тот же формат, что loadouts.*.attack в character/character.json — украденная сила становится альтернативным ударом героя",
     "attack.hit_at": "кадр слоя-эффекта, на котором наносится урон; замерен по пику вспышки, а не назначен на глаз",
     "attack.reach": "замерено по самому дальнему пикселю эффекта от ног владельца",
@@ -54,7 +54,6 @@
         "layer": "attack_fire",
         "element": "fire",
         "steal_chance": 0.18,
-        "charges": 6,
         "attack": {
           "damage": 16, "reach": 27, "arc": 68,
           "swing_ticks": 40, "cooldown_ticks": 50, "knockback": 25,
@@ -63,9 +62,9 @@
       },
       "notes": "Летает, поэтому вода и обрывы ему не преграда. Бьёт с дистанции — в ближний бой не лезет.",
       "tiers": {
-        "t1": { "title": { "ru": "Бехолдер", "en": "Beholder" }, "hp": 30, "damage": 9, "speed": { "walk": 24, "run": 58 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Старший бехолдер", "en": "Greater beholder" }, "hp": 46, "damage": 12, "speed": { "walk": 26, "run": 62 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 1 },
-        "t3": { "title": { "ru": "Око бездны", "en": "Abyss eye" }, "hp": 68, "damage": 16, "speed": { "walk": 28, "run": 66 }, "xp": { "min": 27, "max": 43 }, "drop_rolls": 2 }
+        "t1": { "title": { "ru": "Бехолдер", "en": "Beholder" }, "hp": 30, "damage": 9, "speed": { "walk": 24, "run": 58 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Старший бехолдер", "en": "Greater beholder" }, "hp": 46, "damage": 12, "speed": { "walk": 26, "run": 62 }, "xp": { "min": 19, "max": 30 }, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Око бездны", "en": "Abyss eye" }, "hp": 68, "damage": 16, "speed": { "walk": 28, "run": 66 }, "xp": { "min": 23, "max": 36 }, "drop_rolls": 2 }
       }
     },
 
@@ -91,7 +90,6 @@
         "layer": "attack_fire",
         "element": "fire",
         "steal_chance": 0.15,
-        "charges": 5,
         "attack": {
           "damage": 22, "reach": 54, "arc": 80,
           "swing_ticks": 40, "cooldown_ticks": 60, "knockback": 50,
@@ -100,9 +98,9 @@
       },
       "notes": "Столб огня от ног вперёд — самый дальнобойный из наследуемых ударов. На этом типе механика кражи и обкатывалась.",
       "tiers": {
-        "t1": { "title": { "ru": "Бес-воин", "en": "Demon warrior" }, "hp": 90, "damage": 16, "speed": { "walk": 26, "run": 78 }, "xp": { "min": 27, "max": 43 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Демон крови", "en": "Blood demon" }, "hp": 135, "damage": 21, "speed": { "walk": 28, "run": 82 }, "xp": { "min": 39, "max": 62 }, "drop_rolls": 2 },
-        "t3": { "title": { "ru": "Владыка пламени", "en": "Flame lord" }, "hp": 200, "damage": 27, "speed": { "walk": 30, "run": 86 }, "xp": { "min": 56, "max": 87 }, "drop_rolls": 3 }
+        "t1": { "title": { "ru": "Бес-воин", "en": "Demon warrior" }, "hp": 90, "damage": 16, "speed": { "walk": 26, "run": 78 }, "xp": { "min": 23, "max": 36 }, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Демон крови", "en": "Blood demon" }, "hp": 135, "damage": 21, "speed": { "walk": 28, "run": 82 }, "xp": { "min": 29, "max": 46 }, "drop_rolls": 2 },
+        "t3": { "title": { "ru": "Владыка пламени", "en": "Flame lord" }, "hp": 200, "damage": 27, "speed": { "walk": 30, "run": 86 }, "xp": { "min": 36, "max": 57 }, "drop_rolls": 3 }
       }
     },
 
@@ -129,7 +127,6 @@
         "element": "slash",
         "tint": "#7ad34a",
         "steal_chance": 0.25,
-        "charges": 8,
         "attack": {
           "damage": 19, "reach": 44, "arc": 47,
           "swing_ticks": 44, "cooldown_ticks": 56, "knockback": 70,
@@ -138,9 +135,9 @@
       },
       "notes": "Не нападает первым: пока не тронут, стоит деревом. Медленный, но бьёт тяжело и далеко отбрасывает.",
       "tiers": {
-        "t1": { "title": { "ru": "Молодой энт", "en": "Young ent" }, "hp": 80, "damage": 13, "speed": { "walk": 16, "run": 40 }, "xp": { "min": 24, "max": 38 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Энт", "en": "Ent" }, "hp": 120, "damage": 17, "speed": { "walk": 17, "run": 42 }, "xp": { "min": 35, "max": 55 }, "drop_rolls": 2 },
-        "t3": { "title": { "ru": "Древень", "en": "Elder ent" }, "hp": 180, "damage": 22, "speed": { "walk": 18, "run": 44 }, "xp": { "min": 50, "max": 78 }, "drop_rolls": 2 }
+        "t1": { "title": { "ru": "Молодой энт", "en": "Young ent" }, "hp": 80, "damage": 13, "speed": { "walk": 16, "run": 40 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Энт", "en": "Ent" }, "hp": 120, "damage": 17, "speed": { "walk": 17, "run": 42 }, "xp": { "min": 27, "max": 43 }, "drop_rolls": 2 },
+        "t3": { "title": { "ru": "Древень", "en": "Elder ent" }, "hp": 180, "damage": 22, "speed": { "walk": 18, "run": 44 }, "xp": { "min": 34, "max": 53 }, "drop_rolls": 2 }
       }
     },
 
@@ -166,7 +163,6 @@
         "layer": "attack_attack",
         "element": "spectral",
         "steal_chance": 0.3,
-        "charges": 8,
         "attack": {
           "damage": 14, "reach": 42, "arc": 131,
           "swing_ticks": 30, "cooldown_ticks": 40, "knockback": 20,
@@ -176,8 +172,8 @@
       "notes": "Проходит сквозь воду и пропасти — единственный, кого не держит рельеф. Широкий взмах, бьёт на ходу.",
       "tiers": {
         "t1": { "title": { "ru": "Тень", "en": "Shade" }, "hp": 24, "damage": 7, "speed": { "walk": 30, "run": 72 }, "xp": { "min": 16, "max": 25 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Призрак", "en": "Ghost" }, "hp": 38, "damage": 10, "speed": { "walk": 32, "run": 78 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 1 },
-        "t3": { "title": { "ru": "Банши", "en": "Banshee" }, "hp": 56, "damage": 13, "speed": { "walk": 34, "run": 84 }, "xp": { "min": 24, "max": 38 }, "drop_rolls": 2 }
+        "t2": { "title": { "ru": "Призрак", "en": "Ghost" }, "hp": 38, "damage": 10, "speed": { "walk": 32, "run": 78 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Банши", "en": "Banshee" }, "hp": 56, "damage": 13, "speed": { "walk": 34, "run": 84 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 2 }
       }
     },
 
@@ -204,7 +200,6 @@
         "element": "slash",
         "tint": "#e2593c",
         "steal_chance": 0.35,
-        "charges": 10,
         "attack": {
           "damage": 13, "reach": 38, "arc": 58,
           "swing_ticks": 26, "cooldown_ticks": 30, "knockback": 30,
@@ -213,9 +208,9 @@
       },
       "notes": "Ходят стаей и быстро бегают — опасны числом, а не силой удара.",
       "tiers": {
-        "t1": { "title": { "ru": "Гнолл-падальщик", "en": "Gnoll scavenger" }, "hp": 30, "damage": 8, "speed": { "walk": 34, "run": 100 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Гнолл-охотник", "en": "Gnoll hunter" }, "hp": 46, "damage": 11, "speed": { "walk": 36, "run": 106 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 1 },
-        "t3": { "title": { "ru": "Вожак гноллов", "en": "Gnoll pack leader" }, "hp": 70, "damage": 15, "speed": { "walk": 38, "run": 112 }, "xp": { "min": 27, "max": 43 }, "drop_rolls": 2 }
+        "t1": { "title": { "ru": "Гнолл-падальщик", "en": "Gnoll scavenger" }, "hp": 30, "damage": 8, "speed": { "walk": 34, "run": 100 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Гнолл-охотник", "en": "Gnoll hunter" }, "hp": 46, "damage": 11, "speed": { "walk": 36, "run": 106 }, "xp": { "min": 19, "max": 30 }, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Вожак гноллов", "en": "Gnoll pack leader" }, "hp": 70, "damage": 15, "speed": { "walk": 38, "run": 112 }, "xp": { "min": 23, "max": 36 }, "drop_rolls": 2 }
       }
     },
 
@@ -242,7 +237,6 @@
         "element": "slash",
         "tint": "#ffbe4a",
         "steal_chance": 0.4,
-        "charges": 12,
         "attack": {
           "damage": 10, "reach": 21, "arc": 73,
           "swing_ticks": 22, "cooldown_ticks": 24, "knockback": 20,
@@ -252,8 +246,8 @@
       "notes": "Единственный из мелких, кто умеет бить на ходу (walk_attack и run_attack есть в паке) — его сила это умение и наследует. В t1 слой назван attack6_swing, в t2/t3 — attack_swing: поиск слоя сравнивает имена без цифр, поэтому разнобой художника проходит мимо.",
       "tiers": {
         "t1": { "title": { "ru": "Гоблин", "en": "Goblin" }, "hp": 22, "damage": 5, "speed": { "walk": 36, "run": 96 }, "xp": { "min": 16, "max": 25 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Гоблин-налётчик", "en": "Goblin raider" }, "hp": 34, "damage": 7, "speed": { "walk": 38, "run": 100 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 1 },
-        "t3": { "title": { "ru": "Гоблин-вожак", "en": "Goblin chief" }, "hp": 52, "damage": 10, "speed": { "walk": 40, "run": 104 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 2 }
+        "t2": { "title": { "ru": "Гоблин-налётчик", "en": "Goblin raider" }, "hp": 34, "damage": 7, "speed": { "walk": 38, "run": 100 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Гоблин-вожак", "en": "Goblin chief" }, "hp": 52, "damage": 10, "speed": { "walk": 40, "run": 104 }, "xp": { "min": 19, "max": 30 }, "drop_rolls": 2 }
       }
     },
 
@@ -280,7 +274,6 @@
         "element": "slash",
         "tint": "#caa05a",
         "steal_chance": 0.22,
-        "charges": 6,
         "attack": {
           "damage": 24, "reach": 42, "arc": 151,
           "swing_ticks": 48, "cooldown_ticks": 64, "knockback": 90,
@@ -289,9 +282,9 @@
       },
       "notes": "Самый тяжёлый удар и самый широкий сектор из наследуемых: бьёт почти вокруг себя, но замах длинный.",
       "tiers": {
-        "t1": { "title": { "ru": "Каменный голем", "en": "Stone golem" }, "hp": 110, "damage": 14, "speed": { "walk": 18, "run": 44 }, "xp": { "min": 31, "max": 48 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Рудный голем", "en": "Ore golem" }, "hp": 165, "damage": 18, "speed": { "walk": 19, "run": 46 }, "xp": { "min": 39, "max": 62 }, "drop_rolls": 2 },
-        "t3": { "title": { "ru": "Древний голем", "en": "Ancient golem" }, "hp": 250, "damage": 24, "speed": { "walk": 20, "run": 48 }, "xp": { "min": 62, "max": 97 }, "drop_rolls": 3 }
+        "t1": { "title": { "ru": "Каменный голем", "en": "Stone golem" }, "hp": 110, "damage": 14, "speed": { "walk": 18, "run": 44 }, "xp": { "min": 25, "max": 39 }, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Рудный голем", "en": "Ore golem" }, "hp": 165, "damage": 18, "speed": { "walk": 19, "run": 46 }, "xp": { "min": 29, "max": 46 }, "drop_rolls": 2 },
+        "t3": { "title": { "ru": "Древний голем", "en": "Ancient golem" }, "hp": 250, "damage": 24, "speed": { "walk": 20, "run": 48 }, "xp": { "min": 38, "max": 60 }, "drop_rolls": 3 }
       }
     },
 
@@ -317,7 +310,6 @@
         "layer": "attack_fire",
         "element": "fire",
         "steal_chance": 0.35,
-        "charges": 10,
         "attack": {
           "damage": 12, "reach": 35, "arc": 68,
           "swing_ticks": 24, "cooldown_ticks": 28, "knockback": 25,
@@ -327,8 +319,8 @@
       "notes": "Дешёвый огонь: слабее демонского, но и падает вчетверо чаще, и замах вдвое короче.",
       "tiers": {
         "t1": { "title": { "ru": "Импи", "en": "Imp" }, "hp": 20, "damage": 6, "speed": { "walk": 34, "run": 94 }, "xp": { "min": 16, "max": 25 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Огненный импи", "en": "Fire imp" }, "hp": 32, "damage": 9, "speed": { "walk": 36, "run": 98 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 1 },
-        "t3": { "title": { "ru": "Импи-поджигатель", "en": "Imp firestarter" }, "hp": 48, "damage": 12, "speed": { "walk": 38, "run": 102 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 2 }
+        "t2": { "title": { "ru": "Огненный импи", "en": "Fire imp" }, "hp": 32, "damage": 9, "speed": { "walk": 36, "run": 98 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Импи-поджигатель", "en": "Imp firestarter" }, "hp": 48, "damage": 12, "speed": { "walk": 38, "run": 102 }, "xp": { "min": 19, "max": 30 }, "drop_rolls": 2 }
       }
     },
 
@@ -354,7 +346,6 @@
         "layer": "attack_fire",
         "element": "fire",
         "steal_chance": 0.2,
-        "charges": 6,
         "attack": {
           "damage": 18, "reach": 48, "arc": 63,
           "swing_ticks": 36, "cooldown_ticks": 50, "knockback": 35,
@@ -363,9 +354,9 @@
       },
       "notes": "Держит дистанцию и отступает раньше всех (flee_hp 0.3). Огонь у него бледный, некротический — стихия та же, вид другой.",
       "tiers": {
-        "t1": { "title": { "ru": "Лич-ученик", "en": "Lich acolyte" }, "hp": 40, "damage": 12, "speed": { "walk": 26, "run": 62 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Лич", "en": "Lich" }, "hp": 62, "damage": 16, "speed": { "walk": 27, "run": 64 }, "xp": { "min": 24, "max": 38 }, "drop_rolls": 2 },
-        "t3": { "title": { "ru": "Архилич", "en": "Archlich" }, "hp": 95, "damage": 21, "speed": { "walk": 28, "run": 66 }, "xp": { "min": 35, "max": 55 }, "drop_rolls": 3 }
+        "t1": { "title": { "ru": "Лич-ученик", "en": "Lich acolyte" }, "hp": 40, "damage": 12, "speed": { "walk": 26, "run": 62 }, "xp": { "min": 19, "max": 30 }, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Лич", "en": "Lich" }, "hp": 62, "damage": 16, "speed": { "walk": 27, "run": 64 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 2 },
+        "t3": { "title": { "ru": "Архилич", "en": "Archlich" }, "hp": 95, "damage": 21, "speed": { "walk": 28, "run": 66 }, "xp": { "min": 27, "max": 43 }, "drop_rolls": 3 }
       }
     },
 
@@ -392,7 +383,6 @@
         "element": "slash",
         "tint": "#ffbe4a",
         "steal_chance": 0.3,
-        "charges": 10,
         "attack": {
           "damage": 15, "reach": 42, "arc": 122,
           "swing_ticks": 30, "cooldown_ticks": 36, "knockback": 40,
@@ -401,9 +391,9 @@
       },
       "notes": "Единственный, кто одинаково уверенно дерётся у воды и в ней: болото для него дом, а не преграда.",
       "tiers": {
-        "t1": { "title": { "ru": "Ящер-разведчик", "en": "Lizardman scout" }, "hp": 34, "damage": 8, "speed": { "walk": 32, "run": 88 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Ящер-воин", "en": "Lizardman warrior" }, "hp": 52, "damage": 11, "speed": { "walk": 33, "run": 92 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 1 },
-        "t3": { "title": { "ru": "Ящер-жрец", "en": "Lizardman priest" }, "hp": 78, "damage": 15, "speed": { "walk": 34, "run": 96 }, "xp": { "min": 27, "max": 43 }, "drop_rolls": 2 }
+        "t1": { "title": { "ru": "Ящер-разведчик", "en": "Lizardman scout" }, "hp": 34, "damage": 8, "speed": { "walk": 32, "run": 88 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Ящер-воин", "en": "Lizardman warrior" }, "hp": 52, "damage": 11, "speed": { "walk": 33, "run": 92 }, "xp": { "min": 19, "max": 30 }, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Ящер-жрец", "en": "Lizardman priest" }, "hp": 78, "damage": 15, "speed": { "walk": 34, "run": 96 }, "xp": { "min": 23, "max": 36 }, "drop_rolls": 2 }
       }
     },
 
@@ -430,7 +420,6 @@
         "element": "slash",
         "tint": "#d6de5a",
         "steal_chance": 0.4,
-        "charges": 12,
         "attack": {
           "damage": 11, "reach": 35, "arc": 137,
           "swing_ticks": 28, "cooldown_ticks": 30, "knockback": 25,
@@ -440,8 +429,8 @@
       "notes": "Замечает поздно (sight 120) — до него можно дойти вплотную. Зато бьёт широко и не убегает никогда.",
       "tiers": {
         "t1": { "title": { "ru": "Грибник", "en": "Mushroom" }, "hp": 24, "damage": 5, "speed": { "walk": 22, "run": 52 }, "xp": { "min": 16, "max": 25 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Споровик", "en": "Sporeling" }, "hp": 38, "damage": 8, "speed": { "walk": 23, "run": 54 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 1 },
-        "t3": { "title": { "ru": "Гриб-исполин", "en": "Giant fungus" }, "hp": 58, "damage": 11, "speed": { "walk": 24, "run": 56 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 2 }
+        "t2": { "title": { "ru": "Споровик", "en": "Sporeling" }, "hp": 38, "damage": 8, "speed": { "walk": 23, "run": 54 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Гриб-исполин", "en": "Giant fungus" }, "hp": 58, "damage": 11, "speed": { "walk": 24, "run": 56 }, "xp": { "min": 19, "max": 30 }, "drop_rolls": 2 }
       }
     },
 
@@ -468,7 +457,6 @@
         "element": "slash",
         "tint": "#ffbe4a",
         "steal_chance": 0.28,
-        "charges": 10,
         "attack": {
           "damage": 18, "reach": 42, "arc": 129,
           "swing_ticks": 34, "cooldown_ticks": 40, "knockback": 55,
@@ -477,9 +465,9 @@
       },
       "notes": "Как и гоблин, умеет бить на ходу, но тяжелее: наследуемый удар орка — лучший размен урона и темпа среди рубящих.",
       "tiers": {
-        "t1": { "title": { "ru": "Орк", "en": "Orc" }, "hp": 40, "damage": 10, "speed": { "walk": 30, "run": 86 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Орк-берсерк", "en": "Orc berserker" }, "hp": 62, "damage": 14, "speed": { "walk": 32, "run": 92 }, "xp": { "min": 24, "max": 38 }, "drop_rolls": 2 },
-        "t3": { "title": { "ru": "Орк-вождь", "en": "Orc warlord" }, "hp": 94, "damage": 19, "speed": { "walk": 34, "run": 96 }, "xp": { "min": 31, "max": 48 }, "drop_rolls": 3 }
+        "t1": { "title": { "ru": "Орк", "en": "Orc" }, "hp": 40, "damage": 10, "speed": { "walk": 30, "run": 86 }, "xp": { "min": 19, "max": 30 }, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Орк-берсерк", "en": "Orc berserker" }, "hp": 62, "damage": 14, "speed": { "walk": 32, "run": 92 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 2 },
+        "t3": { "title": { "ru": "Орк-вождь", "en": "Orc warlord" }, "hp": 94, "damage": 19, "speed": { "walk": 34, "run": 96 }, "xp": { "min": 25, "max": 39 }, "drop_rolls": 3 }
       }
     },
 
@@ -506,7 +494,6 @@
         "element": "slash",
         "tint": "#7ad34a",
         "steal_chance": 0.35,
-        "charges": 10,
         "attack": {
           "damage": 14, "reach": 37, "arc": 180,
           "swing_ticks": 30, "cooldown_ticks": 36, "knockback": 30,
@@ -515,9 +502,9 @@
       },
       "notes": "Эффект укуса охватывает владельца кругом — сектор обрезан до 180°, дальше бить уже некуда. Сидит на месте: убежать от него легко, наступить на него — нет.",
       "tiers": {
-        "t1": { "title": { "ru": "Хищный цветок", "en": "Carnivorous plant" }, "hp": 30, "damage": 7, "speed": { "walk": 14, "run": 30 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Лиана-душитель", "en": "Strangler vine" }, "hp": 46, "damage": 10, "speed": { "walk": 15, "run": 32 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 1 },
-        "t3": { "title": { "ru": "Трупоцвет", "en": "Corpse flower" }, "hp": 70, "damage": 14, "speed": { "walk": 16, "run": 34 }, "xp": { "min": 24, "max": 38 }, "drop_rolls": 2 }
+        "t1": { "title": { "ru": "Хищный цветок", "en": "Carnivorous plant" }, "hp": 30, "damage": 7, "speed": { "walk": 14, "run": 30 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Лиана-душитель", "en": "Strangler vine" }, "hp": 46, "damage": 10, "speed": { "walk": 15, "run": 32 }, "xp": { "min": 19, "max": 30 }, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Трупоцвет", "en": "Corpse flower" }, "hp": 70, "damage": 14, "speed": { "walk": 16, "run": 34 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 2 }
       }
     },
 
@@ -544,7 +531,6 @@
         "element": "slash",
         "tint": "#e2593c",
         "steal_chance": 0.5,
-        "charges": 14,
         "attack": {
           "damage": 9, "reach": 39, "arc": 116,
           "swing_ticks": 24, "cooldown_ticks": 26, "knockback": 20,
@@ -555,7 +541,7 @@
       "tiers": {
         "t1": { "title": { "ru": "Крыса", "en": "Rat" }, "hp": 18, "damage": 4, "speed": { "walk": 30, "run": 90 }, "xp": { "min": 16, "max": 25 }, "drop_rolls": 1 },
         "t2": { "title": { "ru": "Чумная крыса", "en": "Plague rat" }, "hp": 28, "damage": 6, "speed": { "walk": 32, "run": 96 }, "xp": { "min": 16, "max": 25 }, "drop_rolls": 1 },
-        "t3": { "title": { "ru": "Крысиный король", "en": "Rat king" }, "hp": 44, "damage": 9, "speed": { "walk": 34, "run": 100 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 2 }
+        "t3": { "title": { "ru": "Крысиный король", "en": "Rat king" }, "hp": 44, "damage": 9, "speed": { "walk": 34, "run": 100 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 2 }
       }
     },
 
@@ -582,7 +568,6 @@
         "element": "slash",
         "tint": "#9fe6d8",
         "steal_chance": 0.4,
-        "charges": 12,
         "attack": {
           "damage": 12, "reach": 24, "arc": 180,
           "swing_ticks": 26, "cooldown_ticks": 28, "knockback": 25,
@@ -592,8 +577,8 @@
       "notes": "Крутит клинком вокруг себя: близко и во все стороны. Сектор обрезан до 180° — замер дал больше, но бить за спину нельзя.",
       "tiers": {
         "t1": { "title": { "ru": "Скелет", "en": "Skeleton" }, "hp": 26, "damage": 6, "speed": { "walk": 28, "run": 76 }, "xp": { "min": 16, "max": 25 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Скелет-страж", "en": "Skeleton guard" }, "hp": 40, "damage": 9, "speed": { "walk": 30, "run": 80 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 1 },
-        "t3": { "title": { "ru": "Костяной рыцарь", "en": "Bone knight" }, "hp": 60, "damage": 13, "speed": { "walk": 32, "run": 84 }, "xp": { "min": 24, "max": 38 }, "drop_rolls": 2 }
+        "t2": { "title": { "ru": "Скелет-страж", "en": "Skeleton guard" }, "hp": 40, "damage": 9, "speed": { "walk": 30, "run": 80 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Костяной рыцарь", "en": "Bone knight" }, "hp": 60, "damage": 13, "speed": { "walk": 32, "run": 84 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 2 }
       }
     },
 
@@ -618,13 +603,13 @@
       "tiers": {
         "green": { "title": { "ru": "Зелёный слизень", "en": "Green slime" }, "element": "slash", "hp": 20, "damage": 4, "speed": { "walk": 20, "run": 46 }, "xp": { "min": 16, "max": 25 }, "drop_rolls": 1 },
         "aqua": { "title": { "ru": "Водный слизень", "en": "Aqua slime" }, "element": "slash", "hp": 24, "damage": 5, "speed": { "walk": 22, "run": 50 }, "xp": { "min": 16, "max": 25 }, "drop_rolls": 1 },
-        "arcane": { "title": { "ru": "Магический слизень", "en": "Arcane slime" }, "element": "magic", "hp": 28, "damage": 7, "speed": { "walk": 21, "run": 48 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 1 },
+        "arcane": { "title": { "ru": "Магический слизень", "en": "Arcane slime" }, "element": "magic", "hp": 28, "damage": 7, "speed": { "walk": 21, "run": 48 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 1 },
         "gold": { "title": { "ru": "Золотой слизень", "en": "Gold slime" }, "element": "slash", "hp": 26, "damage": 5, "speed": { "walk": 24, "run": 58 }, "xp": { "min": 48, "max": 75 }, "drop_rolls": 3 },
-        "ember": { "title": { "ru": "Тлеющий слизень", "en": "Ember slime" }, "element": "fire", "hp": 30, "damage": 8, "speed": { "walk": 21, "run": 48 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 1 },
-        "crimson": { "title": { "ru": "Багровый слизень", "en": "Crimson slime" }, "element": "slash", "hp": 34, "damage": 8, "speed": { "walk": 22, "run": 50 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 2 },
-        "lava": { "title": { "ru": "Лавовый слизень", "en": "Lava slime" }, "element": "fire", "hp": 40, "damage": 11, "speed": { "walk": 20, "run": 46 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 2 },
-        "shadow": { "title": { "ru": "Теневой слизень", "en": "Shadow slime" }, "element": "spectral", "hp": 38, "damage": 10, "speed": { "walk": 24, "run": 56 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 2 },
-        "violet": { "title": { "ru": "Лиловый слизень", "en": "Violet slime" }, "element": "magic", "hp": 36, "damage": 9, "speed": { "walk": 23, "run": 52 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 2 }
+        "ember": { "title": { "ru": "Тлеющий слизень", "en": "Ember slime" }, "element": "fire", "hp": 30, "damage": 8, "speed": { "walk": 21, "run": 48 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 1 },
+        "crimson": { "title": { "ru": "Багровый слизень", "en": "Crimson slime" }, "element": "slash", "hp": 34, "damage": 8, "speed": { "walk": 22, "run": 50 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 2 },
+        "lava": { "title": { "ru": "Лавовый слизень", "en": "Lava slime" }, "element": "fire", "hp": 40, "damage": 11, "speed": { "walk": 20, "run": 46 }, "xp": { "min": 19, "max": 30 }, "drop_rolls": 2 },
+        "shadow": { "title": { "ru": "Теневой слизень", "en": "Shadow slime" }, "element": "spectral", "hp": 38, "damage": 10, "speed": { "walk": 24, "run": 56 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 2 },
+        "violet": { "title": { "ru": "Лиловый слизень", "en": "Violet slime" }, "element": "magic", "hp": 36, "damage": 9, "speed": { "walk": 23, "run": 52 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 2 }
       }
     },
 
@@ -650,7 +635,6 @@
         "layer": "attack_magic",
         "element": "magic",
         "steal_chance": 0.2,
-        "charges": 7,
         "attack": {
           "damage": 17, "reach": 33, "arc": 56,
           "swing_ticks": 34, "cooldown_ticks": 44, "knockback": 30,
@@ -659,9 +643,9 @@
       },
       "notes": "Урон наносится на девятом кадре из двенадцати — самый поздний удар в игре: замах видно издалека, и в этом его слабость.",
       "tiers": {
-        "t1": { "title": { "ru": "Отродье", "en": "Vampire spawn" }, "hp": 44, "damage": 11, "speed": { "walk": 32, "run": 92 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Вампир", "en": "Vampire" }, "hp": 68, "damage": 15, "speed": { "walk": 34, "run": 96 }, "xp": { "min": 24, "max": 38 }, "drop_rolls": 2 },
-        "t3": { "title": { "ru": "Древний вампир", "en": "Elder vampire" }, "hp": 102, "damage": 20, "speed": { "walk": 36, "run": 100 }, "xp": { "min": 35, "max": 55 }, "drop_rolls": 3 }
+        "t1": { "title": { "ru": "Отродье", "en": "Vampire spawn" }, "hp": 44, "damage": 11, "speed": { "walk": 32, "run": 92 }, "xp": { "min": 19, "max": 30 }, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Вампир", "en": "Vampire" }, "hp": 68, "damage": 15, "speed": { "walk": 34, "run": 96 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 2 },
+        "t3": { "title": { "ru": "Древний вампир", "en": "Elder vampire" }, "hp": 102, "damage": 20, "speed": { "walk": 36, "run": 100 }, "xp": { "min": 27, "max": 43 }, "drop_rolls": 3 }
       }
     },
 
@@ -687,7 +671,6 @@
         "layer": "attack_smoke",
         "element": "smoke",
         "steal_chance": 0.45,
-        "charges": 12,
         "attack": {
           "damage": 10, "reach": 16, "arc": 93,
           "swing_ticks": 30, "cooldown_ticks": 32, "knockback": 15,
@@ -696,9 +679,9 @@
       },
       "notes": "Самый короткий вылет эффекта (16 px) — бить приходится вплотную. Медленный: от зомби всегда можно уйти шагом.",
       "tiers": {
-        "t1": { "title": { "ru": "Зомби", "en": "Zombie" }, "hp": 34, "damage": 6, "speed": { "walk": 16, "run": 38 }, "xp": { "min": 18, "max": 29 }, "drop_rolls": 1 },
-        "t2": { "title": { "ru": "Гниющий зомби", "en": "Rotting zombie" }, "hp": 52, "damage": 9, "speed": { "walk": 17, "run": 40 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 1 },
-        "t3": { "title": { "ru": "Мертвяк-исполин", "en": "Zombie brute" }, "hp": 80, "damage": 13, "speed": { "walk": 18, "run": 42 }, "xp": { "min": 24, "max": 38 }, "drop_rolls": 2 }
+        "t1": { "title": { "ru": "Зомби", "en": "Zombie" }, "hp": 34, "damage": 6, "speed": { "walk": 16, "run": 38 }, "xp": { "min": 18, "max": 28 }, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Гниющий зомби", "en": "Rotting zombie" }, "hp": 52, "damage": 9, "speed": { "walk": 17, "run": 40 }, "xp": { "min": 19, "max": 30 }, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Мертвяк-исполин", "en": "Zombie brute" }, "hp": 80, "damage": 13, "speed": { "walk": 18, "run": 42 }, "xp": { "min": 21, "max": 33 }, "drop_rolls": 2 }
       }
     }
   }

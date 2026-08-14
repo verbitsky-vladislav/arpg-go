@@ -4,7 +4,16 @@
   "kinds": {
     "material": "Сырьё с мобов: копится, тратится в крафте",
     "valuable": "Ценность: деньги и трофеи",
-    "gear": "Носибельная вещь: slot говорит, в какое гнездо, loadout — каким оружием герой начинает махать"
+    "gear": "Носибельная вещь: slot говорит, в какое гнездо, loadout — каким оружием герой начинает махать, weapon — что она делает в бою",
+    "skill": "Камень умения: сила, снятая с убитого врага. В сумку не ложится — только в ячейки умений, и что именно в нём заперто, решает не каталог, а тот, с кого его сняли (см. internal/mob, steal.go). Каталог даёт камню имя и картинку по стихии силы, поэтому камней ровно столько, сколько стихий."
+  },
+  "weapon": {
+    "_": "Боевые свойства вещи (internal/combat). Урон вещи замещает базовый урон героя (assets/character/character.json, base.damage — это урон кулаками, «без всего»), а размах и угол сектора приходят от лоадаута: лоадаут отвечает за то, как герой машет, вещь — за то, насколько от этого больно.",
+    "attack_speed": "во сколько раз быстрее замах и перезарядка лоадаута (1 — как нарисовано)",
+    "shape": "single — достаётся ближайшей цели в секторе; area — всем в круге радиуса radius вокруг героя",
+    "radius": "радиус поражения для shape=area, мировых пикселей",
+    "damage": "диапазоны урона по видам: physical, fire, cold, lightning — каждый {min,max}",
+    "effects": "состояния при попадании: [{kind, chance, ticks, power}]; kind — bleed, poison, burn, chill, shock, stun"
   },
   "items": [
     { "id": "raw_meat",     "name": "Сырое мясо",        "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_012" },
@@ -43,7 +52,17 @@
     { "id": "slime_crown",  "name": "Корона слизня",     "kind": "valuable", "stack":  1, "pack": "items/treasure",       "icon": "Icons_082" },
     { "id": "coin",         "name": "Монеты",            "kind": "valuable", "stack": 999, "pack": "items/treasure",      "icon": "Icons_026" },
 
-    { "id": "rusty_blade",  "name": "Ржавый клинок",     "kind": "gear",     "stack":  1, "pack": "ui/icons_16",          "icon": "Gui_icons_items/Sword1_2", "slot": "weapon", "loadout": "sword" },
-    { "id": "crude_spear",  "name": "Грубое копьё",      "kind": "gear",     "stack":  1, "pack": "items/armour_weapons", "icon": "Weapons_019", "slot": "weapon" }
+    { "id": "stone_fire",     "name": "Камень огня",     "kind": "skill",    "stack":  1, "pack": "items/resources",      "icon": "Icons_078" },
+    { "id": "stone_slash",    "name": "Камень клинка",   "kind": "skill",    "stack":  1, "pack": "items/resources",      "icon": "Icons_118" },
+    { "id": "stone_magic",    "name": "Камень чар",      "kind": "skill",    "stack":  1, "pack": "items/resources",      "icon": "Icons_038" },
+    { "id": "stone_spectral", "name": "Камень призрака", "kind": "skill",    "stack":  1, "pack": "items/resources",      "icon": "Icons_058" },
+    { "id": "stone_smoke",    "name": "Камень дыма",     "kind": "skill",    "stack":  1, "pack": "items/resources",      "icon": "Icons_200" },
+
+    { "id": "wooden_stick", "name": "Палка",             "kind": "gear",     "stack":  1, "pack": "items/resources",      "icon": "Icons_019", "slot": "weapon", "loadout": "stick",
+      "weapon": { "attack_speed": 1.0, "shape": "single", "damage": { "physical": { "min": 2, "max": 4 } } } },
+    { "id": "crude_spear",  "name": "Грубое копьё",      "kind": "gear",     "stack":  1, "pack": "items/armour_weapons", "icon": "Weapons_019", "slot": "weapon", "loadout": "stick",
+      "weapon": { "attack_speed": 0.8, "shape": "single", "damage": { "physical": { "min": 4, "max": 7 } } } },
+    { "id": "rusty_blade",  "name": "Ржавый клинок",     "kind": "gear",     "stack":  1, "pack": "ui/icons_16",          "icon": "Gui_icons_items/Sword1_2", "slot": "weapon", "loadout": "sword",
+      "weapon": { "attack_speed": 1.0, "shape": "single", "damage": { "physical": { "min": 5, "max": 9 } } } }
   ]
 }

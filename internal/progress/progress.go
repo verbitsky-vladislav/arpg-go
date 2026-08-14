@@ -67,14 +67,29 @@ const (
 	BandHigh = 1.25
 )
 
-// Сколько убийств ровесника стоит уровень: KillsMin на первом, к сотому —
-// KillsMin+KillsSpan. Отсюда берётся «первые уровни качаются быстрее»: цена
-// уровня растёт, но и опыт за моба растёт вместе с ней, а медленнее
-// становится только за счёт этого числа.
+// Сколько убийств ровесника стоит уровень:
+//
+//	уровень   1 →    5
+//	уровень  10 →   10
+//	уровень  50 →  100
+//	уровень 100 → 1000
+//
+// Здесь и живёт «первые уровни качаются быстрее», и живёт целиком: цена уровня
+// в опыте растёт ×2000 за сотню уровней, а цена в убийствах — ×200, и разницу
+// отыгрывает это число. Побочное следствие полезное: опыт за моба остаётся
+// читаемым от начала до конца игры (десятки на первых уровнях, сотни на
+// последних), а не разрастается в шестизначные числа.
+//
+// Растёт число убийств геометрически с затухающим приростом: логарифм
+// прибавляется на KillsSlope0 за уровень в начале и на KillsSlopeTail в конце.
+// Затухание обязано быть: прирост убийств должен всё время оставаться ниже
+// разгона цены уровня (StartRatio→TailRatio), иначе опыт за моба перестал бы
+// расти с его уровнем — и тварь посильнее платила бы меньше слабой.
 const (
-	KillsMin  = 5.0
-	KillsSpan = 7.0
-	killsTau  = 30.0
+	KillsMin       = 5.0
+	KillsSlope0    = 0.0835
+	KillsSlopeTail = 0.045
+	killsSlopeTau  = 23.5
 )
 
 // need[L] — опыт для перехода с уровня L на L+1. Индекс 0 не используется,
@@ -116,9 +131,11 @@ func MobLevel(hp, damage int) int {
 	return min(max(l, 1), MaxLevel)
 }
 
-// kills — сколько ровесников надо убить, чтобы взять уровень level.
-func kills(level int) float64 {
-	return KillsMin + KillsSpan*(1-math.Exp(-float64(level-1)/killsTau))
+// Kills — сколько ровесников надо убить, чтобы уйти с уровня level на следующий.
+func Kills(level int) float64 {
+	x := max(float64(level-1), 0)
+	return KillsMin * math.Exp(KillsSlopeTail*x+
+		(KillsSlope0-KillsSlopeTail)*killsSlopeTau*(1-math.Exp(-x/killsSlopeTau)))
 }
 
 // Band — сколько опыта положено давать существу уровня level. Это опорная
@@ -126,7 +143,7 @@ func kills(level int) float64 {
 // слизень намеренно выходят за неё (см. BandOff).
 func Band(level int) (lo, hi int) {
 	level = min(max(level, 1), MaxLevel)
-	mid := float64(Need(min(level, MaxLevel-1))) / kills(level)
+	mid := float64(Need(min(level, MaxLevel-1))) / Kills(level)
 	return int(math.Round(mid * BandLow)), int(math.Round(mid * BandHigh))
 }
 
