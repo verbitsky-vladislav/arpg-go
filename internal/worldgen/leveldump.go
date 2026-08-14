@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // leveldump.go — режим `worldgen level <biome-dir> [seed] [size]`: выгрузить
 // СЕТКУ УРОВНЕЙ карты текстом, не трогая .tmx. Нужен, когда карту в Tiled уже
@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func runLevelDump(args []string) {
+func RunLevelDump(args []string) {
 	if len(args) < 1 {
 		fmt.Fprintln(os.Stderr, "worldgen level <biome-dir> [seed] [size]")
 		os.Exit(2)
@@ -36,7 +36,7 @@ func runLevelDump(args []string) {
 	if err != nil {
 		fatal(err)
 	}
-	// сид считается так же, как в основном прогоне (runGenerate), иначе
+	// сид считается так же, как в основном прогоне (RunGenerate), иначе
 	// выгрузка окажется другой картой, чем seed_N.png
 	g := NewGenerator(defaultParams(size, size), uint64(seed)*0x9E3779B97F4A7C15, m)
 	g.Run()

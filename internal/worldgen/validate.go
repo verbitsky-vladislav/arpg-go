@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // validate.go — проверки E1..E12 (worldgen.spec §8) с фактическими значениями.
 // Пишет человекочитаемый отчёт. E3/E4 (недостижимое/узкое плато) — ключевые:
@@ -182,6 +182,13 @@ func (g *Generator) validate(mp *MapV1) []checkResult {
 	}
 	sort.Strings(keys)
 	add("E13", "угловые наборы покрывают все ключи", miss == 0, strings.Join(keys, ", "))
+
+	// E15: макушки, на которые положен подъём, связаны с точкой появления. E3
+	// проверяет, что лестница построена, а эта — что по ней действительно
+	// доходишь: тем же обходом и по тем же правилам, что у физики в игре.
+	unreach, plateauCells := g.navReach(mp)
+	add("E15", "на плато со ступенями можно подняться", unreach == 0,
+		fmt.Sprintf("отрезано клеток: %d из %d", unreach, plateauCells))
 
 	// E11: обязательные роли манифеста закрыты
 	roleGaps := g.Manifest.validateRoles()

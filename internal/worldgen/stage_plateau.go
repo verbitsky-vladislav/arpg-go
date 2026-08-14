@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // stage_plateau.go — возвышенность: травяной верх + скальный обрыв на юг
 // (эталон художника — assets/biomes/forest/tiles/elevated_test.tsx.tmx,

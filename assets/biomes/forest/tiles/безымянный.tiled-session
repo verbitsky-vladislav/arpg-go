@@ -4,12 +4,102 @@
     ],
     "file.lastUsedOpenFilter": "Все файлы (*)",
     "fileStates": {
-        "/Users/personal/Development/game/assets/biomes/forest/authoring/forest.tmx": {
-            "scale": 4,
+        "/Users/personal/Development/game/assets/biomes/Flying_islands/Tiled_files/Water_detilazation2.tsx": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/cave_glowing/Tiled_files/Glowing_cave.tmx": {
+            "scale": 1.1319,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 447,
-                "y": 282.25
+                "x": 260.1819948758724,
+                "y": 244.27952999381574
+            }
+        },
+        "/Users/personal/Development/game/assets/biomes/cave_glowing/Tiled_files/Glowing_cave.tmx#Details": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/cave_glowing/Tiled_files/Glowing_cave.tmx#Ground_walls": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/cave_glowing/Tiled_files/Glowing_cave.tmx#Objects": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/cave_glowing/Tiled_files/Glowing_cave.tmx#Shinies_animation": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/cave_glowing/Tiled_files/Glowing_cave.tmx#Totem_animation": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/cave_glowing/Tiled_files/Glowing_cave.tmx#Walls_shinies": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/cave_glowing/Tiled_files/Glowing_cave.tmx#Water_coasts": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/cave_glowing/Tiled_files/Glowing_cave.tmx#Water_detilazation": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/cave_glowing/Tiled_files/Glowing_cave.tmx#Wisps": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/desert/Tiled_files/Desert.tmx": {
+            "scale": 1.1645,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 161.0133104336625,
+                "y": 173.8943752683555
+            }
+        },
+        "/Users/personal/Development/game/assets/biomes/desert/Tiled_files/Desert.tmx#Animated_objects": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/desert/Tiled_files/Desert.tmx#Details": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/desert/Tiled_files/Desert.tmx#Ground_grass": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/desert/Tiled_files/Desert.tmx#Objects": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/desert/Tiled_files/Desert.tmx#Water_coasts": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/desert/Tiled_files/Desert.tmx#Water_detilazation": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/desert/Tiled_files/Desert.tmx#rocks_details": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/desert/Tiled_files/Desert.tmx#sand": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/desert/Tiled_files/Desert.tmx#spots": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/desert/Tiled_files/Water_detilazation2.tsx": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/farm/Tiled_files/Barn_interior.tmx": {
+            "scale": 3.0689,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 7.983316497767916,
+                "y": -17.758806086871516
+            }
+        },
+        "/Users/personal/Development/game/assets/biomes/farm/Tiled_files/Barn_interior.tmx#Barn_interior": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/farm/Tiled_files/Barn_interior.tmx#Interior_walls_floor": {
+            "scaleInDock": 1
+        },
+        "/Users/personal/Development/game/assets/biomes/forest/authoring/forest.tmx": {
+            "scale": 1.7651,
+            "selectedLayer": 8,
+            "viewCenter": {
+                "x": 428.0210752931846,
+                "y": 278.4544784998018
             }
         },
         "/Users/personal/Development/game/assets/biomes/forest/authoring/forest.tmx#Ground_grass": {
@@ -59,11 +149,11 @@
             "scaleInDock": 1
         },
         "elevated_test.tsx.tmx": {
-            "scale": 5.58,
+            "scale": 2.1298,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 253.9426523297491,
-                "y": 160.3942652329749
+                "x": 201.19260024415442,
+                "y": 176.77716217485212
             }
         },
         "gora_zadanie.tmx": {
@@ -102,6 +192,9 @@
     ],
     "project": "безымянный.tiled-project",
     "recentFiles": [
+        "/Users/personal/Development/game/assets/biomes/desert/Tiled_files/Desert.tmx",
+        "/Users/personal/Development/game/assets/biomes/cave_glowing/Tiled_files/Glowing_cave.tmx",
+        "/Users/personal/Development/game/assets/biomes/farm/Tiled_files/Barn_interior.tmx",
         "/Users/personal/Development/game/out/worldgen/forest/seed_1.tmx",
         "gora_zadanie.tmx",
         "/Users/personal/Development/game/out/worldgen/forest/seed_1.user.tmx",

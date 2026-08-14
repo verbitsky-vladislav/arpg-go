@@ -12,7 +12,9 @@
     "activity": ["day", "night", "any"],
     "zones": ["water", "shore", "meadow", "woods", "trail", "plateau", "farmyard"],
     "products": ["milk", "wool", "feather", "egg"],
-    "biomes": "id каталога в assets/biomes"
+    "biomes": "id каталога в assets/biomes",
+    "drops": "что падает с трупа; id — предмет из assets/items/items.json",
+    "_drops": "Ровно одна строка с chance 1.0 — обязательная добыча: с любого зверя, даже с цыплёнка, что-то остаётся, иначе убийство ничего не даёт. Она же держит количества маленькими (1-2 штуки), а всё остальное — редкие строки с низким шансом, ради которых и охотятся."
   },
 
   "species": {
@@ -35,7 +37,7 @@
       "use": { "tameable": false, "rideable": false, "products": [] },
       "drops": [
         { "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 },
-        { "id": "feather", "min": 1, "max": 3, "chance": 0.8 }
+        { "id": "feather", "min": 1, "max": 2, "chance": 0.4 }
       ],
       "voice": "drum",
       "notes": "Единственное животное с анимацией flight — взлетает при испуге вместо бега."
@@ -59,9 +61,9 @@
       "spawn": { "group": { "min": 1, "max": 2 }, "with": null },
       "use": { "tameable": false, "rideable": false, "products": [] },
       "drops": [
-        { "id": "raw_meat", "min": 2, "max": 3, "chance": 1.0 },
-        { "id": "hide", "min": 1, "max": 1, "chance": 0.6 },
-        { "id": "tusk", "min": 1, "max": 2, "chance": 0.25 }
+        { "id": "raw_meat", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "hide", "min": 1, "max": 1, "chance": 0.35 },
+        { "id": "tusk", "min": 1, "max": 1, "chance": 0.12 }
       ],
       "voice": "snort",
       "notes": "Единственное животное с готовой анимацией attack."
@@ -85,8 +87,8 @@
       "spawn": { "group": { "min": 2, "max": 4 }, "with": null },
       "use": { "tameable": true, "rideable": false, "products": ["milk"] },
       "drops": [
-        { "id": "raw_meat", "min": 3, "max": 4, "chance": 1.0 },
-        { "id": "hide", "min": 2, "max": 3, "chance": 1.0 }
+        { "id": "raw_meat", "min": 2, "max": 3, "chance": 1.0 },
+        { "id": "hide", "min": 1, "max": 2, "chance": 0.5 }
       ],
       "voice": "moo",
       "notes": ""
@@ -109,7 +111,7 @@
       "habitat": { "biomes": { "farm": 4, "glades": 1 }, "zones": ["meadow", "farmyard"], "avoid": ["water", "plateau"], "needs_settlement": true },
       "spawn": { "group": { "min": 1, "max": 2 }, "with": "buffalo" },
       "use": { "tameable": true, "rideable": false, "products": [] },
-      "drops": [{ "id": "raw_meat", "min": 1, "max": 2, "chance": 1.0 }],
+      "drops": [{ "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 }],
       "voice": "moo",
       "notes": ""
     },
@@ -132,8 +134,8 @@
       "spawn": { "group": { "min": 1, "max": 2 }, "with": null },
       "use": { "tameable": true, "rideable": false, "products": [] },
       "drops": [
-        { "id": "raw_meat", "min": 3, "max": 4, "chance": 1.0 },
-        { "id": "hide", "min": 2, "max": 2, "chance": 1.0 }
+        { "id": "raw_meat", "min": 2, "max": 3, "chance": 1.0 },
+        { "id": "hide", "min": 1, "max": 1, "chance": 0.5 }
       ],
       "voice": "moo",
       "notes": "Взрослой коровы в паке нет — молоко даёт только buffalo/goat."
@@ -156,7 +158,7 @@
       "habitat": { "biomes": { "farm": 4 }, "zones": ["meadow", "farmyard"], "avoid": ["water", "plateau"], "needs_settlement": true },
       "spawn": { "group": { "min": 1, "max": 2 }, "with": "bull" },
       "use": { "tameable": true, "rideable": false, "products": [] },
-      "drops": [{ "id": "raw_meat", "min": 1, "max": 2, "chance": 1.0 }],
+      "drops": [{ "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 }],
       "voice": "moo",
       "notes": ""
     },
@@ -178,7 +180,7 @@
       "habitat": { "biomes": { "farm": 5 }, "zones": ["farmyard", "trail"], "avoid": ["water"], "needs_settlement": true },
       "spawn": { "group": { "min": 1, "max": 1 }, "with": null },
       "use": { "tameable": true, "rideable": false, "products": [] },
-      "drops": [],
+      "drops": [{ "id": "pelt", "min": 1, "max": 1, "chance": 1.0 }],
       "voice": "meow",
       "notes": "В паке нет idle — стояния на месте у кота просто нет, подменять нечем."
     },
@@ -200,7 +202,7 @@
       "habitat": { "biomes": { "farm": 5 }, "zones": ["farmyard"], "avoid": ["water"], "needs_settlement": true },
       "spawn": { "group": { "min": 3, "max": 6 }, "with": "rooster" },
       "use": { "tameable": true, "rideable": false, "products": [] },
-      "drops": [{ "id": "feather", "min": 1, "max": 1, "chance": 0.5 }],
+      "drops": [{ "id": "feather", "min": 1, "max": 1, "chance": 1.0 }],
       "voice": "peep",
       "notes": "Взрослой курицы в паке нет — вырастает в rooster."
     },
@@ -245,9 +247,9 @@
       "spawn": { "group": { "min": 2, "max": 4 }, "with": null },
       "use": { "tameable": false, "rideable": false, "products": [] },
       "drops": [
-        { "id": "raw_meat", "min": 2, "max": 3, "chance": 1.0 },
-        { "id": "hide", "min": 1, "max": 2, "chance": 0.8 },
-        { "id": "antler", "min": 1, "max": 1, "chance": 0.3 }
+        { "id": "raw_meat", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "hide", "min": 1, "max": 1, "chance": 0.4 },
+        { "id": "antler", "min": 1, "max": 1, "chance": 0.15 }
       ],
       "voice": "bell",
       "notes": ""
@@ -270,7 +272,10 @@
       "habitat": { "biomes": { "farm": 5 }, "zones": ["farmyard", "trail"], "avoid": ["water"], "needs_settlement": true },
       "spawn": { "group": { "min": 1, "max": 1 }, "with": null },
       "use": { "tameable": true, "rideable": false, "products": [] },
-      "drops": [],
+      "drops": [
+        { "id": "fang", "min": 1, "max": 1, "chance": 1.0 },
+        { "id": "pelt", "min": 1, "max": 1, "chance": 0.25 }
+      ],
       "voice": "bark",
       "notes": "В паке нет idle — вместо него sitting (сидячая поза)."
     },
@@ -293,8 +298,8 @@
       "spawn": { "group": { "min": 1, "max": 2 }, "with": null },
       "use": { "tameable": true, "rideable": true, "products": [] },
       "drops": [
-        { "id": "raw_meat", "min": 2, "max": 2, "chance": 1.0 },
-        { "id": "hide", "min": 1, "max": 1, "chance": 0.8 }
+        { "id": "raw_meat", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "hide", "min": 1, "max": 1, "chance": 0.4 }
       ],
       "voice": "bray",
       "notes": ""
@@ -319,7 +324,7 @@
       "use": { "tameable": true, "rideable": false, "products": ["feather"] },
       "drops": [
         { "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 },
-        { "id": "feather", "min": 1, "max": 3, "chance": 0.9 }
+        { "id": "feather", "min": 1, "max": 2, "chance": 0.5 }
       ],
       "voice": "quack",
       "notes": "Самец утки. На воде — swim/swim_idle, на суше walk/idle."
@@ -344,7 +349,7 @@
       "use": { "tameable": true, "rideable": false, "products": ["feather", "egg"] },
       "drops": [
         { "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 },
-        { "id": "feather", "min": 1, "max": 3, "chance": 0.9 }
+        { "id": "feather", "min": 1, "max": 2, "chance": 0.5 }
       ],
       "voice": "quack",
       "notes": ""
@@ -367,7 +372,7 @@
       "habitat": { "biomes": { "farm": 4, "swamp": 2 }, "zones": ["water", "shore", "farmyard"], "avoid": [], "needs_settlement": false },
       "spawn": { "group": { "min": 2, "max": 5 }, "with": "duck" },
       "use": { "tameable": true, "rideable": false, "products": [] },
-      "drops": [{ "id": "feather", "min": 1, "max": 1, "chance": 0.5 }],
+      "drops": [{ "id": "feather", "min": 1, "max": 1, "chance": 1.0 }],
       "voice": "peep",
       "notes": ""
     },
@@ -413,7 +418,7 @@
       "use": { "tameable": false, "rideable": false, "products": [] },
       "drops": [
         { "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 },
-        { "id": "pelt", "min": 1, "max": 1, "chance": 0.5 }
+        { "id": "pelt", "min": 1, "max": 1, "chance": 0.3 }
       ],
       "voice": "yelp",
       "notes": "Хищник: охотится на prey, от игрока убегает (unprovoked=false)."
@@ -437,8 +442,8 @@
       "spawn": { "group": { "min": 2, "max": 4 }, "with": null },
       "use": { "tameable": true, "rideable": false, "products": ["milk"] },
       "drops": [
-        { "id": "raw_meat", "min": 1, "max": 2, "chance": 1.0 },
-        { "id": "hide", "min": 1, "max": 1, "chance": 0.6 }
+        { "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 },
+        { "id": "hide", "min": 1, "max": 1, "chance": 0.3 }
       ],
       "voice": "bleat",
       "notes": "Единственный вид, которому разрешена зона plateau."
@@ -484,8 +489,8 @@
       "spawn": { "group": { "min": 2, "max": 4 }, "with": null },
       "use": { "tameable": true, "rideable": false, "products": ["feather", "egg"] },
       "drops": [
-        { "id": "raw_meat", "min": 1, "max": 2, "chance": 1.0 },
-        { "id": "feather", "min": 2, "max": 4, "chance": 0.9 }
+        { "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 },
+        { "id": "feather", "min": 1, "max": 3, "chance": 0.5 }
       ],
       "voice": "honk",
       "notes": "Домашнее, но нападает первым — щиплется при подходе. Спрайтов swim в паке нет: либо на воду не выпускать, либо доснять."
@@ -508,7 +513,7 @@
       "habitat": { "biomes": { "farm": 4 }, "zones": ["water", "shore", "farmyard"], "avoid": [], "needs_settlement": true },
       "spawn": { "group": { "min": 2, "max": 5 }, "with": "goose" },
       "use": { "tameable": true, "rideable": false, "products": [] },
-      "drops": [{ "id": "feather", "min": 1, "max": 1, "chance": 0.5 }],
+      "drops": [{ "id": "feather", "min": 1, "max": 1, "chance": 1.0 }],
       "voice": "peep",
       "notes": "Спрайты swim в паке нет — на воду не выпускать, либо доснять."
     },
@@ -532,7 +537,7 @@
       "use": { "tameable": false, "rideable": false, "products": [] },
       "drops": [
         { "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 },
-        { "id": "pelt", "min": 1, "max": 1, "chance": 0.4 }
+        { "id": "pelt", "min": 1, "max": 1, "chance": 0.25 }
       ],
       "voice": "squeak",
       "notes": "Самое быстрое животное; замечает игрока с максимальной дистанции."
@@ -556,8 +561,8 @@
       "spawn": { "group": { "min": 1, "max": 3 }, "with": null },
       "use": { "tameable": true, "rideable": true, "products": [] },
       "drops": [
-        { "id": "raw_meat", "min": 2, "max": 3, "chance": 1.0 },
-        { "id": "hide", "min": 1, "max": 2, "chance": 0.8 }
+        { "id": "raw_meat", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "hide", "min": 1, "max": 1, "chance": 0.4 }
       ],
       "voice": "neigh",
       "notes": "Ездовое: run-анимации в паке нет, галоп — ускоренный walk."
@@ -602,7 +607,7 @@
       "habitat": { "biomes": { "farm": 5 }, "zones": ["farmyard", "trail"], "avoid": ["water"], "needs_settlement": true },
       "spawn": { "group": { "min": 2, "max": 4 }, "with": null },
       "use": { "tameable": true, "rideable": false, "products": [] },
-      "drops": [{ "id": "raw_meat", "min": 1, "max": 2, "chance": 1.0 }],
+      "drops": [{ "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 }],
       "voice": "oink",
       "notes": "Взрослой свиньи в паке нет — grows_into пустой, пробел контента."
     },
@@ -626,7 +631,7 @@
       "use": { "tameable": true, "rideable": false, "products": [] },
       "drops": [
         { "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 },
-        { "id": "pelt", "min": 1, "max": 1, "chance": 0.4 }
+        { "id": "pelt", "min": 1, "max": 1, "chance": 0.25 }
       ],
       "voice": "squeak",
       "notes": "Домашний, в отличие от дикого hare."
@@ -649,7 +654,7 @@
       "habitat": { "biomes": { "farm": 4 }, "zones": ["farmyard", "meadow"], "avoid": ["water"], "needs_settlement": true },
       "spawn": { "group": { "min": 2, "max": 4 }, "with": "rabbit" },
       "use": { "tameable": true, "rideable": false, "products": [] },
-      "drops": [],
+      "drops": [{ "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 }],
       "voice": "squeak",
       "notes": ""
     },
@@ -673,7 +678,7 @@
       "use": { "tameable": true, "rideable": false, "products": ["feather", "egg"] },
       "drops": [
         { "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 },
-        { "id": "feather", "min": 1, "max": 3, "chance": 0.9 }
+        { "id": "feather", "min": 1, "max": 2, "chance": 0.5 }
       ],
       "voice": "crow",
       "notes": "В паке нет idle — вместо него sitting (сидячая поза)."
@@ -697,8 +702,8 @@
       "spawn": { "group": { "min": 3, "max": 6 }, "with": null },
       "use": { "tameable": true, "rideable": false, "products": ["wool"] },
       "drops": [
-        { "id": "raw_meat", "min": 1, "max": 2, "chance": 1.0 },
-        { "id": "wool", "min": 1, "max": 3, "chance": 1.0 }
+        { "id": "raw_meat", "min": 1, "max": 1, "chance": 1.0 },
+        { "id": "wool", "min": 1, "max": 2, "chance": 0.6 }
       ],
       "voice": "bleat",
       "notes": "Ходит стадом — самая большая группа спавна."
@@ -723,7 +728,7 @@
       "use": { "tameable": true, "rideable": false, "products": ["feather"] },
       "drops": [
         { "id": "raw_meat", "min": 1, "max": 2, "chance": 1.0 },
-        { "id": "feather", "min": 2, "max": 4, "chance": 0.9 }
+        { "id": "feather", "min": 1, "max": 3, "chance": 0.5 }
       ],
       "voice": "gobble",
       "notes": ""

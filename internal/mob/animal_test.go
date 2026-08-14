@@ -6,21 +6,44 @@ import (
 
 	"github.com/vladislav/game/internal/engine"
 	"github.com/vladislav/game/internal/mob"
+	"github.com/vladislav/game/internal/physics"
 	"github.com/vladislav/game/internal/sprite"
 )
 
-// plainWorld — вся суша, воды нет.
-type plainWorld struct{}
+// field собирает поле 640×640 px из правила «что в этой точке».
+func field(kind func(p engine.Vec2) physics.Cell) *physics.Field {
+	const sub = 8.0
+	const side = 80
+	cells := make([]physics.Cell, side*side)
+	for sy := range side {
+		for sx := range side {
+			cells[sy*side+sx] = kind(engine.Vec2{
+				X: (float64(sx) + 0.5) * sub,
+				Y: (float64(sy) + 0.5) * sub,
+			})
+		}
+	}
+	return physics.NewField(side, side, sub, cells)
+}
 
-func (plainWorld) Walkable(engine.Vec2) bool { return true }
-func (plainWorld) Water(engine.Vec2) bool    { return false }
+// plainField — вся суша, воды нет.
+func plainField() *physics.Field {
+	return field(func(engine.Vec2) physics.Cell { return physics.Ground })
+}
 
-// pondWorld — правая половина карты залита водой: проверка, что зверя не
-// уносит туда, где ему нечем плыть.
-type pondWorld struct{}
-
-func (pondWorld) Walkable(engine.Vec2) bool { return true }
-func (pondWorld) Water(p engine.Vec2) bool  { return p.X > 200 }
+// pondField — правее x=200 вода (мель у берега, дальше глубина): проверка, что
+// зверя не уносит туда, где ему нечем плыть.
+func pondField() *physics.Field {
+	return field(func(p engine.Vec2) physics.Cell {
+		switch {
+		case p.X > 240:
+			return physics.Deep
+		case p.X > 200:
+			return physics.Shallow
+		}
+		return physics.Ground
+	})
+}
 
 func newRNG() *rand.Rand { return rand.New(rand.NewPCG(7, 11)) }
 
@@ -48,7 +71,7 @@ func TestAnimalsLive(t *testing.T) {
 	for _, a := range animals(t) {
 		id := a.Species.ID
 		start := a.Pos
-		c := mob.Ctx{World: plainWorld{}, Threat: engine.Vec2{X: 140, Y: 100}, HasThreat: true}
+		c := mob.Ctx{Field: plainField(), Threat: engine.Vec2{X: 140, Y: 100}, HasThreat: true}
 		moved := 0.0
 		// 1800 тиков — полминуты: за это время выпадает полтора десятка решений,
 		// так что «ни разу не тронулся» уже не невезение, а поломка.
@@ -73,7 +96,7 @@ func TestDeathEnds(t *testing.T) {
 		if a.Alive() {
 			t.Fatalf("%s: пережил урон больше своего hp", a.Species.ID)
 		}
-		c := mob.Ctx{World: plainWorld{}}
+		c := mob.Ctx{Field: plainField()}
 		for range 600 {
 			a.Update(c)
 			if a.Gone() {
@@ -93,7 +116,7 @@ func TestNoIdleNoStanding(t *testing.T) {
 		if a.Pack.Has("idle") {
 			continue
 		}
-		c := mob.Ctx{World: plainWorld{}}
+		c := mob.Ctx{Field: plainField()}
 		for i := range 1200 {
 			a.Update(c)
 			if a.State() == mob.Idle {
@@ -103,19 +126,26 @@ func TestNoIdleNoStanding(t *testing.T) {
 	}
 }
 
-// TestStaysOutOfWater — зверь без клипа swim в воду не заходит, даже если по
-// данным вида он водоплавающий.
+// TestStaysOutOfWater — на глубину выходит только тот, кому есть чем плыть: вид
+// водоплавающий И в паке есть клип swim. Сухопутный зверь не заходит даже на
+// мель, водоплавающий без клипа бредёт по мели, но не глубже.
 func TestStaysOutOfWater(t *testing.T) {
-	w := pondWorld{}
+	w := pondField()
 	for _, a := range animals(t) {
-		if a.Species.Locomotion.Water && a.Pack.Has("swim") {
+		sp := a.Species
+		if sp.Locomotion.Water && a.Pack.Has("swim") {
 			continue
 		}
-		c := mob.Ctx{World: w, Threat: engine.Vec2{X: 0, Y: 100}, HasThreat: true} // гонит вправо, к воде
+		c := mob.Ctx{Field: w, Threat: engine.Vec2{X: 0, Y: 100}, HasThreat: true} // гонит вправо, к воде
 		for range 900 {
 			a.Update(c)
-			if w.Water(a.Pos) {
-				t.Fatalf("%s: зашёл в воду (%.0f,%.0f) без клипа swim", a.Species.ID, a.Pos.X, a.Pos.Y)
+			switch cell := w.CellAt(a.Pos); {
+			case cell == physics.Deep:
+				t.Fatalf("%s: вышел на глубину (%.0f,%.0f) без клипа swim",
+					sp.ID, a.Pos.X, a.Pos.Y)
+			case cell == physics.Shallow && !sp.Locomotion.Water:
+				t.Fatalf("%s: сухопутный зверь забрёл на мель (%.0f,%.0f)",
+					sp.ID, a.Pos.X, a.Pos.Y)
 			}
 		}
 	}
@@ -179,6 +209,78 @@ func TestAnchors(t *testing.T) {
 		b := p.Bounds()
 		if b.W <= 0 || b.H <= 0 || b.X+b.W > p.Frame.W || b.Y+b.H > p.Frame.H {
 			t.Errorf("%s: bbox %+v не помещается в кадр %dx%d", id, b, p.Frame.W, p.Frame.H)
+		}
+	}
+}
+
+// plateauField — низ до y=400 и макушка возвышенности за ним, БЕЗ лестницы.
+func plateauField() *physics.Field {
+	return field(func(p engine.Vec2) physics.Cell {
+		if p.Y >= 400 {
+			return physics.Plateau
+		}
+		return physics.Ground
+	})
+}
+
+// TestNoClimbWithoutStairs — на возвышенность нельзя забраться, минуя лестницу.
+// Зверя гонят прямо на неё: он обязан упереться в границу этажей, даже там, где
+// обрыва не нарисовано.
+func TestNoClimbWithoutStairs(t *testing.T) {
+	w := plateauField()
+	for _, a := range animals(t) {
+		c := mob.Ctx{Field: w, Threat: engine.Vec2{X: 100, Y: 40}, HasThreat: true} // гонит вниз, к плато
+		for range 900 {
+			a.Update(c)
+			if w.CellAt(a.Pos) == physics.Plateau {
+				t.Fatalf("%s: залез на плато без лестницы (%.0f,%.0f)",
+					a.Species.ID, a.Pos.X, a.Pos.Y)
+			}
+			if a.Floor() != physics.FloorLow {
+				t.Fatalf("%s: сменил этаж без лестницы", a.Species.ID)
+			}
+		}
+	}
+}
+
+// TestCrowdSeparates — толпа, слипшаяся в одну точку, расходится и больше не
+// налезает. Это проверка сходимости попарного расталкивания: тем же способом
+// разводит тела игровой слой (scene.Game.separate), и если бы оно дрожало —
+// звери бы вечно дёргались друг об друга.
+func TestCrowdSeparates(t *testing.T) {
+	l, cat := catalog(t)
+	sp := cat.Get(cat.IDs()[0])
+	pack, err := sprite.Load(l, animalsDir+"/"+sp.Art)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := plainField()
+	rng := newRNG()
+	herd := make([]*mob.Animal, 12)
+	for i := range herd {
+		herd[i] = mob.NewAnimal(sp, pack, engine.Vec2{X: 300, Y: 300}, rng)
+	}
+
+	for range 120 {
+		for i, a := range herd {
+			for _, b := range herd[i+1:] {
+				if d, ok := physics.Separate(a.Pos, a.Radius(), b.Pos, b.Radius()); ok {
+					a.Push(f, d)
+					b.Push(f, d.Scale(-1))
+				}
+			}
+		}
+	}
+
+	for i, a := range herd {
+		for _, b := range herd[i+1:] {
+			gap := a.Radius() + b.Radius()
+			if d := engine.Dist(a.Pos, b.Pos); d < gap-0.5 {
+				t.Fatalf("тела остались внахлёст: %.2f при зазоре %.2f", d, gap)
+			}
+		}
+		if !f.Fits(a.Pos, a.Body()) {
+			t.Fatalf("особь %d вытолкнули в непроходимое: %v", i, a.Pos)
 		}
 	}
 }

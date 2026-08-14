@@ -561,5 +561,30 @@
    <wangtile tileid="1371" wangid="0,1,0,1,0,1,0,1"/>
    <wangtile tileid="1372" wangid="0,1,0,1,0,1,0,1"/>
   </wangset>
+  <wangset name="bridge_start" type="corner" tile="-1">
+   <wangcolor name="" color="#ff0000" tile="-1" probability="1"/>
+   <wangtile tileid="54" wangid="0,1,0,1,0,1,0,1"/>
+   <wangtile tileid="55" wangid="0,1,0,1,0,1,0,1"/>
+  </wangset>
+  <wangset name="bridge_end" type="corner" tile="-1">
+   <wangcolor name="" color="#ff0000" tile="-1" probability="1"/>
+   <wangtile tileid="174" wangid="0,1,0,1,0,1,0,1"/>
+   <wangtile tileid="175" wangid="0,1,0,1,0,1,0,1"/>
+  </wangset>
+  <wangset name="bridge_block_1" type="corner" tile="-1">
+   <wangcolor name="" color="#ff0000" tile="-1" probability="1"/>
+   <wangtile tileid="144" wangid="0,1,0,1,0,1,0,1"/>
+   <wangtile tileid="145" wangid="0,1,0,1,0,1,0,1"/>
+  </wangset>
+  <wangset name="bridge_block_2" type="corner" tile="-1">
+   <wangcolor name="" color="#ff0000" tile="-1" probability="1"/>
+   <wangtile tileid="114" wangid="0,1,0,1,0,1,0,1"/>
+   <wangtile tileid="115" wangid="0,1,0,1,0,1,0,1"/>
+  </wangset>
+  <wangset name="bridge_block_3" type="corner" tile="-1">
+   <wangcolor name="" color="#ff0000" tile="-1" probability="1"/>
+   <wangtile tileid="84" wangid="0,1,0,1,0,1,0,1"/>
+   <wangtile tileid="85" wangid="0,1,0,1,0,1,0,1"/>
+  </wangset>
  </wangsets>
 </tileset>

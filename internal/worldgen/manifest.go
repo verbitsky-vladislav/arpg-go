@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // manifest.go — структуры manifest.json (роли → тайлы) и его загрузка.
 // Генератор не знает слов «трава/лес», он знает роли; конкретные тайлы под роли
@@ -8,7 +8,9 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -26,12 +28,14 @@ type Manifest struct {
 	Terrains    map[string]Terrain    `json:"terrains"`
 	Transitions map[string]Transition `json:"transitions"`
 	Stairs      Stairs                `json:"stairs"`
+	Bridges     Bridges               `json:"bridges"`
 	Hangers     Hangers               `json:"hangers"`
 	Props       []Prop                `json:"props"`
 	Surface     map[string][]string   `json:"surface"`
 	Spots       SpotSet               `json:"spots"`
 
-	dir string // каталог манифеста (для резолва путей к арту), не сериализуется
+	dir  string // каталог манифеста (для резолва путей к арту), не сериализуется
+	fsys fs.FS  // откуда читать соседние файлы; nil — обычная файловая система
 }
 
 // SpotSet — набор напольных декалей (пятна травы/земли) для разбавления фона.
@@ -159,8 +163,8 @@ func (m *Manifest) loadStairs() error {
 	if !ok {
 		return fmt.Errorf("stairs: нет листа %s", st.Sheet)
 	}
-	tsxPath := filepath.Join(m.dir, strings.TrimSuffix(sh.File, filepath.Ext(sh.File))+".tsx")
-	sets, err := parseWangCorners(tsxPath)
+	tsxPath := tsxOf(sh.File)
+	sets, err := m.wangCorners(tsxPath)
 	if err != nil {
 		return fmt.Errorf("stairs: %w", err)
 	}
@@ -171,7 +175,7 @@ func (m *Manifest) loadStairs() error {
 			tbl, ok := sets[set]
 			if !ok {
 				return fmt.Errorf("stairs %s: в %s нет набора %q",
-					name, filepath.Base(tsxPath), set)
+					name, path.Base(tsxPath), set)
 			}
 			ids := tbl["1,1,1,1"]
 			if len(ids) < st.Width {
@@ -185,39 +189,97 @@ func (m *Manifest) loadStairs() error {
 	return nil
 }
 
-// Hangers — свесы (лианы) на южной грани обрыва.
+// Bridges — брод через воду: набор камней шириной Width, собираемый сверху
+// вниз из start (примыкание к северному берегу), тела (варианты чередуются) и
+// end (южный берег). Устроен как лестница, только пересекает не обрыв, а реку,
+// и потому вертикальный: горизонтального набора у художника нет.
+type Bridges struct {
+	Sheet  string   `json:"sheet"`
+	Width  int      `json:"width"`
+	Start  string   `json:"start"`
+	Blocks []string `json:"blocks"`
+	End    string   `json:"end"`
+
+	kit [][]int // ряды сверху вниз: start, тела в порядке Blocks, end
+}
+
+// Hangers — свесы (лианы) на южной грани обрыва. Вариант — такой же
+// многотайловый штамп, как у декора: вертикальная плеть это штамп шириной в
+// тайл, гирлянда-дуга — шириной в два-четыре. Лист один на всю секцию, поэтому
+// в клетках штампа поле sheet не заполняется.
 type Hangers struct {
 	Sheet    string  `json:"sheet"`
-	Variants [][]int `json:"variants"`
+	Variants []Stamp `json:"variants"`
 	On       string  `json:"on"`
 }
 
 // Prop — объект. Footprint/Anchor опциональны: если 0, меряются из PNG.
+//
+// Footprint — габарит КАРТИНКИ, и он врёт про физику вчетверо: у дерева спрайт
+// 128 px, а ствол у земли 22-28. Поэтому размещение и столкновения считаются по
+// Body — ширине рисунка у самой земли, замеренной из PNG.
 type Prop struct {
-	ID            string   `json:"id"`
-	File          string   `json:"file"`
-	Footprint     [2]int   `json:"footprint,omitempty"`
-	Anchor        [2]int   `json:"anchor,omitempty"`
-	Collides      bool     `json:"collides"`
-	On            []string `json:"on"`
-	Zone          []string `json:"zone,omitempty"`
-	Weight        int      `json:"weight"`
-	SwapOnGroundB string   `json:"swap_on_ground_b,omitempty"`
-	Prefab        bool     `json:"prefab,omitempty"`
+	ID        string   `json:"id"`
+	File      string   `json:"file"`
+	Group     string   `json:"group"` // группа размещения, см. propGroups
+	Footprint [2]int   `json:"footprint,omitempty"`
+	Anchor    [2]int   `json:"anchor,omitempty"`
+	Body      int      `json:"body"`     // ширина тела у земли в пикселях
+	Collides  bool     `json:"collides"` // непроходим ли (мелочь — нет)
+	OnTrail   bool     `json:"on_trail"` // можно ли ставить на тропу
+	On        []string `json:"on"`
+	Zone      []string `json:"zone,omitempty"`
+	Weight    int      `json:"weight"`
+	// Anim — покачивание на ветру: File тогда указывает на вертикальную полосу
+	// кадров, а не на одиночный спрайт.
+	Anim          *PropAnim `json:"anim,omitempty"`
+	SwapOnGroundB string    `json:"swap_on_ground_b,omitempty"`
+	Prefab        bool      `json:"prefab,omitempty"`
+}
+
+// PropAnim — кадры пропса в вертикальной полосе (кадр = высота футпринта).
+type PropAnim struct {
+	Frames int `json:"frames"`
+	MS     int `json:"ms"`
 }
 
 // LoadManifest читает manifest.json из каталога биома.
-func LoadManifest(biomeDir string) (*Manifest, error) {
-	path := filepath.Join(biomeDir, "manifest.json")
-	raw, err := os.ReadFile(path)
+func LoadManifest(biomeDir string) (*Manifest, error) { return LoadManifestFS(nil, biomeDir) }
+
+// readFile читает файл, лежащий рядом с манифестом биома.
+func (m *Manifest) readFile(rel string) ([]byte, error) {
+	if m.fsys != nil {
+		return fs.ReadFile(m.fsys, path.Join(m.dir, rel))
+	}
+	return os.ReadFile(filepath.Join(m.dir, rel))
+}
+
+// tsxOf — имя .tsx-разметки рядом с листом (Ground_grass.png → Ground_grass.tsx).
+func tsxOf(sheetFile string) string {
+	return strings.TrimSuffix(sheetFile, path.Ext(sheetFile)) + ".tsx"
+}
+
+// wangCorners читает угловые наборы .tsx листа биома.
+func (m *Manifest) wangCorners(rel string) (map[string]map[string][]int, error) {
+	raw, err := m.readFile(rel)
+	if err != nil {
+		return nil, fmt.Errorf("wangsets %s: %w", rel, err)
+	}
+	return parseWangCorners(raw, rel)
+}
+
+// LoadManifestFS читает манифест из произвольной файловой системы: игра держит
+// ресурсы за fs.FS (os.DirFS сейчас, embed.FS потом) и генерирует карту тем же
+// кодом, что и инструмент. fsys nil — чтение с диска по обычным путям.
+func LoadManifestFS(fsys fs.FS, biomeDir string) (*Manifest, error) {
+	m := Manifest{fsys: fsys, dir: biomeDir}
+	raw, err := m.readFile("manifest.json")
 	if err != nil {
 		return nil, fmt.Errorf("манифест: %w", err)
 	}
-	var m Manifest
 	if err := json.Unmarshal(raw, &m); err != nil {
-		return nil, fmt.Errorf("манифест %s: %w", path, err)
+		return nil, fmt.Errorf("манифест %s: %w", biomeDir, err)
 	}
-	m.dir = biomeDir
 	if m.TileSize == 0 {
 		m.TileSize = 16
 	}
@@ -230,7 +292,47 @@ func LoadManifest(biomeDir string) (*Manifest, error) {
 	if err := m.loadStairs(); err != nil {
 		return nil, err
 	}
+	if err := m.loadBridges(); err != nil {
+		return nil, err
+	}
 	return &m, nil
+}
+
+// loadBridges разбирает набор брода из .tsx листа Bridges.Sheet. Ряды идут
+// сверху вниз: start, тела в порядке Blocks, end. Отсутствие секции — не ошибка:
+// биом без брода просто не получит переправ.
+func (m *Manifest) loadBridges() error {
+	b := &m.Bridges
+	if b.Sheet == "" || b.Start == "" || b.End == "" {
+		return nil
+	}
+	sh, ok := m.Sheets[b.Sheet]
+	if !ok {
+		return fmt.Errorf("bridges: нет листа %s", b.Sheet)
+	}
+	tsxPath := tsxOf(sh.File)
+	sets, err := m.wangCorners(tsxPath)
+	if err != nil {
+		return fmt.Errorf("bridges: %w", err)
+	}
+	if b.Width <= 0 {
+		b.Width = 2
+	}
+	names := append([]string{b.Start}, b.Blocks...)
+	names = append(names, b.End)
+	for _, name := range names {
+		tbl, ok := sets[name]
+		if !ok {
+			return fmt.Errorf("bridges: в %s нет набора %q", path.Base(tsxPath), name)
+		}
+		ids := tbl["1,1,1,1"]
+		if len(ids) < b.Width {
+			return fmt.Errorf("bridges: в наборе %q %d тайлов при ширине %d",
+				name, len(ids), b.Width)
+		}
+		b.kit = append(b.kit, ids[:b.Width])
+	}
+	return nil
 }
 
 // loadWangsets заполняет Terrain.Corner из угловых наборов .tsx для ролей,
@@ -246,11 +348,11 @@ func (m *Manifest) loadWangsets() error {
 		if !ok {
 			return fmt.Errorf("роль %s: нет листа %s для wangset %s", role, t.Sheet, t.Wangset)
 		}
-		tsxPath := filepath.Join(m.dir, strings.TrimSuffix(sh.File, filepath.Ext(sh.File))+".tsx")
+		tsxPath := tsxOf(sh.File)
 		sets, ok := cache[tsxPath]
 		if !ok {
 			var err error
-			sets, err = parseWangCorners(tsxPath)
+			sets, err = m.wangCorners(tsxPath)
 			if err != nil {
 				return fmt.Errorf("роль %s: %w", role, err)
 			}
@@ -258,7 +360,7 @@ func (m *Manifest) loadWangsets() error {
 		}
 		tbl, ok := sets[t.Wangset]
 		if !ok {
-			return fmt.Errorf("роль %s: в %s нет wangset %q", role, filepath.Base(tsxPath), t.Wangset)
+			return fmt.Errorf("роль %s: в %s нет wangset %q", role, path.Base(tsxPath), t.Wangset)
 		}
 		// Разметка .tsx — источник истины, но ключи, которых художник не
 		// нарисовал, можно дописать в манифесте (поле corner). Без этого
@@ -298,11 +400,7 @@ type tsxRoot struct {
 // [top,NE,right,SE,bottom,SW,left,NW]; для corner-схемы значимы углы
 // индексов 7(NW),1(NE),3(SE),5(SW). Все тайлы комбинации копятся как варианты
 // (генератор выбирает один псевдослучайно по позиции — так поверхность не плоская).
-func parseWangCorners(path string) (map[string]map[string][]int, error) {
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("wangsets %s: %w", path, err)
-	}
+func parseWangCorners(raw []byte, path string) (map[string]map[string][]int, error) {
 	var root tsxRoot
 	if err := xml.Unmarshal(raw, &root); err != nil {
 		return nil, fmt.Errorf("wangsets %s: %w", path, err)

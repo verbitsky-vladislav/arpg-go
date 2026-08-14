@@ -32,15 +32,15 @@ const (
 	itemW         = 180
 	itemH         = 28
 	itemGap       = 10
-	itemTop       = 148
+	itemTop       = 140
 	itemTextScale = 2
 )
 
-// menuItem — пункт меню: подпись и переход. Переход nil (экран ещё не написан)
-// — пункт рисуется как обычный, но выбор ничего не делает.
+// menuItem — пункт меню: подпись и действие. Действие nil (экран ещё не
+// написан) — пункт рисуется как обычный, но выбор ничего не делает.
 type menuItem struct {
 	label string
-	next  func() Scene
+	act   func() (Scene, error)
 }
 
 // Menu — стартовый экран: заголовок и три пункта. Управление мышью
@@ -53,6 +53,10 @@ type Menu struct {
 	OnSettings func() Scene
 	OnBestiary func() Scene
 
+	// Resume — забег, поставленный на паузу: меню открыто из игры, и тот же ESC
+	// возвращает обратно. nil — возвращаться некуда (игра ещё не начиналась).
+	Resume Scene
+
 	sel int // индекс выбранного пункта
 }
 
@@ -60,10 +64,19 @@ type Menu struct {
 func NewMenu() *Menu { return &Menu{} }
 
 func (m *Menu) items() []menuItem {
+	// Переходы приходят снаружи как func() Scene — здесь они оборачиваются в
+	// действие с ошибкой, потому что выход из игры возвращает Termination.
+	open := func(f func() Scene) func() (Scene, error) {
+		if f == nil {
+			return nil
+		}
+		return func() (Scene, error) { return f(), nil }
+	}
 	return []menuItem{
-		{"СТАРТ", m.OnStart},
-		{"НАСТРОЙКИ", m.OnSettings},
-		{"БЕСТИАРИЙ", m.OnBestiary},
+		{"СТАРТ", open(m.OnStart)},
+		{"НАСТРОЙКИ", open(m.OnSettings)},
+		{"БЕСТИАРИЙ", open(m.OnBestiary)},
+		{"ВЫХОД", quit},
 	}
 }
 
@@ -73,6 +86,9 @@ func itemRect(i int) (x, y, w, h float32) {
 }
 
 func (m *Menu) Update() (Scene, error) {
+	if m.Resume != nil && inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		return m.Resume, nil
+	}
 	items := m.items()
 
 	// Мышь: наведение перекладывает выбор на пункт под курсором.
@@ -99,8 +115,8 @@ func (m *Menu) Update() (Scene, error) {
 		activate = true
 	}
 	if activate {
-		if next := items[m.sel].next; next != nil {
-			return next(), nil
+		if act := items[m.sel].act; act != nil {
+			return act()
 		}
 	}
 	return m, nil
@@ -124,7 +140,11 @@ func (m *Menu) Draw(screen *ebiten.Image) {
 		m.drawItem(screen, i, it.label, i == m.sel)
 	}
 
-	ui.PixelTextCentered(screen, "МЫШЬ ИЛИ СТРЕЛКИ - ВЫБОР, ENTER - ПУСК", config.ScreenW/2, config.ScreenH-24, 1, menuEdge)
+	hint := "МЫШЬ ИЛИ СТРЕЛКИ - ВЫБОР, ENTER - ПУСК"
+	if m.Resume != nil {
+		hint = "ESC - ВЕРНУТЬСЯ В ИГРУ,  ENTER - ВЫБОР"
+	}
+	ui.PixelTextCentered(screen, hint, config.ScreenW/2, config.ScreenH-24, 1, menuEdge)
 }
 
 // drawBackground — фон: заливка, скан-линии и рамка экрана со «срезанными»

@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // util.go — мелкие общие помощники.
 

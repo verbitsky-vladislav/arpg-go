@@ -8,6 +8,7 @@ import (
 	"github.com/vladislav/game/internal/anim"
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/engine"
+	"github.com/vladislav/game/internal/physics"
 	"github.com/vladislav/game/internal/sprite"
 )
 
@@ -32,13 +33,14 @@ func (s State) String() string {
 	return stateNames[s]
 }
 
-// World — то, что персонажу нужно знать про карту. Интерфейс тот же, что у
-// животных (mob.World), но объявлен здесь: пакет character не должен зависеть
-// от mob, чтобы герой и звери оставались независимыми.
-type World interface {
-	Walkable(p engine.Vec2) bool // можно ли там стоять
-	Water(p engine.Vec2) bool    // вода под точкой
-}
+// placeSearch — в каком радиусе искать место под героя, если в заданную точку
+// он не помещается (появление, воскрешение). Полтора экрана: дальше уносить
+// игрока от того места, куда его звали, уже нельзя.
+const placeSearch = 256
+
+// playerCaps — что герой умеет в смысле физики: заходит в мелководье (медленно),
+// но не плавает — клипа swim в паках нет, и по глубокой воде он бы «шёл стоя».
+var playerCaps = physics.Caps{Wade: true}
 
 // Input — намерения игрока за один тик. Персонаж не знает про клавиши и мышь:
 // раскладку держит тот, кто его обновляет (сцена, просмотрщик, тест). Ровно та
@@ -94,12 +96,19 @@ type Player struct {
 	Cat     *Catalog
 	Body    *Body
 	Loadout *Loadout
-	Pack    *sprite.Pack
-	Pos     engine.Vec2
-	HP      int
-	MaxHP   int
+	// Stolen — украденная у врага сила: ею бьют, когда оружия нет. Заглушка
+	// под будущий механизм воровства (у врагов в enemies.json уже описаны
+	// power/steal_chance/charges), выдавать её пока некому. Своих клипов удара
+	// у неё не будет — attackClip в этом случае бьёт из стойки, а замах
+	// рисует игровой слой.
+	Stolen *Loadout
+	Pack   *sprite.Pack
+	Pos    engine.Vec2
+	HP     int
+	MaxHP  int
 
 	vel     engine.Vec2
+	floor   uint8 // этаж: 0 — низ, 1 — макушка плато (physics.Floor*)
 	dir     sprite.Dir
 	state   State
 	clip    string     // имя проигрываемого клипа ("" — клипа нет)
@@ -182,9 +191,26 @@ func (p *Player) Radius() float64 { return p.Cat.Base.BodyRadius }
 // Invulnerable — идут ли кадры неуязвимости после полученного удара.
 func (p *Player) Invulnerable() bool { return p.invuln > 0 }
 
-// CanAttack — готов ли удар (перезарядка вышла, персонаж не занят).
+// Armed — есть ли чем бить вообще: оружие в руках или украденная у врага сила.
+// Голыми руками герой не дерётся, поэтому правило одно на всю игру и лежит
+// здесь, а не в сцене.
+func (p *Player) Armed() bool {
+	return p.Loadout.CanStrike() || p.Stolen.CanStrike()
+}
+
+// striker — чем бьём: оружием, а если его нет — украденной силой.
+func (p *Player) striker() *Loadout {
+	if !p.Loadout.CanStrike() && p.Stolen.CanStrike() {
+		return p.Stolen
+	}
+	return p.Loadout
+}
+
+// CanAttack — готов ли удар: есть чем бить, перезарядка вышла, персонаж не
+// занят. Без оружия и без украденной силы удара нет — ни замаха, ни сектора.
 func (p *Player) CanAttack() bool {
-	return p.Alive() && p.cooldown == 0 && p.state != Hurt && p.state != Attacking
+	return p.Armed() &&
+		p.Alive() && p.cooldown == 0 && p.state != Hurt && p.state != Attacking
 }
 
 // Speed — скорость персонажа в текущем состоянии, px/с.
@@ -236,6 +262,7 @@ func (p *Player) Kill() {
 // Revive поднимает персонажа с полным здоровьем в точке pos.
 func (p *Player) Revive(pos engine.Vec2) {
 	p.HP, p.Pos = p.MaxHP, pos
+	p.floor = physics.FloorLow // воскрешают на точке старта, а она внизу
 	p.gone, p.fade, p.lock, p.invuln, p.cooldown = false, 0, 0, 0, 0
 	p.pending, p.vel = nil, engine.Vec2{}
 	p.clip = ""
@@ -243,7 +270,7 @@ func (p *Player) Revive(pos engine.Vec2) {
 }
 
 // Update продвигает персонажа на один тик логики.
-func (p *Player) Update(in Input, w World) {
+func (p *Player) Update(in Input, f *physics.Field) {
 	if p.gone {
 		return
 	}
@@ -260,10 +287,10 @@ func (p *Player) Update(in Input, w World) {
 		p.updateDead()
 		return
 	case Hurt:
-		p.updateHurt(w)
+		p.updateHurt(f)
 		return
 	case Attacking:
-		p.updateAttack(in, w)
+		p.updateAttack(in, f)
 		return
 	}
 
@@ -272,11 +299,11 @@ func (p *Player) Update(in Input, w World) {
 		p.startAttack(in)
 		return
 	}
-	p.move(in, w)
+	p.move(in, f)
 }
 
 // move — обычное перемещение по вводу; заодно выбирает между idle/walk/run.
-func (p *Player) move(in Input, w World) {
+func (p *Player) move(in Input, f *physics.Field) {
 	dir := clampLen(in.Move)
 	if dir.Len() == 0 {
 		p.vel = engine.Vec2{}
@@ -290,12 +317,12 @@ func (p *Player) move(in Input, w World) {
 	} else {
 		p.enter(Walk)
 	}
-	p.step(w, 1)
+	p.step(f, 1)
 }
 
 // updateAttack ведёт замах: урон на своём кадре, движение — только если
 // лоадаут умеет бить на ходу.
-func (p *Player) updateAttack(in Input, w World) {
+func (p *Player) updateAttack(in Input, f *physics.Field) {
 	if !p.struck && p.player.Index() >= p.atkFrame {
 		p.struck = true
 		p.pending = &Hit{
@@ -310,7 +337,7 @@ func (p *Player) updateAttack(in Input, w World) {
 	if p.atkMoving {
 		if d := clampLen(in.Move); d.Len() > 0 {
 			p.vel = d.Scale(p.Speed(p.clip == "run_attack"))
-			p.step(w, p.Cat.Base.AttackMoveScale)
+			p.step(f, p.Cat.Base.AttackMoveScale)
 		}
 	}
 	if p.atkTicks--; p.atkTicks <= 0 {
@@ -320,9 +347,9 @@ func (p *Player) updateAttack(in Input, w World) {
 
 // updateHurt отыгрывает оцепенение: персонаж не слушается ввода, но отброс
 // доезжает, поэтому удар видно, а не только слышно.
-func (p *Player) updateHurt(w World) {
+func (p *Player) updateHurt(f *physics.Field) {
 	if p.vel.Len() > 0 {
-		p.step(w, 1)
+		p.step(f, 1)
 		p.vel = p.vel.Scale(0.85) // отброс гаснет
 	}
 	if p.lock--; p.lock <= 0 {
@@ -345,7 +372,7 @@ func (p *Player) updateDead() {
 
 // startAttack начинает замах: клип выбирается по тому, как персонаж двигался.
 func (p *Player) startAttack(in Input) {
-	p.atk = p.Loadout.Attack
+	p.atk = p.striker().Attack
 	p.atkFace = p.faceVec()
 	p.cooldown = p.atk.CooldownTicks
 	p.struck = false
@@ -369,9 +396,9 @@ func (p *Player) startAttack(in Input) {
 // attackClip выбирает клип замаха с деградацией: чего нет в паке, тем и не
 // бьём — но ударить можно всегда.
 //
-//	стоя       attack       → walk_attack → ускоренный walk/run (рывок)
-//	шагом      walk_attack  → attack      → ускоренный walk
-//	бегом      run_attack   → walk_attack → attack → ускоренный run
+//	стоя       attack       → walk_attack → стойка (idle)
+//	шагом      walk_attack  → attack      → стойка
+//	бегом      run_attack   → walk_attack → attack → стойка
 func (p *Player) attackClip(moving, run bool) (string, *anim.Clip) {
 	var order []string
 	switch {
@@ -385,10 +412,12 @@ func (p *Player) attackClip(moving, run bool) (string, *anim.Clip) {
 	if n, c := p.pick(order...); c != nil {
 		return n, c
 	}
-	// Клипа удара нет вовсе (unarmed): рывок походкой. Имя нарочно не совпадает
-	// с исходным — play() сравнивает имена, и без «звёздочки» переход «иду» →
-	// «бью» на том же walk не перезапустил бы клип.
-	if _, c := p.pick("run", "walk", "idle"); c != nil {
+	// Клипа удара нет вовсе (unarmed): бьём из стойки. Походка тут не годится —
+	// ускоренный run читается как «герой побежал на месте», а не как удар; сам
+	// замах показывает игровой слой (след сектора). Имя нарочно не совпадает с
+	// исходным: play() сравнивает имена, и без «звёздочки» переход «стою» →
+	// «бью» на том же idle не перезапустил бы клип.
+	if _, c := p.pick("idle", "walk", "run"); c != nil {
 		return "attack*", c
 	}
 	return "", nil
@@ -431,6 +460,11 @@ func (p *Player) face(in Input) {
 	}
 }
 
+// FaceVec — направление взгляда единичным вектором. Наружу оно нужно тем, кто
+// показывает намерение героя: враг видит занесённое оружие и решает, уходить ли
+// с линии удара.
+func (p *Player) FaceVec() engine.Vec2 { return p.faceVec() }
+
 // faceVec — направление взгляда единичным вектором (для сектора удара).
 func (p *Player) faceVec() engine.Vec2 {
 	switch p.dir {
@@ -454,32 +488,42 @@ func (p *Player) knock(from engine.Vec2) {
 	p.vel = d.Scale(p.Cat.Base.Hurt.Knockback)
 }
 
-// step двигает персонажа на долю scale от скорости, упираясь в непроходимое.
-// Скольжение вдоль препятствия — по осям отдельно, иначе герой залипает в углу.
-func (p *Player) step(w World, scale float64) {
+// step двигает персонажа на долю scale от скорости. Стены, скольжение вдоль
+// них и этажи держит поле (internal/physics) — здесь только скорость.
+//
+// Мелководье вязкое: по нему герой бредёт медленнее. Замедление применяется к
+// шагу, а не к Speed(), потому что оно свойство места, а не состояния, — и
+// отброс от удара в воде тоже гаснет быстрее.
+func (p *Player) step(f *physics.Field, scale float64) {
 	if p.vel.Len() == 0 {
 		return
 	}
-	next := p.Pos.Add(p.vel.Scale(scale / config.TPS))
-	if w != nil && !p.canStand(w, next) {
-		if x := (engine.Vec2{X: next.X, Y: p.Pos.Y}); p.canStand(w, x) {
-			next = x
-		} else if y := (engine.Vec2{X: p.Pos.X, Y: next.Y}); p.canStand(w, y) {
-			next = y
-		} else {
-			return
-		}
-	}
-	p.Pos = next
+	d := p.vel.Scale(scale * f.SpeedScale(p.Pos) / config.TPS)
+	p.Pos, p.floor = f.Move(p.Pos, d, p.body())
 }
 
-// canStand — можно ли персонажу стоять в точке. Плавать он не умеет (клипа
-// swim в паках нет), поэтому вода непроходима.
-func (p *Player) canStand(w World, at engine.Vec2) bool {
-	if w.Water(at) {
-		return false
+// body — тело персонажа для поля: круг радиуса Radius на своём этаже.
+func (p *Player) body() physics.Body {
+	return physics.Body{Radius: p.Radius(), Floor: p.floor, Caps: playerCaps}
+}
+
+// Push сдвигает персонажа на delta с проверкой стен: этим игровой слой
+// расталкивает тела, которые налезли друг на друга.
+func (p *Player) Push(f *physics.Field, delta engine.Vec2) {
+	p.Pos, p.floor = f.Move(p.Pos, delta, p.body())
+}
+
+// Floor — этаж, на котором стоит персонаж (0 — низ, 1 — макушка плато).
+func (p *Player) Floor() uint8 { return p.floor }
+
+// Place ставит персонажа в точку pos, поправив её так, чтобы он туда поместился
+// (появление, воскрешение). Этаж берётся из клетки, куда он встал.
+func (p *Player) Place(f *physics.Field, pos engine.Vec2) {
+	if q, ok := f.Place(pos, p.body(), placeSearch); ok {
+		pos = q
 	}
-	return w.Walkable(at)
+	p.Pos = pos
+	p.floor = f.CellAt(pos).Floor()
 }
 
 // enter переводит в состояние s и заряжает подходящий клип. Замах и смерть

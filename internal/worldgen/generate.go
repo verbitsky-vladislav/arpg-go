@@ -1,15 +1,17 @@
-// Инструмент worldgen — общий процедурный генератор карт биомов.
-// Читает manifest.json биома, прогоняет пайплайн шума→уровней→тайлов→объектов
-// (worldgen.spec §5) и композитит результат в PNG на настоящем арте.
-// Только stdlib, не зависит от игрового бинарника.
+// Package worldgen — процедурный генератор карт биомов: читает manifest.json
+// биома, прогоняет пайплайн шума→уровней→тайлов→объектов (worldgen.spec §5) и
+// отдаёт карту в map_format v1 (docs/worldgen/map_format.md).
 //
-// Запуск:
+// Пакет — библиотека: игра генерирует им карту забега при запуске
+// (internal/world), а cmd-обёртка tools/worldgen прогоняет те же стадии из
+// командной строки и дополнительно композитит результат в PNG на настоящем
+// арте. Отсюда и Run*-функции: это точки входа подкоманд инструмента.
 //
 //	go run ./tools/worldgen <biome-dir> [-seeds 6] [-size 256] [-out dir]
 //	go run ./tools/worldgen audit        # проверить все биомы (роли/файлы)
 //	go run ./tools/worldgen index <biome-dir> <sheet>  # атлас с наложенными id
 //	go run ./tools/worldgen tmxhint <biome-dir>        # черновик blob-наборов из .tmx
-package main
+package worldgen
 
 import (
 	"flag"
@@ -18,36 +20,7 @@ import (
 	"path/filepath"
 )
 
-func main() {
-	if len(os.Args) < 2 {
-		usage()
-		os.Exit(2)
-	}
-	switch os.Args[1] {
-	case "audit":
-		runAudit(os.Args[2:])
-	case "index":
-		runIndex(os.Args[2:])
-	case "tmxhint":
-		runTMXHint(os.Args[2:])
-	case "plateautest":
-		runPlateauTest(os.Args[2:])
-	case "ref":
-		runRef(os.Args[2:])
-	case "tiles":
-		runTilesDump(os.Args[2:])
-	case "tmx":
-		runTMXExport(os.Args[2:])
-	case "level":
-		runLevelDump(os.Args[2:])
-	case "-h", "--help", "help":
-		usage()
-	default:
-		runGenerate(os.Args[1:])
-	}
-}
-
-func usage() {
+func Usage() {
 	fmt.Fprint(os.Stderr, `worldgen — генератор карт биомов
 
   worldgen <biome-dir> [-seeds N] [-size N] [-out dir]
@@ -58,11 +31,24 @@ func usage() {
       выгрузить атлас листа с наложенными номерами тайлов (authoring-помощник)
   worldgen tmxhint <biome-dir>
       напечатать черновик blob/edge-наборов, снятый с примера .tmx (подсказка)
+  worldgen props <biome-dir>
+      пересобрать секцию props манифеста по каталогу props/ (остальное не трогает)
 `)
 }
 
-// runGenerate — основной режим: сгенерировать N карт биома.
-func runGenerate(args []string) {
+// Generate прогоняет пайплайн и отдаёт карту в map_format v1: то же, что делает
+// подкоманда генерации, но без файлов, картинок и отчётов — этим игра создаёт
+// карту забега при запуске.
+func Generate(m *Manifest, seed uint64, size int) *MapV1 {
+	p := defaultParams(size, size)
+	p.EdgeMode = m.EdgeMode
+	g := NewGenerator(p, seed, m)
+	g.Run()
+	return g.ToMapV1(int64(seed))
+}
+
+// RunGenerate — основной режим: сгенерировать N карт биома.
+func RunGenerate(args []string) {
 	fs := flag.NewFlagSet("generate", flag.ExitOnError)
 	seeds := fs.Int("seeds", 6, "число сидов (карт)")
 	size := fs.Int("size", 256, "сторона карты в тайлах")

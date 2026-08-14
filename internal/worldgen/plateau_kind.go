@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // plateau_kind.go — три типа возвышенностей и их размещение на карте.
 //

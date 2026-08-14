@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // plateautest.go — отладочный режим: одно чистое мини-плато на травяном поле,
 // чтобы быстро итерировать раскладку скального обрыва (углы, стенка, подножие),
@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 )
 
-func runPlateauTest(args []string) {
+func RunPlateauTest(args []string) {
 	biomeDir := "assets/biomes/forest"
 	if len(args) > 0 && args[0] != "" && args[0][0] != '-' {
 		biomeDir = args[0]

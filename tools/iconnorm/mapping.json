@@ -1,0 +1,30 @@
+{
+  "tileSize": 16,
+  "defaultMs": 150,
+  "packs": [
+    { "dir": "ui/rpg_basic", "id": "rpg_basic", "category": "ui",
+      "source_pack": "craftpix-net-255216-free-basic-pixel-art-ui-for-rpg" },
+
+    { "dir": "ui/icons_16", "id": "icons_16", "category": "ui",
+      "source_pack": "craftpix-net-556632-basic-icons-16x16-for-gui",
+      "icon_dirs": ["separately"] },
+
+    { "dir": "ui/bars", "id": "bars", "category": "ui",
+      "source_pack": "craftpix-net-573594-hp-mana-stamina-and-scroll-bar-pixel-rpg-asset-pack" },
+
+    { "dir": "items/armour_weapons", "id": "armour_weapons", "category": "items",
+      "source_pack": "craftpix-net-armour-and-weapons" },
+
+    { "dir": "items/resources", "id": "resources", "category": "items",
+      "source_pack": "craftpix-net-986610-pixel-art-resources-and-icons-basic-pack" },
+
+    { "dir": "items/treasure", "id": "treasure", "category": "items",
+      "source_pack": "craftpix-net-522456-treasure-32x32-objects-and-icons-pixel-pack" },
+
+    { "dir": "items/magic", "id": "magic", "category": "items",
+      "source_pack": "craftpix-net-359734-magic-objects-and-icons-pixel-art-pack" },
+
+    { "dir": "items/fishing", "id": "fishing", "category": "items",
+      "source_pack": "craftpix-net-596440-fishing-and-gathering-pixel-art-rpg-icons" }
+  ]
+}

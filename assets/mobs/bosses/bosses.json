@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "doc": "docs/mobs/enemies.md",
+  "about": "Боссы: те же поля, что у врагов (mobs/enemies/enemies.json), плюс то, чего у рядового моба не бывает — фазы, вторая атака и арена. Отдельный файл, а не флаг в общей таблице: боссовые поля пустовали бы у шестидесяти обычных записей.",
+
+  "vocab": {
+    "phases": "фазы боя: порог здоровья и что меняется при переходе",
+    "arena": "как босс держится карты: он не спавнится толпой и не снимается по удалению",
+    "attack2": "вторая атака, которая есть только у боссов; в манифесте это отдельный клип"
+  },
+
+  "types": {
+    "slime_boss": {
+      "art": "slime_boss",
+      "title": { "ru": "Королевский слизень", "en": "Slime king" },
+      "family": "ooze",
+      "size_class": "large",
+      "temper": "aggressive",
+      "activity": "any",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 260, "reach": 44, "flee_hp": 0.0 },
+      "habitat": {
+        "biomes": { "dungeon_2": 5, "cave": 3, "sewer": 2 },
+        "zones": ["indoor"],
+        "group": { "min": 1, "max": 1 }
+      },
+      "arena": {
+        "unique": true,
+        "persistent": true,
+        "_": "unique — больше одного на карте не появляется; persistent — не снимается спавнером по удалению игрока (босс обязан дождаться того, кто от него убежал)."
+      },
+      "phases": [
+        { "at_hp": 1.0, "attack": "attack", "speed_scale": 1.0, "notes": "Наскок телом: медленный размах, широкий." },
+        { "at_hp": 0.5, "attack": "attack2", "speed_scale": 1.25, "notes": "Ниже половины здоровья переходит на вторую атаку и разгоняется." }
+      ],
+      "drops": [
+        { "id": "slime_crown", "min": 1, "max": 1, "chance": 1.0 },
+        { "id": "slime_gel", "min": 4, "max": 8, "chance": 1.0 }
+      ],
+      "power": null,
+      "_power": "Как и у обычных слизней, отбирать нечего: в parts только тело и тень, отдельного слоя-эффекта нет. Босс даёт корону, а не силу.",
+      "notes": "Единственный готовый босс: три тира — это три его версии по силе, а не три разных существа.",
+      "tiers": {
+        "t1": { "title": { "ru": "Королевский слизень", "en": "Slime king" }, "hp": 260, "damage": 18, "speed": { "walk": 22, "run": 52 }, "xp": 220, "drop_rolls": 2 },
+        "t2": { "title": { "ru": "Королева слизней", "en": "Slime queen" }, "hp": 420, "damage": 24, "speed": { "walk": 23, "run": 56 }, "xp": 360, "drop_rolls": 3 },
+        "t3": { "title": { "ru": "Прародитель слизи", "en": "Ooze progenitor" }, "hp": 640, "damage": 32, "speed": { "walk": 24, "run": 60 }, "xp": 560, "drop_rolls": 4 }
+      }
+    }
+  }
+}

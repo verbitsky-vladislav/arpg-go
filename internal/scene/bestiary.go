@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"image/color"
 	"math"
+	"sort"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -13,6 +15,7 @@ import (
 	"github.com/vladislav/game/internal/assets"
 	"github.com/vladislav/game/internal/character"
 	"github.com/vladislav/game/internal/config"
+	"github.com/vladislav/game/internal/item"
 	"github.com/vladislav/game/internal/mob"
 	"github.com/vladislav/game/internal/sprite"
 	"github.com/vladislav/game/internal/ui"
@@ -57,7 +60,8 @@ var (
 type bestEntry struct {
 	title string   // подпись в рамке
 	sub   string   // вторая строка (мелким)
-	facts []string // строки-характеристики (страница персонажа)
+	facts []string // строки-характеристики (подробный разворот)
+	note  string   // примечание из данных — абзацем под характеристиками
 	pack  *sprite.Pack
 	play  *anim.Player
 	refH  int    // высота, по которой подбирается масштаб (см. drawFrameFit)
@@ -76,6 +80,7 @@ type bestSection struct {
 	entries []bestEntry
 	loaded  bool
 	spread  int // текущий разворот
+	detail  int // открытая карточка (-1 — обычный разворот с сеткой)
 }
 
 func (s *bestSection) ensure() {
@@ -111,12 +116,14 @@ func NewBestiary(l *assets.Loader, back Scene) *Bestiary {
 	return &Bestiary{
 		back: back,
 		secs: []*bestSection{
-			{title: "ПЕРСОНАЖИ", side: 0, perPage: 1, load: func() ([]bestEntry, string) { return loadPersons(l) }},
-			{title: "ЖИВОТНЫЕ", side: 0, perPage: 4, load: func() ([]bestEntry, string) { return loadAnimals(l) }},
-			// Мобов и боссов ещё нет в данных: раздел листается и открывается,
-			// но вместо карточек честно пишет, что содержимое впереди.
-			{title: "МОБЫ", side: 1, perPage: 4, note: "СКОРО"},
-			{title: "БОССЫ", side: 1, perPage: 4, note: "СКОРО"},
+			{title: "ПЕРСОНАЖИ", side: 0, perPage: 1, detail: -1, load: func() ([]bestEntry, string) { return loadPersons(l) }},
+			{title: "ЖИВОТНЫЕ", side: 0, perPage: 4, detail: -1, load: func() ([]bestEntry, string) { return loadAnimals(l) }},
+			{title: "МОБЫ", side: 1, perPage: 4, detail: -1, load: func() ([]bestEntry, string) {
+				return loadEnemies(l, enemiesRoot+"/enemies.json", enemiesRoot)
+			}},
+			{title: "БОССЫ", side: 1, perPage: 4, detail: -1, load: func() ([]bestEntry, string) {
+				return loadEnemies(l, bossesRoot+"/bosses.json", bossesRoot)
+			}},
 		},
 	}
 }
@@ -131,19 +138,21 @@ func loadPersons(l *assets.Loader) ([]bestEntry, string) {
 	for _, bid := range cat.BodyIDs() {
 		for _, lid := range cat.LoadoutIDs() {
 			b, lo := cat.Body(bid), cat.Loadout(lid)
-			e := bestEntry{
-				title: b.Title.RU,
-				sub:   lo.Title.RU,
-				facts: []string{
-					fmt.Sprintf("ЗДОРОВЬЕ    %d", int(float64(cat.Base.HP)*b.HPScale)),
-					fmt.Sprintf("ШАГ / БЕГ   %.0f / %.0f",
-						cat.Base.Speed.Walk*b.SpeedScale*lo.SpeedScale,
-						cat.Base.Speed.Run*b.SpeedScale*lo.SpeedScale),
+			facts := []string{
+				fmt.Sprintf("ЗДОРОВЬЕ    %d", int(float64(cat.Base.HP)*b.HPScale)),
+				fmt.Sprintf("ШАГ / БЕГ   %.0f / %.0f",
+					cat.Base.Speed.Walk*b.SpeedScale*lo.SpeedScale,
+					cat.Base.Speed.Run*b.SpeedScale*lo.SpeedScale),
+			}
+			if lo.CanStrike() {
+				facts = append(facts,
 					fmt.Sprintf("УРОН        %d", lo.Attack.Damage),
 					fmt.Sprintf("РАЗМАХ      %.0f ПКС / %.0f ГРАД", lo.Attack.Reach, lo.Attack.Arc),
-					fmt.Sprintf("ЗАМАХ       %.2f С", float64(lo.Attack.SwingTicks)/config.TPS),
-				},
+					fmt.Sprintf("ЗАМАХ       %.2f С", float64(lo.Attack.SwingTicks)/config.TPS))
+			} else {
+				facts = append(facts, "БЕЗ ОРУЖИЯ НЕ БЬЁТ")
 			}
+			e := bestEntry{title: b.Title.RU, sub: lo.Title.RU, facts: facts}
 			p, err := character.LoadPack(l, "character", b, lo)
 			if err != nil {
 				e.err = "НЕТ СПРАЙТОВ"
@@ -161,10 +170,11 @@ func loadPersons(l *assets.Loader) ([]bestEntry, string) {
 
 // loadAnimals — карточки животных по таблице видов.
 func loadAnimals(l *assets.Loader) ([]bestEntry, string) {
-	cat, err := mob.LoadSpecies(l.FS(), "mobs/animals/species.json")
+	cat, err := mob.LoadSpecies(l.FS(), animalsRoot+"/species.json")
 	if err != nil {
 		return nil, "НЕТ ТАБЛИЦЫ ВИДОВ"
 	}
+	items := itemCatalog(l)
 	var out []bestEntry
 	for _, id := range cat.IDs() {
 		sp := cat.Get(id)
@@ -175,8 +185,10 @@ func loadAnimals(l *assets.Loader) ([]bestEntry, string) {
 		e := bestEntry{
 			title: sp.Title.RU,
 			sub:   fmt.Sprintf("%s  HP %d", kind, sp.Stats.HP),
+			facts: speciesFacts(sp, cat, items),
+			note:  sp.Notes,
 		}
-		p, err := sprite.Load(l, "mobs/animals/"+sp.Art)
+		p, err := sprite.Load(l, animalsRoot+"/"+sp.Art)
 		if err != nil {
 			e.err = "НЕТ СПРАЙТОВ"
 		} else {
@@ -186,6 +198,248 @@ func loadAnimals(l *assets.Loader) ([]bestEntry, string) {
 		out = append(out, e)
 	}
 	return out, ""
+}
+
+// loadEnemies — карточки врагов. Боссы грузятся этой же функцией: таблицы у
+// них одного формата, и книге незачем знать, чем босс отличается от моба.
+func loadEnemies(l *assets.Loader, file, root string) ([]bestEntry, string) {
+	cat, err := mob.LoadEnemies(l.FS(), file)
+	if err != nil {
+		return nil, "НЕТ ТАБЛИЦЫ"
+	}
+	items := itemCatalog(l)
+	var out []bestEntry
+	for _, id := range cat.IDs() {
+		tier := cat.Get(id)
+		ty := tier.Type
+		e := bestEntry{
+			title: tier.Title.RU,
+			sub:   fmt.Sprintf("%s  HP %d", word(bestFamily, ty.Family), tier.HP),
+			facts: enemyFacts(tier, items),
+			note:  ty.Notes,
+		}
+		p, err := sprite.Load(l, tier.PackDir(root))
+		if err != nil {
+			e.err = "НЕТ СПРАЙТОВ"
+		} else {
+			e.pack, e.refH = p, p.Bounds().H
+			e.play = anim.NewPlayer(walkClip(p))
+		}
+		out = append(out, e)
+	}
+	return out, ""
+}
+
+// enemyFacts — строки статьи о враге. Как и у животных, ничего не выдумывает:
+// всё это лежит в enemies.json. Единственное, чего нет у зверей, — блок силы:
+// ради него игрок и полезет в книгу перед охотой.
+func enemyFacts(t *mob.Tier, items *item.Catalog) []string {
+	ty := t.Type
+	f := []string{
+		fmt.Sprintf("РАЗМЕР      %s", word(bestSize, ty.SizeClass)),
+		fmt.Sprintf("УРОН        %d, ДОСТАЁТ ЗА %.0f", t.Damage, ty.Threat.Reach),
+		fmt.Sprintf("ХАРАКТЕР    %s", word(bestTemper, ty.Temper)),
+		fmt.Sprintf("АКТИВЕН     %s", word(bestActivity, ty.Activity)),
+		fmt.Sprintf("СКОРОСТЬ    ШАГ %.0f, БЕГ %.0f", t.Speed.Walk, t.Speed.Run),
+		fmt.Sprintf("ЗАМЕЧАЕТ ЗА %.0f", ty.Threat.Sight),
+	}
+	if ty.Locomotion.Air {
+		f = append(f, "ЛЕТАЕТ      ВОДА И ОБРЫВЫ НЕ ПРЕГРАДА")
+	}
+	if !ty.Threat.Unprovoked {
+		f = append(f, "ПЕРВЫМ НЕ НАПАДАЕТ")
+	}
+	if ty.Threat.FleeHP > 0 {
+		f = append(f, fmt.Sprintf("ОТСТУПАЕТ   НИЖЕ %.0f%% ЗДОРОВЬЯ", ty.Threat.FleeHP*100))
+	}
+	if ty.Habitat.Group.Max > 1 {
+		f = append(f, fmt.Sprintf("ДЕРЖИТСЯ    ГРУППОЙ %d-%d", ty.Habitat.Group.Min, ty.Habitat.Group.Max))
+	}
+	if len(ty.Habitat.Biomes) > 0 {
+		f = append(f, "ВОДИТСЯ     "+words(bestBiome, byWeight(ty.Habitat.Biomes)))
+	}
+	if len(ty.Habitat.Zones) > 0 {
+		f = append(f, "МЕСТА       "+words(bestZone, ty.Habitat.Zones))
+	}
+	// Первая фаза — обычное состояние, писать о ней нечего: интересны переходы.
+	for _, ph := range ty.Phases[min(1, len(ty.Phases)):] {
+		f = append(f, fmt.Sprintf("НИЖЕ %.0f%%    МЕНЯЕТ АТАКУ, СКОРОСТЬ ×%.2f",
+			ph.AtHP*100, ph.SpeedScale))
+	}
+	f = append(f, fmt.Sprintf("ОПЫТ        %d", t.XP))
+	if len(ty.Drops) > 0 {
+		out := make([]string, 0, len(ty.Drops))
+		for _, d := range ty.Drops {
+			out = append(out, fmt.Sprintf("%s %d%%", items.Name(d.ID), int(d.Chance*100)))
+		}
+		f = append(f, "ДОБЫЧА      "+strings.Join(out, ", "))
+	}
+	if p := ty.Power; p != nil {
+		f = append(f,
+			fmt.Sprintf("СИЛА        %s, УРОН %d", word(bestElement, p.Element), p.Attack.Damage),
+			fmt.Sprintf("            РАЗМАХ %.0f ПКС / %.0f ГРАД", p.Attack.Reach, p.Attack.Arc),
+			fmt.Sprintf("ОТДАЁТ ЕЁ   С ШАНСОМ %d%%, ЗАРЯДОВ %d",
+				int(p.StealChance*100), p.Charges))
+	} else {
+		f = append(f, "СИЛЫ НЕ ОСТАВЛЯЕТ")
+	}
+	return f
+}
+
+// byWeight — биомы от частого к редкому: в книге сначала должно стоять то
+// место, где эту тварь встретишь скорее всего.
+func byWeight(m map[string]int) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if m[out[i]] != m[out[j]] {
+			return m[out[i]] > m[out[j]]
+		}
+		return out[i] < out[j]
+	})
+	return out
+}
+
+// Словарь значений species.json и enemies.json. Английские ключи — это данные,
+// а книга — текст для человека, поэтому перевод живёт здесь, а не в таблицах.
+var (
+	bestTemper = map[string]string{
+		"passive": "СПОКОЙНЫЙ", "skittish": "ПУГЛИВЫЙ", "territorial": "ТЕРРИТОРИАЛЬНЫЙ",
+		"predator": "ХИЩНИК", "tame": "РУЧНОЙ",
+		"aggressive": "АГРЕССИВНЫЙ", "ambusher": "ИЗ ЗАСАДЫ", "ranged": "БЬЁТ ИЗДАЛИ",
+	}
+	bestFamily = map[string]string{
+		"undead": "НЕЖИТЬ", "demon": "ДЕМОН", "spirit": "ДУХ", "beast": "ЗВЕРЬ",
+		"humanoid": "ГУМАНОИД", "plant": "РАСТЕНИЕ", "fungus": "ГРИБ",
+		"construct": "ГОЛЕМ", "ooze": "СЛИЗЬ", "aberration": "ТВАРЬ",
+	}
+	bestElement = map[string]string{
+		"fire": "ОГОНЬ", "magic": "МАГИЯ", "smoke": "ДЫМ",
+		"spectral": "ПРИЗРАЧНАЯ", "slash": "КЛИНОК",
+	}
+	bestBiome = map[string]string{
+		"cave": "ПЕЩЕРЫ", "cave_glowing": "СВЕТЯЩИЕСЯ ПЕЩЕРЫ", "cursed_area": "ПРОКЛЯТЫЕ ЗЕМЛИ",
+		"dead_island": "МЁРТВЫЙ ОСТРОВ", "desert": "ПУСТЫНЯ", "dungeon_1": "ПОДЗЕМЕЛЬЕ I",
+		"dungeon_2": "ПОДЗЕМЕЛЬЕ II", "dungeon_3": "ПОДЗЕМЕЛЬЕ III", "farm": "ФЕРМА",
+		"fishing-docks": "ПРИСТАНЬ", "flying_islands": "ЛЕТУЧИЕ ОСТРОВА", "forest": "ЛЕС",
+		"glades": "ПОЛЯНЫ", "rocky": "СКАЛЫ", "ruined_tample": "РУИНЫ ХРАМА",
+		"sewer": "КАНАЛИЗАЦИЯ", "swamp": "БОЛОТО", "winterland": "ЗИМНИЕ ЗЕМЛИ",
+	}
+	bestActivity = map[string]string{"day": "ДНЁМ", "night": "НОЧЬЮ", "any": "ЛЮБОЕ ВРЕМЯ"}
+	bestSize     = map[string]string{
+		"tiny": "КРОШЕЧНЫЙ", "small": "МЕЛКИЙ", "medium": "СРЕДНИЙ", "large": "КРУПНЫЙ",
+	}
+	bestZone = map[string]string{
+		"water": "ВОДА", "shore": "БЕРЕГ", "meadow": "ЛУГ", "woods": "ЛЕС",
+		"trail": "ТРОПА", "plateau": "ПЛАТО", "farmyard": "ДВОР", "indoor": "ПОД КРЫШЕЙ",
+	}
+)
+
+// itemsFile — каталог предметов: имена добычи берутся оттуда, а не из словаря
+// рядом. Идентификаторы вроде raw_meat раздают таблицы мобов, и объяснять, что
+// это такое, должен один файл на всю игру.
+const itemsFile = "items/items.json"
+
+// itemCatalog — каталог для подписей. Книга не должна падать из-за него: без
+// каталога добыча покажется сырыми идентификаторами, и это сразу видно.
+func itemCatalog(l *assets.Loader) *item.Catalog {
+	c, err := item.Load(l.FS(), itemsFile)
+	if err != nil {
+		return nil
+	}
+	return c
+}
+
+// word переводит значение по словарю, оставляя как есть незнакомое: новое
+// значение в данных должно быть видно, а не потеряно.
+func word(dict map[string]string, key string) string {
+	if v, ok := dict[key]; ok {
+		return v
+	}
+	return strings.ToUpper(key)
+}
+
+func words(dict map[string]string, keys []string) string {
+	out := make([]string, 0, len(keys))
+	for _, k := range keys {
+		out = append(out, word(dict, k))
+	}
+	return strings.Join(out, ", ")
+}
+
+// speciesFacts — строки статьи о виде. Ничего не выдумывает: всё это лежит в
+// species.json, просто никогда не показывалось игроку.
+func speciesFacts(s *mob.Species, cat *mob.Catalog, items *item.Catalog) []string {
+	name := func(id string) string {
+		if o := cat.Get(id); o != nil {
+			return o.Title.RU
+		}
+		return id
+	}
+	names := func(ids []string) string {
+		out := make([]string, 0, len(ids))
+		for _, id := range ids {
+			out = append(out, name(id))
+		}
+		return strings.Join(out, ", ")
+	}
+
+	f := []string{
+		fmt.Sprintf("РАЗМЕР      %s", word(bestSize, s.SizeClass)),
+		fmt.Sprintf("ЗДОРОВЬЕ    %d", s.Stats.HP),
+		fmt.Sprintf("ХАРАКТЕР    %s", word(bestTemper, s.Temper)),
+		fmt.Sprintf("АКТИВЕН     %s", word(bestActivity, s.Activity)),
+		fmt.Sprintf("СКОРОСТЬ    ШАГ %.0f", s.Stats.Speed.Walk),
+	}
+	if s.Stats.Speed.Run > 0 {
+		f[len(f)-1] += fmt.Sprintf(", БЕГ %.0f", s.Stats.Speed.Run)
+	}
+	if s.Locomotion.Water {
+		f = append(f, "ПЛАВАЕТ")
+	}
+	if len(s.Habitat.Zones) > 0 {
+		f = append(f, "ВОДИТСЯ     "+words(bestZone, s.Habitat.Zones))
+	}
+	if s.Habitat.NeedsSettlement {
+		f = append(f, "ЖИВЁТ ТОЛЬКО ВО ДВОРЕ")
+	}
+	if s.Spawn.Group.Max > 1 {
+		f = append(f, fmt.Sprintf("ДЕРЖИТСЯ    ГРУППОЙ %d-%d", s.Spawn.Group.Min, s.Spawn.Group.Max))
+	}
+	if s.Threat.Attacks {
+		f = append(f, fmt.Sprintf("НАПАДАЕТ    УРОН %d, ЗАМЕЧАЕТ ЗА %.0f",
+			s.Threat.Damage, s.Threat.Sight))
+	} else {
+		f = append(f, "НЕ НАПАДАЕТ")
+	}
+	if len(s.Threat.Prey) > 0 {
+		f = append(f, "ОХОТИТСЯ НА "+names(s.Threat.Prey))
+	}
+	if s.GrowsInto != "" {
+		f = append(f, "ВЫРАСТАЕТ В "+name(s.GrowsInto))
+	}
+	if s.YoungForm != "" {
+		f = append(f, "ДЕТЁНЫШ     "+name(s.YoungForm))
+	}
+	if s.Use.Tameable {
+		f = append(f, "ПРИРУЧАЕТСЯ")
+	}
+	if s.Use.Rideable {
+		f = append(f, "ЕЗДОВОЕ")
+	}
+	if len(s.Use.Products) > 0 {
+		f = append(f, "ДАЁТ        "+items.Names(s.Use.Products))
+	}
+	if len(s.Drops) > 0 {
+		out := make([]string, 0, len(s.Drops))
+		for _, d := range s.Drops {
+			out = append(out, fmt.Sprintf("%s %d%%", items.Name(d.ID), int(d.Chance*100)))
+		}
+		f = append(f, "ДОБЫЧА      "+strings.Join(out, ", "))
+	}
+	return f
 }
 
 // walkClip — клип ходьбы лицом к читателю. Если ходьбы в паке нет (птица,
@@ -208,15 +462,18 @@ func walkClip(p *sprite.Pack) *anim.Clip {
 func (b *Bestiary) section() *bestSection { return b.secs[b.cur] }
 
 func (b *Bestiary) Update() (Scene, error) {
+	sec := b.section()
+	sec.ensure()
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		if sec.detail >= 0 {
+			sec.detail = -1 // из статьи о виде — обратно к сетке
+			return b, nil
+		}
 		if b.back != nil {
 			return b.back, nil
 		}
 		return NewMenu(), nil
 	}
-
-	sec := b.section()
-	sec.ensure()
 
 	// Закладки: мышь по всему ярлыку, клавиши — перебор разделов по кругу.
 	mx, my := ebiten.CursorPosition()
@@ -256,7 +513,20 @@ func (b *Bestiary) Update() (Scene, error) {
 		}
 	}
 	sec = b.section()
-	sec.spread = clampInt(sec.spread+turn, 0, sec.spreads()-1)
+	if sec.detail >= 0 {
+		sec.detail = clampInt(sec.detail+turn, 0, len(sec.entries)-1)
+		sec.spread = sec.detail / sec.perSpread() // вернёмся на страницу с этим видом
+	} else {
+		sec.spread = clampInt(sec.spread+turn, 0, sec.spreads()-1)
+	}
+
+	// Клик по карточке открывает статью о виде: в данных про него гораздо
+	// больше, чем помещается в рамку.
+	if sec.detail < 0 && sec.perPage > 1 && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		if i := b.cardAt(sec, mx, my); i >= 0 {
+			sec.detail = i
+		}
+	}
 
 	// Крутим только то, что видно на развороте.
 	for _, e := range b.visible() {
@@ -271,6 +541,24 @@ func (b *Bestiary) Update() (Scene, error) {
 	return b, nil
 }
 
+// cardAt — номер карточки под точкой (mx,my) на текущем развороте; -1, если
+// курсор мимо.
+func (b *Bestiary) cardAt(sec *bestSection, mx, my int) int {
+	from := sec.spread * sec.perSpread()
+	for page := range 2 {
+		for i := range sec.perPage {
+			n := from + page*sec.perPage + i
+			if n >= len(sec.entries) {
+				return -1
+			}
+			if x, y, w, h := cellRect(page, i, sec.perPage); inRect(mx, my, x, y, w, h) {
+				return n
+			}
+		}
+	}
+	return -1
+}
+
 // selectStep переводит выбор на соседний раздел (по кругу).
 func (b *Bestiary) selectStep(d int) {
 	b.cur = ((b.cur+d)%len(b.secs) + len(b.secs)) % len(b.secs)
@@ -280,6 +568,9 @@ func (b *Bestiary) selectStep(d int) {
 // visible — карточки текущего разворота.
 func (b *Bestiary) visible() []*bestEntry {
 	sec := b.section()
+	if sec.detail >= 0 && sec.detail < len(sec.entries) {
+		return []*bestEntry{&sec.entries[sec.detail]}
+	}
 	from := sec.spread * sec.perSpread()
 	var out []*bestEntry
 	for i := from; i < from+sec.perSpread() && i < len(sec.entries); i++ {
@@ -340,6 +631,11 @@ func (b *Bestiary) drawPage(dst *ebiten.Image, sec *bestSection, page int) {
 	ui.PixelTextCentered(dst, sec.title, cx, paperY+5, 2, bkInk)
 	vector.FillRect(dst, px+pagePad, paperY+headH-4, pageW-2*pagePad, 1, bkFrame, false)
 
+	if sec.detail >= 0 && sec.detail < len(sec.entries) {
+		b.drawArticle(dst, &sec.entries[sec.detail], page)
+		return
+	}
+
 	from := sec.spread*sec.perSpread() + page*sec.perPage
 	// Раздел закрыт или пуст — вместо карточек пояснение по центру страницы.
 	if len(sec.entries) == 0 {
@@ -356,8 +652,63 @@ func (b *Bestiary) drawPage(dst *ebiten.Image, sec *bestSection, page int) {
 			return
 		}
 		x, y, w, h := cellRect(page, i, sec.perPage)
-		drawCard(dst, &sec.entries[from+i], x, y, w, h, sec.perPage == 1)
+		drawCard(dst, &sec.entries[from+i], x, y, w, h, sec.perPage == 1, sec.perPage == 1)
 	}
+}
+
+// drawArticle — разворот про один вид: слева портрет, справа всё, что про него
+// известно из данных. Затем и книга, чтобы не пересказывать species.json
+// вручную.
+func (b *Bestiary) drawArticle(dst *ebiten.Image, e *bestEntry, page int) {
+	x, y, w, h := cellRect(page, 0, 1)
+	if page == 0 {
+		drawCard(dst, e, x, y, w, h, true, false)
+		return
+	}
+
+	vector.FillRect(dst, x, y, w, h, bkPaper, false)
+	vector.StrokeRect(dst, x+0.5, y+0.5, w-1, h-1, 1, bkFrame, false)
+	vector.StrokeRect(dst, x+2.5, y+2.5, w-5, h-5, 1, bkPaperDim, false)
+
+	ty := float64(y) + 12
+	ui.PixelTextCentered(dst, "ЧТО ИЗВЕСТНО", float64(x+w/2), ty, 2, bkInk)
+	vector.FillRect(dst, x+20, y+30, w-40, 1, bkFrame, false)
+
+	ty = float64(y) + 40
+	for _, f := range e.facts {
+		ui.PixelText(dst, f, float64(x)+14, ty, 1, bkInk)
+		ty += 10
+	}
+	if e.note == "" {
+		return
+	}
+	ty += 6
+	for _, line := range wrapPixel(e.note, float64(w)-28, 1) {
+		ui.PixelText(dst, line, float64(x)+14, ty, 1, bkInkDim)
+		ty += 9
+	}
+}
+
+// wrapPixel режет текст на строки, влезающие в ширину maxW пиксельным шрифтом.
+func wrapPixel(s string, maxW, scale float64) []string {
+	var out []string
+	line := ""
+	for _, word := range strings.Fields(s) {
+		try := word
+		if line != "" {
+			try = line + " " + word
+		}
+		if ui.PixelTextWidth(try, scale) > maxW && line != "" {
+			out = append(out, line)
+			line = word
+			continue
+		}
+		line = try
+	}
+	if line != "" {
+		out = append(out, line)
+	}
+	return out
 }
 
 // cellRect — рамка i-й карточки на странице page (сетка 2×2, либо одна на всю
@@ -374,9 +725,11 @@ func cellRect(page, i, perPage int) (x, y, w, h float32) {
 	return ix + float32(i%2)*(w+6), iy + float32(i/2)*(h+6), w, h
 }
 
-// drawCard — карточка существа: рамка, кадр анимации и подписи. big — страница
-// целиком под одного (персонаж), тогда справа от портрета помещаются числа.
-func drawCard(dst *ebiten.Image, e *bestEntry, x, y, w, h float32, big bool) {
+// drawCard — карточка существа: рамка, кадр анимации и подписи. big — карточка
+// на всю страницу (персонаж, портрет статьи); facts — печатать ли под портретом
+// характеристики (в сетке 2×2 они не поместятся, а в статье живут на соседней
+// странице).
+func drawCard(dst *ebiten.Image, e *bestEntry, x, y, w, h float32, big, facts bool) {
 	vector.FillRect(dst, x, y, w, h, bkPaper, false)
 	vector.StrokeRect(dst, x+0.5, y+0.5, w-1, h-1, 1, bkFrame, false)
 	vector.StrokeRect(dst, x+2.5, y+2.5, w-5, h-5, 1, bkPaperDim, false)
@@ -393,7 +746,10 @@ func drawCard(dst *ebiten.Image, e *bestEntry, x, y, w, h float32, big bool) {
 	top := float64(y) + 6
 	if big {
 		top = nameY + 34
-		base = float64(y+h) - float64(len(e.facts))*10 - 16
+		base = float64(y+h) - 16
+		if facts {
+			base -= float64(len(e.facts)) * 10
+		}
 	}
 	// Рост, к которому приводятся все существа: кадры в паках от 16 до 64 px,
 	// и без общей цели цыплёнок вышел бы с буйвола.
@@ -414,6 +770,9 @@ func drawCard(dst *ebiten.Image, e *bestEntry, x, y, w, h float32, big bool) {
 	}
 	if big {
 		vector.FillRect(dst, x+20, y+52, w-40, 1, bkFrame, false)
+	}
+	if !facts {
+		return
 	}
 	for i, f := range e.facts {
 		ui.PixelText(dst, f, float64(x)+14, float64(y+h)-float64(len(e.facts)-i)*10-6, 1, bkInk)
@@ -442,7 +801,11 @@ func (b *Bestiary) drawFooter(dst *ebiten.Image, sec *bestSection) {
 	y := float32(paperY + paperH - footH + 4)
 	for _, d := range []int{-1, 1} {
 		x, ay, w, h := arrowRect(d)
-		on := (d < 0 && sec.spread > 0) || (d > 0 && sec.spread < sec.spreads()-1)
+		cur, last := sec.spread, sec.spreads()-1
+		if sec.detail >= 0 {
+			cur, last = sec.detail, len(sec.entries)-1
+		}
+		on := (d < 0 && cur > 0) || (d > 0 && cur < last)
 		col, ink := bkPaperDim, bkInkDim
 		if on {
 			col, ink = bkTabOn, bkInk
@@ -457,11 +820,14 @@ func (b *Bestiary) drawFooter(dst *ebiten.Image, sec *bestSection) {
 	}
 	// Счётчик разворотов — на поле левой страницы: по центру его разрезал бы
 	// корешок.
-	ui.PixelText(dst, fmt.Sprintf("%d / %d", sec.spread+1, sec.spreads()),
-		pageX(0)+pagePad, float64(y)+5, 1, bkInkDim)
-
-	ui.PixelTextCentered(dst, "ESC - НАЗАД,  СТРЕЛКИ - ЛИСТАТЬ,  ЗАКЛАДКИ - РАЗДЕЛЫ",
-		config.ScreenW/2, config.ScreenH-9, 1, bkFrame)
+	counter := fmt.Sprintf("%d / %d", sec.spread+1, sec.spreads())
+	hint := "ESC - НАЗАД,  СТРЕЛКИ - ЛИСТАТЬ,  КЛИК ПО КАРТОЧКЕ - ПОДРОБНО"
+	if sec.detail >= 0 {
+		counter = fmt.Sprintf("%d / %d", sec.detail+1, len(sec.entries))
+		hint = "ESC - К СПИСКУ,  СТРЕЛКИ - СЛЕДУЮЩИЙ ВИД"
+	}
+	ui.PixelText(dst, counter, pageX(0)+pagePad, float64(y)+5, 1, bkInkDim)
+	ui.PixelTextCentered(dst, hint, config.ScreenW/2, config.ScreenH-9, 1, bkFrame)
 }
 
 // arrowRect — кнопка листалки: d<0 — назад, d>0 — вперёд.

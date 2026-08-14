@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	"github.com/vladislav/game/internal/engine"
+	"github.com/vladislav/game/internal/physics"
 	"github.com/vladislav/game/internal/sprite"
 )
 
@@ -87,9 +88,9 @@ func (c *SpawnConfig) cap(id string) int {
 	return c.Limits.PerSpecies
 }
 
-// SpawnWorld — что спавнеру нужно знать про карту сверх World.
+// SpawnWorld — что спавнеру нужно знать про карту.
 type SpawnWorld interface {
-	World
+	Field() *physics.Field        // сетка проходимости: где вообще можно стоять
 	Biome() string                // id биома карты (ключ в habitat.biomes)
 	Zone(p engine.Vec2) string    // water|shore|meadow|woods|trail|plateau|farmyard
 	Size() (w float64, h float64) // размеры мира
@@ -157,7 +158,7 @@ func (s *Spawner) Update(player engine.Vec2, hasPlayer, night bool) {
 		s.despawnFar(player)
 	}
 
-	ctx := Ctx{World: s.world, Threat: player, HasThreat: hasPlayer}
+	ctx := Ctx{Field: s.world.Field(), Threat: player, HasThreat: hasPlayer}
 	live := s.animals[:0]
 	for _, a := range s.animals {
 		ctx.Prey = s.nearestPrey(a)
@@ -232,7 +233,15 @@ func (s *Spawner) placeGroup(sp *Species, count int, center engine.Vec2) int {
 			if !s.placeable(p) || !Fits(sp, s.world.Zone(p)) {
 				continue
 			}
-			s.animals = append(s.animals, NewAnimal(sp, pack, p, s.rng))
+			// Тело должно поместиться целиком: иначе зверь родится по пояс в
+			// воде или в скале и первым же тиком начнёт выдавливаться наружу.
+			f := s.world.Field()
+			if !f.Fits(p, bodyOf(sp, pack, f.CellAt(p).Floor())) {
+				continue
+			}
+			a := NewAnimal(sp, pack, p, s.rng)
+			a.Land(f)
+			s.animals = append(s.animals, a)
 			s.counts[sp.ID]++
 			placed++
 			break
@@ -241,14 +250,15 @@ func (s *Spawner) placeGroup(sp *Species, count int, center engine.Vec2) int {
 	return placed
 }
 
-// placeable — можно ли вообще кого-то ставить в точку (в границах и на суше
-// либо на воде; пригодность конкретному виду проверяет Fits).
+// placeable — годится ли точка под подсев вообще: она в границах мира и не в
+// скале. Поместится ли туда конкретный вид — решают Fits (зона обитания) и
+// поле (тело целиком), уже с видом и паком на руках.
 func (s *Spawner) placeable(p engine.Vec2) bool {
 	w, h := s.world.Size()
 	if p.X < 0 || p.Y < 0 || p.X >= w || p.Y >= h {
 		return false
 	}
-	return s.world.Walkable(p) || s.world.Water(p)
+	return s.world.Field().CellAt(p) != physics.Solid
 }
 
 func (s *Spawner) hasRoom(sp *Species) bool {
@@ -303,6 +313,9 @@ func (s *Spawner) nearestPrey(a *Animal) *Animal {
 		}
 		if !slices.Contains(a.Species.Threat.Prey, o.Species.ID) {
 			continue
+		}
+		if o.Floor() != a.Floor() {
+			continue // добыча на другом этаже: до неё не добраться
 		}
 		if d := engine.Dist(a.Pos, o.Pos); d < bestD {
 			best, bestD = o, d

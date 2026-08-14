@@ -1,0 +1,4986 @@
+{
+ "id": "magic",
+ "category": "items",
+ "source_pack": "craftpix-net-359734-magic-objects-and-icons-pixel-art-pack",
+ "tile_size": 16,
+ "sheets": {
+  "Ball": {
+   "file": "sheets/Ball.png",
+   "size": {
+    "w": 32,
+    "h": 384
+   },
+   "columns": 2,
+   "tilecount": 48,
+   "anim": {
+    "frames": 12,
+    "frame": {
+     "w": 32,
+     "h": 32
+    },
+    "ms": 150
+   },
+   "sprites_from": "gap_slice",
+   "sprites": [
+    {
+     "id": "Ball_001",
+     "x": 2,
+     "y": 0,
+     "w": 25,
+     "h": 29
+    }
+   ]
+  },
+  "Boilers": {
+   "file": "sheets/Boilers.png",
+   "size": {
+    "w": 160,
+    "h": 768
+   },
+   "columns": 10,
+   "tilecount": 480,
+   "anim": {
+    "frames": 12,
+    "frame": {
+     "w": 160,
+     "h": 64
+    },
+    "ms": 150
+   },
+   "sprites_from": "gap_slice",
+   "sprites": [
+    {
+     "id": "Boilers_001",
+     "x": 5,
+     "y": 3,
+     "w": 20,
+     "h": 26
+    },
+    {
+     "id": "Boilers_002",
+     "x": 34,
+     "y": 0,
+     "w": 25,
+     "h": 27
+    },
+    {
+     "id": "Boilers_003",
+     "x": 72,
+     "y": 6,
+     "w": 16,
+     "h": 20
+    },
+    {
+     "id": "Boilers_004",
+     "x": 104,
+     "y": 6,
+     "w": 16,
+     "h": 20
+    },
+    {
+     "id": "Boilers_005",
+     "x": 133,
+     "y": 3,
+     "w": 23,
+     "h": 23
+    },
+    {
+     "id": "Boilers_006",
+     "x": 3,
+     "y": 36,
+     "w": 27,
+     "h": 25
+    },
+    {
+     "id": "Boilers_007",
+     "x": 32,
+     "y": 32,
+     "w": 96,
+     "h": 32
+    },
+    {
+     "id": "Boilers_008",
+     "x": 131,
+     "y": 32,
+     "w": 27,
+     "h": 32
+    }
+   ]
+  },
+  "Bottles_icons": {
+   "file": "sheets/Bottles_icons.png",
+   "size": {
+    "w": 528,
+    "h": 320
+   },
+   "columns": 33,
+   "tilecount": 660,
+   "sprites_from": "gap_slice",
+   "sprites": [
+    {
+     "id": "Bottles_icons_001",
+     "x": 5,
+     "y": 18,
+     "w": 6,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_002",
+     "x": 27,
+     "y": 7,
+     "w": 8,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_003",
+     "x": 53,
+     "y": 18,
+     "w": 6,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_004",
+     "x": 75,
+     "y": 7,
+     "w": 8,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_005",
+     "x": 101,
+     "y": 18,
+     "w": 6,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_006",
+     "x": 123,
+     "y": 7,
+     "w": 8,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_007",
+     "x": 149,
+     "y": 18,
+     "w": 6,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_008",
+     "x": 171,
+     "y": 7,
+     "w": 8,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_009",
+     "x": 197,
+     "y": 18,
+     "w": 6,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_010",
+     "x": 219,
+     "y": 7,
+     "w": 8,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_011",
+     "x": 245,
+     "y": 18,
+     "w": 6,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_012",
+     "x": 267,
+     "y": 7,
+     "w": 8,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_013",
+     "x": 293,
+     "y": 18,
+     "w": 6,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_014",
+     "x": 315,
+     "y": 7,
+     "w": 8,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_015",
+     "x": 341,
+     "y": 18,
+     "w": 6,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_016",
+     "x": 363,
+     "y": 7,
+     "w": 8,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_017",
+     "x": 389,
+     "y": 18,
+     "w": 6,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_018",
+     "x": 411,
+     "y": 7,
+     "w": 8,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_019",
+     "x": 437,
+     "y": 18,
+     "w": 6,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_020",
+     "x": 459,
+     "y": 7,
+     "w": 8,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_021",
+     "x": 485,
+     "y": 18,
+     "w": 6,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_022",
+     "x": 507,
+     "y": 7,
+     "w": 8,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_023",
+     "x": 3,
+     "y": 50,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_024",
+     "x": 27,
+     "y": 39,
+     "w": 10,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_025",
+     "x": 51,
+     "y": 50,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_026",
+     "x": 75,
+     "y": 39,
+     "w": 10,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_027",
+     "x": 99,
+     "y": 50,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_028",
+     "x": 123,
+     "y": 39,
+     "w": 10,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_029",
+     "x": 147,
+     "y": 50,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_030",
+     "x": 171,
+     "y": 39,
+     "w": 10,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_031",
+     "x": 195,
+     "y": 50,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_032",
+     "x": 219,
+     "y": 39,
+     "w": 10,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_033",
+     "x": 243,
+     "y": 50,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_034",
+     "x": 267,
+     "y": 39,
+     "w": 10,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_035",
+     "x": 291,
+     "y": 50,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_036",
+     "x": 315,
+     "y": 39,
+     "w": 10,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_037",
+     "x": 339,
+     "y": 50,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_038",
+     "x": 363,
+     "y": 39,
+     "w": 10,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_039",
+     "x": 387,
+     "y": 50,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_040",
+     "x": 411,
+     "y": 39,
+     "w": 10,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_041",
+     "x": 435,
+     "y": 50,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_042",
+     "x": 459,
+     "y": 39,
+     "w": 10,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_043",
+     "x": 483,
+     "y": 50,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_044",
+     "x": 507,
+     "y": 39,
+     "w": 10,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_045",
+     "x": 5,
+     "y": 82,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_046",
+     "x": 26,
+     "y": 71,
+     "w": 11,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_047",
+     "x": 53,
+     "y": 82,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_048",
+     "x": 74,
+     "y": 71,
+     "w": 11,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_049",
+     "x": 101,
+     "y": 82,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_050",
+     "x": 122,
+     "y": 71,
+     "w": 11,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_051",
+     "x": 149,
+     "y": 82,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_052",
+     "x": 170,
+     "y": 71,
+     "w": 11,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_053",
+     "x": 197,
+     "y": 82,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_054",
+     "x": 218,
+     "y": 71,
+     "w": 11,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_055",
+     "x": 245,
+     "y": 82,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_056",
+     "x": 266,
+     "y": 71,
+     "w": 11,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_057",
+     "x": 293,
+     "y": 82,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_058",
+     "x": 314,
+     "y": 71,
+     "w": 11,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_059",
+     "x": 341,
+     "y": 82,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_060",
+     "x": 362,
+     "y": 71,
+     "w": 11,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_061",
+     "x": 389,
+     "y": 82,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_062",
+     "x": 410,
+     "y": 71,
+     "w": 11,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_063",
+     "x": 437,
+     "y": 82,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_064",
+     "x": 458,
+     "y": 71,
+     "w": 11,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_065",
+     "x": 485,
+     "y": 82,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_066",
+     "x": 506,
+     "y": 71,
+     "w": 11,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_067",
+     "x": 5,
+     "y": 114,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_068",
+     "x": 26,
+     "y": 103,
+     "w": 10,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_069",
+     "x": 53,
+     "y": 114,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_070",
+     "x": 74,
+     "y": 103,
+     "w": 10,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_071",
+     "x": 101,
+     "y": 114,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_072",
+     "x": 122,
+     "y": 103,
+     "w": 10,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_073",
+     "x": 149,
+     "y": 114,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_074",
+     "x": 170,
+     "y": 103,
+     "w": 10,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_075",
+     "x": 197,
+     "y": 114,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_076",
+     "x": 218,
+     "y": 103,
+     "w": 10,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_077",
+     "x": 245,
+     "y": 114,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_078",
+     "x": 266,
+     "y": 103,
+     "w": 10,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_079",
+     "x": 293,
+     "y": 114,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_080",
+     "x": 314,
+     "y": 103,
+     "w": 10,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_081",
+     "x": 341,
+     "y": 114,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_082",
+     "x": 362,
+     "y": 103,
+     "w": 10,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_083",
+     "x": 389,
+     "y": 114,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_084",
+     "x": 410,
+     "y": 103,
+     "w": 10,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_085",
+     "x": 437,
+     "y": 114,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_086",
+     "x": 458,
+     "y": 103,
+     "w": 10,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_087",
+     "x": 485,
+     "y": 114,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_088",
+     "x": 506,
+     "y": 103,
+     "w": 10,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_089",
+     "x": 2,
+     "y": 146,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_090",
+     "x": 25,
+     "y": 135,
+     "w": 13,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_091",
+     "x": 50,
+     "y": 146,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_092",
+     "x": 73,
+     "y": 135,
+     "w": 13,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_093",
+     "x": 98,
+     "y": 146,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_094",
+     "x": 121,
+     "y": 135,
+     "w": 13,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_095",
+     "x": 146,
+     "y": 146,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_096",
+     "x": 169,
+     "y": 135,
+     "w": 13,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_097",
+     "x": 194,
+     "y": 146,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_098",
+     "x": 217,
+     "y": 135,
+     "w": 13,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_099",
+     "x": 242,
+     "y": 146,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_100",
+     "x": 265,
+     "y": 135,
+     "w": 13,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_101",
+     "x": 290,
+     "y": 146,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_102",
+     "x": 313,
+     "y": 135,
+     "w": 13,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_103",
+     "x": 338,
+     "y": 146,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_104",
+     "x": 361,
+     "y": 135,
+     "w": 13,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_105",
+     "x": 386,
+     "y": 146,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_106",
+     "x": 409,
+     "y": 135,
+     "w": 13,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_107",
+     "x": 434,
+     "y": 146,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_108",
+     "x": 457,
+     "y": 135,
+     "w": 13,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_109",
+     "x": 482,
+     "y": 146,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_110",
+     "x": 505,
+     "y": 135,
+     "w": 13,
+     "h": 16
+    },
+    {
+     "id": "Bottles_icons_111",
+     "x": 3,
+     "y": 178,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_112",
+     "x": 25,
+     "y": 167,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_113",
+     "x": 51,
+     "y": 178,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_114",
+     "x": 73,
+     "y": 167,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_115",
+     "x": 99,
+     "y": 178,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_116",
+     "x": 121,
+     "y": 167,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_117",
+     "x": 147,
+     "y": 178,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_118",
+     "x": 169,
+     "y": 167,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_119",
+     "x": 195,
+     "y": 178,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_120",
+     "x": 217,
+     "y": 167,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_121",
+     "x": 243,
+     "y": 178,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_122",
+     "x": 265,
+     "y": 167,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_123",
+     "x": 291,
+     "y": 178,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_124",
+     "x": 313,
+     "y": 167,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_125",
+     "x": 339,
+     "y": 178,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_126",
+     "x": 361,
+     "y": 167,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_127",
+     "x": 387,
+     "y": 178,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_128",
+     "x": 409,
+     "y": 167,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_129",
+     "x": 435,
+     "y": 178,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_130",
+     "x": 457,
+     "y": 167,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_131",
+     "x": 483,
+     "y": 178,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_132",
+     "x": 505,
+     "y": 167,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_133",
+     "x": 2,
+     "y": 210,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_134",
+     "x": 24,
+     "y": 199,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_135",
+     "x": 50,
+     "y": 210,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_136",
+     "x": 72,
+     "y": 199,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_137",
+     "x": 98,
+     "y": 210,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_138",
+     "x": 120,
+     "y": 199,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_139",
+     "x": 146,
+     "y": 210,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_140",
+     "x": 168,
+     "y": 199,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_141",
+     "x": 194,
+     "y": 210,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_142",
+     "x": 216,
+     "y": 199,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_143",
+     "x": 242,
+     "y": 210,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_144",
+     "x": 264,
+     "y": 199,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_145",
+     "x": 290,
+     "y": 210,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_146",
+     "x": 312,
+     "y": 199,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_147",
+     "x": 338,
+     "y": 210,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_148",
+     "x": 360,
+     "y": 199,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_149",
+     "x": 386,
+     "y": 210,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_150",
+     "x": 408,
+     "y": 199,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_151",
+     "x": 434,
+     "y": 210,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_152",
+     "x": 456,
+     "y": 199,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_153",
+     "x": 482,
+     "y": 210,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_154",
+     "x": 504,
+     "y": 199,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_155",
+     "x": 4,
+     "y": 242,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_156",
+     "x": 25,
+     "y": 231,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_157",
+     "x": 52,
+     "y": 242,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_158",
+     "x": 73,
+     "y": 231,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_159",
+     "x": 100,
+     "y": 242,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_160",
+     "x": 121,
+     "y": 231,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_161",
+     "x": 148,
+     "y": 242,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_162",
+     "x": 169,
+     "y": 231,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_163",
+     "x": 196,
+     "y": 242,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_164",
+     "x": 217,
+     "y": 231,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_165",
+     "x": 244,
+     "y": 242,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_166",
+     "x": 265,
+     "y": 231,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_167",
+     "x": 292,
+     "y": 242,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_168",
+     "x": 313,
+     "y": 231,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_169",
+     "x": 340,
+     "y": 242,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_170",
+     "x": 361,
+     "y": 231,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_171",
+     "x": 388,
+     "y": 242,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_172",
+     "x": 409,
+     "y": 231,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_173",
+     "x": 436,
+     "y": 242,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_174",
+     "x": 457,
+     "y": 231,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_175",
+     "x": 484,
+     "y": 242,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_176",
+     "x": 505,
+     "y": 231,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_177",
+     "x": 3,
+     "y": 274,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_178",
+     "x": 24,
+     "y": 263,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_179",
+     "x": 51,
+     "y": 274,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_180",
+     "x": 72,
+     "y": 263,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_181",
+     "x": 99,
+     "y": 274,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_182",
+     "x": 120,
+     "y": 263,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_183",
+     "x": 147,
+     "y": 274,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_184",
+     "x": 168,
+     "y": 263,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_185",
+     "x": 195,
+     "y": 274,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_186",
+     "x": 216,
+     "y": 263,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_187",
+     "x": 243,
+     "y": 274,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_188",
+     "x": 264,
+     "y": 263,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_189",
+     "x": 291,
+     "y": 274,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_190",
+     "x": 312,
+     "y": 263,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_191",
+     "x": 339,
+     "y": 274,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_192",
+     "x": 360,
+     "y": 263,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_193",
+     "x": 387,
+     "y": 274,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_194",
+     "x": 408,
+     "y": 263,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_195",
+     "x": 435,
+     "y": 274,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_196",
+     "x": 456,
+     "y": 263,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_197",
+     "x": 483,
+     "y": 274,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_198",
+     "x": 504,
+     "y": 263,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_199",
+     "x": 3,
+     "y": 306,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_200",
+     "x": 23,
+     "y": 295,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_201",
+     "x": 51,
+     "y": 306,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_202",
+     "x": 71,
+     "y": 295,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_203",
+     "x": 99,
+     "y": 306,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_204",
+     "x": 119,
+     "y": 295,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_205",
+     "x": 147,
+     "y": 306,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_206",
+     "x": 167,
+     "y": 295,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_207",
+     "x": 195,
+     "y": 306,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_208",
+     "x": 215,
+     "y": 295,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_209",
+     "x": 243,
+     "y": 306,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_210",
+     "x": 263,
+     "y": 295,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_211",
+     "x": 291,
+     "y": 306,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_212",
+     "x": 311,
+     "y": 295,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_213",
+     "x": 339,
+     "y": 306,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_214",
+     "x": 359,
+     "y": 295,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_215",
+     "x": 387,
+     "y": 306,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_216",
+     "x": 407,
+     "y": 295,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_217",
+     "x": 435,
+     "y": 306,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_218",
+     "x": 455,
+     "y": 295,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "Bottles_icons_219",
+     "x": 483,
+     "y": 306,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "Bottles_icons_220",
+     "x": 503,
+     "y": 295,
+     "w": 17,
+     "h": 17
+    }
+   ]
+  },
+  "Bottles_objects": {
+   "file": "sheets/Bottles_objects.png",
+   "size": {
+    "w": 160,
+    "h": 704
+   },
+   "columns": 10,
+   "tilecount": 440,
+   "sprites_from": "gap_slice",
+   "sprites": [
+    {
+     "id": "Bottles_objects_001",
+     "x": 4,
+     "y": 3,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_002",
+     "x": 18,
+     "y": 3,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_003",
+     "x": 36,
+     "y": 3,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_004",
+     "x": 51,
+     "y": 3,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_005",
+     "x": 65,
+     "y": 3,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_006",
+     "x": 82,
+     "y": 3,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_007",
+     "x": 97,
+     "y": 2,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_008",
+     "x": 115,
+     "y": 3,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_009",
+     "x": 129,
+     "y": 2,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_010",
+     "x": 146,
+     "y": 3,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_011",
+     "x": 4,
+     "y": 19,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_012",
+     "x": 18,
+     "y": 19,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_013",
+     "x": 36,
+     "y": 19,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_014",
+     "x": 51,
+     "y": 19,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_015",
+     "x": 65,
+     "y": 19,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_016",
+     "x": 82,
+     "y": 19,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_017",
+     "x": 97,
+     "y": 18,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_018",
+     "x": 115,
+     "y": 19,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_019",
+     "x": 129,
+     "y": 18,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_020",
+     "x": 146,
+     "y": 19,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_021",
+     "x": 4,
+     "y": 35,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_022",
+     "x": 18,
+     "y": 35,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_023",
+     "x": 36,
+     "y": 35,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_024",
+     "x": 51,
+     "y": 35,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_025",
+     "x": 65,
+     "y": 35,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_026",
+     "x": 82,
+     "y": 35,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_027",
+     "x": 97,
+     "y": 34,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_028",
+     "x": 115,
+     "y": 35,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_029",
+     "x": 129,
+     "y": 34,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_030",
+     "x": 146,
+     "y": 35,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_031",
+     "x": 4,
+     "y": 51,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_032",
+     "x": 18,
+     "y": 51,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_033",
+     "x": 36,
+     "y": 51,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_034",
+     "x": 51,
+     "y": 51,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_035",
+     "x": 65,
+     "y": 51,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_036",
+     "x": 82,
+     "y": 51,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_037",
+     "x": 97,
+     "y": 50,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_038",
+     "x": 115,
+     "y": 51,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_039",
+     "x": 129,
+     "y": 50,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_040",
+     "x": 146,
+     "y": 51,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_041",
+     "x": 4,
+     "y": 67,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_042",
+     "x": 18,
+     "y": 67,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_043",
+     "x": 36,
+     "y": 67,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_044",
+     "x": 51,
+     "y": 67,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_045",
+     "x": 65,
+     "y": 67,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_046",
+     "x": 82,
+     "y": 67,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_047",
+     "x": 97,
+     "y": 66,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_048",
+     "x": 115,
+     "y": 67,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_049",
+     "x": 129,
+     "y": 66,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_050",
+     "x": 146,
+     "y": 67,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_051",
+     "x": 4,
+     "y": 83,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_052",
+     "x": 18,
+     "y": 83,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_053",
+     "x": 36,
+     "y": 83,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_054",
+     "x": 51,
+     "y": 83,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_055",
+     "x": 65,
+     "y": 83,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_056",
+     "x": 82,
+     "y": 83,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_057",
+     "x": 97,
+     "y": 82,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_058",
+     "x": 115,
+     "y": 83,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_059",
+     "x": 129,
+     "y": 82,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_060",
+     "x": 146,
+     "y": 83,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_061",
+     "x": 4,
+     "y": 99,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_062",
+     "x": 18,
+     "y": 99,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_063",
+     "x": 36,
+     "y": 99,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_064",
+     "x": 51,
+     "y": 99,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_065",
+     "x": 65,
+     "y": 99,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_066",
+     "x": 82,
+     "y": 99,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_067",
+     "x": 97,
+     "y": 98,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_068",
+     "x": 115,
+     "y": 99,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_069",
+     "x": 129,
+     "y": 98,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_070",
+     "x": 146,
+     "y": 99,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_071",
+     "x": 4,
+     "y": 115,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_072",
+     "x": 18,
+     "y": 115,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_073",
+     "x": 36,
+     "y": 115,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_074",
+     "x": 51,
+     "y": 115,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_075",
+     "x": 65,
+     "y": 115,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_076",
+     "x": 82,
+     "y": 115,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_077",
+     "x": 97,
+     "y": 114,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_078",
+     "x": 115,
+     "y": 115,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_079",
+     "x": 129,
+     "y": 114,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_080",
+     "x": 146,
+     "y": 115,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_081",
+     "x": 4,
+     "y": 131,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_082",
+     "x": 18,
+     "y": 131,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_083",
+     "x": 36,
+     "y": 131,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_084",
+     "x": 51,
+     "y": 131,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_085",
+     "x": 65,
+     "y": 131,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_086",
+     "x": 82,
+     "y": 131,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_087",
+     "x": 97,
+     "y": 130,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_088",
+     "x": 115,
+     "y": 131,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_089",
+     "x": 129,
+     "y": 130,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_090",
+     "x": 146,
+     "y": 131,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_091",
+     "x": 4,
+     "y": 147,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_092",
+     "x": 18,
+     "y": 147,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_093",
+     "x": 36,
+     "y": 147,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_094",
+     "x": 51,
+     "y": 147,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_095",
+     "x": 65,
+     "y": 147,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_096",
+     "x": 82,
+     "y": 147,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_097",
+     "x": 97,
+     "y": 146,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_098",
+     "x": 115,
+     "y": 147,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_099",
+     "x": 129,
+     "y": 146,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_100",
+     "x": 146,
+     "y": 147,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_101",
+     "x": 4,
+     "y": 163,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_102",
+     "x": 18,
+     "y": 163,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_103",
+     "x": 36,
+     "y": 163,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_104",
+     "x": 51,
+     "y": 163,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_105",
+     "x": 65,
+     "y": 163,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_106",
+     "x": 82,
+     "y": 163,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_107",
+     "x": 97,
+     "y": 162,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_108",
+     "x": 115,
+     "y": 163,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_109",
+     "x": 129,
+     "y": 162,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_110",
+     "x": 146,
+     "y": 163,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_111",
+     "x": 4,
+     "y": 183,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_112",
+     "x": 18,
+     "y": 183,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_113",
+     "x": 36,
+     "y": 183,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_114",
+     "x": 51,
+     "y": 183,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_115",
+     "x": 65,
+     "y": 183,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_116",
+     "x": 82,
+     "y": 183,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_117",
+     "x": 97,
+     "y": 182,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_118",
+     "x": 115,
+     "y": 183,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_119",
+     "x": 129,
+     "y": 182,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_120",
+     "x": 146,
+     "y": 183,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_121",
+     "x": 4,
+     "y": 215,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_122",
+     "x": 18,
+     "y": 215,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_123",
+     "x": 36,
+     "y": 215,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_124",
+     "x": 51,
+     "y": 215,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_125",
+     "x": 65,
+     "y": 215,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_126",
+     "x": 82,
+     "y": 215,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_127",
+     "x": 97,
+     "y": 214,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_128",
+     "x": 115,
+     "y": 215,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_129",
+     "x": 129,
+     "y": 214,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_130",
+     "x": 146,
+     "y": 215,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_131",
+     "x": 4,
+     "y": 247,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_132",
+     "x": 18,
+     "y": 247,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_133",
+     "x": 36,
+     "y": 247,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_134",
+     "x": 51,
+     "y": 247,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_135",
+     "x": 65,
+     "y": 247,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_136",
+     "x": 82,
+     "y": 247,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_137",
+     "x": 97,
+     "y": 246,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_138",
+     "x": 115,
+     "y": 247,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_139",
+     "x": 129,
+     "y": 246,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_140",
+     "x": 146,
+     "y": 247,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_141",
+     "x": 4,
+     "y": 279,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_142",
+     "x": 18,
+     "y": 279,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_143",
+     "x": 36,
+     "y": 279,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_144",
+     "x": 51,
+     "y": 279,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_145",
+     "x": 65,
+     "y": 279,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_146",
+     "x": 82,
+     "y": 279,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_147",
+     "x": 97,
+     "y": 278,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_148",
+     "x": 115,
+     "y": 279,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_149",
+     "x": 129,
+     "y": 278,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_150",
+     "x": 146,
+     "y": 279,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_151",
+     "x": 4,
+     "y": 311,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_152",
+     "x": 18,
+     "y": 311,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_153",
+     "x": 36,
+     "y": 311,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_154",
+     "x": 51,
+     "y": 311,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_155",
+     "x": 65,
+     "y": 311,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_156",
+     "x": 82,
+     "y": 311,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_157",
+     "x": 97,
+     "y": 310,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_158",
+     "x": 115,
+     "y": 311,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_159",
+     "x": 129,
+     "y": 310,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_160",
+     "x": 146,
+     "y": 311,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_161",
+     "x": 4,
+     "y": 343,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_162",
+     "x": 18,
+     "y": 343,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_163",
+     "x": 36,
+     "y": 343,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_164",
+     "x": 51,
+     "y": 343,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_165",
+     "x": 65,
+     "y": 343,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_166",
+     "x": 82,
+     "y": 343,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_167",
+     "x": 97,
+     "y": 342,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_168",
+     "x": 115,
+     "y": 343,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_169",
+     "x": 129,
+     "y": 342,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_170",
+     "x": 146,
+     "y": 343,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_171",
+     "x": 4,
+     "y": 375,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_172",
+     "x": 18,
+     "y": 375,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_173",
+     "x": 36,
+     "y": 375,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_174",
+     "x": 51,
+     "y": 375,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_175",
+     "x": 65,
+     "y": 375,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_176",
+     "x": 82,
+     "y": 375,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_177",
+     "x": 97,
+     "y": 374,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_178",
+     "x": 115,
+     "y": 375,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_179",
+     "x": 129,
+     "y": 374,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_180",
+     "x": 146,
+     "y": 375,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_181",
+     "x": 4,
+     "y": 407,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_182",
+     "x": 18,
+     "y": 407,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_183",
+     "x": 36,
+     "y": 407,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_184",
+     "x": 51,
+     "y": 407,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_185",
+     "x": 65,
+     "y": 407,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_186",
+     "x": 82,
+     "y": 407,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_187",
+     "x": 97,
+     "y": 406,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_188",
+     "x": 115,
+     "y": 407,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_189",
+     "x": 129,
+     "y": 406,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_190",
+     "x": 146,
+     "y": 407,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_191",
+     "x": 4,
+     "y": 439,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_192",
+     "x": 18,
+     "y": 439,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_193",
+     "x": 36,
+     "y": 439,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_194",
+     "x": 51,
+     "y": 439,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_195",
+     "x": 65,
+     "y": 439,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_196",
+     "x": 82,
+     "y": 439,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_197",
+     "x": 97,
+     "y": 438,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_198",
+     "x": 115,
+     "y": 439,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_199",
+     "x": 129,
+     "y": 438,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_200",
+     "x": 146,
+     "y": 439,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_201",
+     "x": 4,
+     "y": 471,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_202",
+     "x": 18,
+     "y": 471,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_203",
+     "x": 36,
+     "y": 471,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_204",
+     "x": 51,
+     "y": 471,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_205",
+     "x": 65,
+     "y": 471,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_206",
+     "x": 82,
+     "y": 471,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_207",
+     "x": 97,
+     "y": 470,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_208",
+     "x": 115,
+     "y": 471,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_209",
+     "x": 129,
+     "y": 470,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_210",
+     "x": 146,
+     "y": 471,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_211",
+     "x": 4,
+     "y": 503,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_212",
+     "x": 18,
+     "y": 503,
+     "w": 11,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_213",
+     "x": 36,
+     "y": 503,
+     "w": 9,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_214",
+     "x": 51,
+     "y": 503,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_215",
+     "x": 65,
+     "y": 503,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_216",
+     "x": 82,
+     "y": 503,
+     "w": 13,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_217",
+     "x": 97,
+     "y": 502,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_218",
+     "x": 115,
+     "y": 503,
+     "w": 10,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_219",
+     "x": 129,
+     "y": 502,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "Bottles_objects_220",
+     "x": 146,
+     "y": 503,
+     "w": 12,
+     "h": 13
+    },
+    {
+     "id": "Bottles_objects_221",
+     "x": 6,
+     "y": 531,
+     "w": 5,
+     "h": 10
+    },
+    {
+     "id": "Bottles_objects_222",
+     "x": 20,
+     "y": 531,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_223",
+     "x": 38,
+     "y": 531,
+     "w": 5,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_224",
+     "x": 53,
+     "y": 531,
+     "w": 6,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_225",
+     "x": 67,
+     "y": 531,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_226",
+     "x": 84,
+     "y": 531,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_227",
+     "x": 99,
+     "y": 531,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_228",
+     "x": 116,
+     "y": 531,
+     "w": 8,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_229",
+     "x": 131,
+     "y": 531,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_230",
+     "x": 147,
+     "y": 531,
+     "w": 10,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_231",
+     "x": 6,
+     "y": 547,
+     "w": 5,
+     "h": 10
+    },
+    {
+     "id": "Bottles_objects_232",
+     "x": 20,
+     "y": 547,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_233",
+     "x": 38,
+     "y": 547,
+     "w": 5,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_234",
+     "x": 53,
+     "y": 547,
+     "w": 6,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_235",
+     "x": 67,
+     "y": 547,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_236",
+     "x": 84,
+     "y": 547,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_237",
+     "x": 99,
+     "y": 547,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_238",
+     "x": 116,
+     "y": 547,
+     "w": 8,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_239",
+     "x": 131,
+     "y": 547,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_240",
+     "x": 147,
+     "y": 547,
+     "w": 10,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_241",
+     "x": 6,
+     "y": 563,
+     "w": 5,
+     "h": 10
+    },
+    {
+     "id": "Bottles_objects_242",
+     "x": 20,
+     "y": 563,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_243",
+     "x": 38,
+     "y": 563,
+     "w": 5,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_244",
+     "x": 53,
+     "y": 563,
+     "w": 6,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_245",
+     "x": 67,
+     "y": 563,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_246",
+     "x": 84,
+     "y": 563,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_247",
+     "x": 99,
+     "y": 563,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_248",
+     "x": 116,
+     "y": 563,
+     "w": 8,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_249",
+     "x": 131,
+     "y": 563,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_250",
+     "x": 147,
+     "y": 563,
+     "w": 10,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_251",
+     "x": 6,
+     "y": 579,
+     "w": 5,
+     "h": 10
+    },
+    {
+     "id": "Bottles_objects_252",
+     "x": 20,
+     "y": 579,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_253",
+     "x": 38,
+     "y": 579,
+     "w": 5,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_254",
+     "x": 53,
+     "y": 579,
+     "w": 6,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_255",
+     "x": 67,
+     "y": 579,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_256",
+     "x": 84,
+     "y": 579,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_257",
+     "x": 99,
+     "y": 579,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_258",
+     "x": 116,
+     "y": 579,
+     "w": 8,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_259",
+     "x": 131,
+     "y": 579,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_260",
+     "x": 147,
+     "y": 579,
+     "w": 10,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_261",
+     "x": 6,
+     "y": 595,
+     "w": 5,
+     "h": 10
+    },
+    {
+     "id": "Bottles_objects_262",
+     "x": 20,
+     "y": 595,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_263",
+     "x": 38,
+     "y": 595,
+     "w": 5,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_264",
+     "x": 53,
+     "y": 595,
+     "w": 6,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_265",
+     "x": 67,
+     "y": 595,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_266",
+     "x": 84,
+     "y": 595,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_267",
+     "x": 99,
+     "y": 595,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_268",
+     "x": 116,
+     "y": 595,
+     "w": 8,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_269",
+     "x": 131,
+     "y": 595,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_270",
+     "x": 147,
+     "y": 595,
+     "w": 10,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_271",
+     "x": 6,
+     "y": 611,
+     "w": 5,
+     "h": 10
+    },
+    {
+     "id": "Bottles_objects_272",
+     "x": 20,
+     "y": 611,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_273",
+     "x": 38,
+     "y": 611,
+     "w": 5,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_274",
+     "x": 53,
+     "y": 611,
+     "w": 6,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_275",
+     "x": 67,
+     "y": 611,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_276",
+     "x": 84,
+     "y": 611,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_277",
+     "x": 99,
+     "y": 611,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_278",
+     "x": 116,
+     "y": 611,
+     "w": 8,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_279",
+     "x": 131,
+     "y": 611,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_280",
+     "x": 147,
+     "y": 611,
+     "w": 10,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_281",
+     "x": 6,
+     "y": 627,
+     "w": 5,
+     "h": 10
+    },
+    {
+     "id": "Bottles_objects_282",
+     "x": 20,
+     "y": 627,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_283",
+     "x": 38,
+     "y": 627,
+     "w": 5,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_284",
+     "x": 53,
+     "y": 627,
+     "w": 6,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_285",
+     "x": 67,
+     "y": 627,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_286",
+     "x": 84,
+     "y": 627,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_287",
+     "x": 99,
+     "y": 627,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_288",
+     "x": 116,
+     "y": 627,
+     "w": 8,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_289",
+     "x": 131,
+     "y": 627,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_290",
+     "x": 147,
+     "y": 627,
+     "w": 10,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_291",
+     "x": 6,
+     "y": 643,
+     "w": 5,
+     "h": 10
+    },
+    {
+     "id": "Bottles_objects_292",
+     "x": 20,
+     "y": 643,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_293",
+     "x": 38,
+     "y": 643,
+     "w": 5,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_294",
+     "x": 53,
+     "y": 643,
+     "w": 6,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_295",
+     "x": 67,
+     "y": 643,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_296",
+     "x": 84,
+     "y": 643,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_297",
+     "x": 99,
+     "y": 643,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_298",
+     "x": 116,
+     "y": 643,
+     "w": 8,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_299",
+     "x": 131,
+     "y": 643,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_300",
+     "x": 147,
+     "y": 643,
+     "w": 10,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_301",
+     "x": 6,
+     "y": 659,
+     "w": 5,
+     "h": 10
+    },
+    {
+     "id": "Bottles_objects_302",
+     "x": 20,
+     "y": 659,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_303",
+     "x": 38,
+     "y": 659,
+     "w": 5,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_304",
+     "x": 53,
+     "y": 659,
+     "w": 6,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_305",
+     "x": 67,
+     "y": 659,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_306",
+     "x": 84,
+     "y": 659,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_307",
+     "x": 99,
+     "y": 659,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_308",
+     "x": 116,
+     "y": 659,
+     "w": 8,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_309",
+     "x": 131,
+     "y": 659,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_310",
+     "x": 147,
+     "y": 659,
+     "w": 10,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_311",
+     "x": 6,
+     "y": 675,
+     "w": 5,
+     "h": 10
+    },
+    {
+     "id": "Bottles_objects_312",
+     "x": 20,
+     "y": 675,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_313",
+     "x": 38,
+     "y": 675,
+     "w": 5,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_314",
+     "x": 53,
+     "y": 675,
+     "w": 6,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_315",
+     "x": 67,
+     "y": 675,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_316",
+     "x": 84,
+     "y": 675,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_317",
+     "x": 99,
+     "y": 675,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_318",
+     "x": 116,
+     "y": 675,
+     "w": 8,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_319",
+     "x": 131,
+     "y": 675,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_320",
+     "x": 147,
+     "y": 675,
+     "w": 10,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_321",
+     "x": 6,
+     "y": 691,
+     "w": 5,
+     "h": 10
+    },
+    {
+     "id": "Bottles_objects_322",
+     "x": 20,
+     "y": 691,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_323",
+     "x": 38,
+     "y": 691,
+     "w": 5,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_324",
+     "x": 53,
+     "y": 691,
+     "w": 6,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_325",
+     "x": 67,
+     "y": 691,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_326",
+     "x": 84,
+     "y": 691,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_327",
+     "x": 99,
+     "y": 691,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_328",
+     "x": 116,
+     "y": 691,
+     "w": 8,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_329",
+     "x": 131,
+     "y": 691,
+     "w": 9,
+     "h": 11
+    },
+    {
+     "id": "Bottles_objects_330",
+     "x": 147,
+     "y": 691,
+     "w": 10,
+     "h": 11
+    }
+   ]
+  },
+  "Furniture": {
+   "file": "sheets/Furniture.png",
+   "size": {
+    "w": 96,
+    "h": 256
+   },
+   "columns": 6,
+   "tilecount": 96,
+   "sprites_from": "gap_slice",
+   "sprites": [
+    {
+     "id": "Furniture_001",
+     "x": 1,
+     "y": 5,
+     "w": 46,
+     "h": 52
+    },
+    {
+     "id": "Furniture_002",
+     "x": 53,
+     "y": 10,
+     "w": 39,
+     "h": 54
+    },
+    {
+     "id": "Furniture_003",
+     "x": 1,
+     "y": 69,
+     "w": 46,
+     "h": 52
+    },
+    {
+     "id": "Furniture_004",
+     "x": 53,
+     "y": 72,
+     "w": 39,
+     "h": 56
+    },
+    {
+     "id": "Furniture_005",
+     "x": 1,
+     "y": 133,
+     "w": 46,
+     "h": 52
+    },
+    {
+     "id": "Furniture_006",
+     "x": 53,
+     "y": 136,
+     "w": 39,
+     "h": 56
+    },
+    {
+     "id": "Furniture_007",
+     "x": 1,
+     "y": 197,
+     "w": 46,
+     "h": 52
+    },
+    {
+     "id": "Furniture_008",
+     "x": 53,
+     "y": 195,
+     "w": 39,
+     "h": 61
+    }
+   ]
+  },
+  "Runes": {
+   "file": "sheets/Runes.png",
+   "size": {
+    "w": 320,
+    "h": 1536
+   },
+   "columns": 20,
+   "tilecount": 1920,
+   "anim": {
+    "frames": 12,
+    "frame": {
+     "w": 320,
+     "h": 128
+    },
+    "ms": 150
+   },
+   "sprites_from": "gap_slice",
+   "sprites": [
+    {
+     "id": "Runes_001",
+     "x": 15,
+     "y": 4,
+     "w": 36,
+     "h": 57
+    },
+    {
+     "id": "Runes_002",
+     "x": 80,
+     "y": 16,
+     "w": 28,
+     "h": 45
+    },
+    {
+     "id": "Runes_003",
+     "x": 141,
+     "y": 17,
+     "w": 37,
+     "h": 44
+    },
+    {
+     "id": "Runes_004",
+     "x": 208,
+     "y": 32,
+     "w": 3,
+     "h": 3
+    },
+    {
+     "id": "Runes_005",
+     "x": 214,
+     "y": 23,
+     "w": 19,
+     "h": 38
+    },
+    {
+     "id": "Runes_006",
+     "x": 278,
+     "y": 12,
+     "w": 28,
+     "h": 49
+    },
+    {
+     "id": "Runes_007",
+     "x": 17,
+     "y": 79,
+     "w": 27,
+     "h": 46
+    },
+    {
+     "id": "Runes_008",
+     "x": 74,
+     "y": 76,
+     "w": 41,
+     "h": 49
+    },
+    {
+     "id": "Runes_009",
+     "x": 146,
+     "y": 79,
+     "w": 27,
+     "h": 46
+    },
+    {
+     "id": "Runes_010",
+     "x": 207,
+     "y": 74,
+     "w": 33,
+     "h": 51
+    },
+    {
+     "id": "Runes_011",
+     "x": 271,
+     "y": 74,
+     "w": 33,
+     "h": 51
+    }
+   ]
+  },
+  "other_icons": {
+   "file": "sheets/other_icons.png",
+   "size": {
+    "w": 336,
+    "h": 160
+   },
+   "columns": 21,
+   "tilecount": 210,
+   "sprites_from": "gap_slice",
+   "sprites": [
+    {
+     "id": "other_icons_001",
+     "x": 3,
+     "y": 18,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "other_icons_002",
+     "x": 25,
+     "y": 7,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "other_icons_003",
+     "x": 50,
+     "y": 18,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_004",
+     "x": 71,
+     "y": 7,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_005",
+     "x": 98,
+     "y": 18,
+     "w": 12,
+     "h": 11
+    },
+    {
+     "id": "other_icons_006",
+     "x": 119,
+     "y": 7,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_007",
+     "x": 146,
+     "y": 18,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_008",
+     "x": 167,
+     "y": 7,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_009",
+     "x": 195,
+     "y": 18,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "other_icons_010",
+     "x": 217,
+     "y": 7,
+     "w": 14,
+     "h": 17
+    },
+    {
+     "id": "other_icons_011",
+     "x": 242,
+     "y": 18,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_012",
+     "x": 263,
+     "y": 7,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_013",
+     "x": 290,
+     "y": 19,
+     "w": 12,
+     "h": 10
+    },
+    {
+     "id": "other_icons_014",
+     "x": 311,
+     "y": 8,
+     "w": 17,
+     "h": 15
+    },
+    {
+     "id": "other_icons_015",
+     "x": 3,
+     "y": 50,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "other_icons_016",
+     "x": 24,
+     "y": 39,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "other_icons_017",
+     "x": 50,
+     "y": 50,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_018",
+     "x": 71,
+     "y": 39,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_019",
+     "x": 99,
+     "y": 50,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "other_icons_020",
+     "x": 120,
+     "y": 39,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "other_icons_021",
+     "x": 146,
+     "y": 50,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_022",
+     "x": 167,
+     "y": 39,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_023",
+     "x": 195,
+     "y": 50,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "other_icons_024",
+     "x": 216,
+     "y": 39,
+     "w": 14,
+     "h": 17
+    },
+    {
+     "id": "other_icons_025",
+     "x": 242,
+     "y": 50,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_026",
+     "x": 263,
+     "y": 39,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_027",
+     "x": 290,
+     "y": 50,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_028",
+     "x": 311,
+     "y": 39,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_029",
+     "x": 3,
+     "y": 82,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "other_icons_030",
+     "x": 25,
+     "y": 71,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "other_icons_031",
+     "x": 50,
+     "y": 82,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_032",
+     "x": 71,
+     "y": 71,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_033",
+     "x": 99,
+     "y": 82,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "other_icons_034",
+     "x": 120,
+     "y": 71,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "other_icons_035",
+     "x": 146,
+     "y": 82,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_036",
+     "x": 167,
+     "y": 71,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_037",
+     "x": 194,
+     "y": 82,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_038",
+     "x": 215,
+     "y": 71,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_039",
+     "x": 242,
+     "y": 82,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_040",
+     "x": 263,
+     "y": 71,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_041",
+     "x": 291,
+     "y": 82,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "other_icons_042",
+     "x": 312,
+     "y": 71,
+     "w": 15,
+     "h": 17
+    },
+    {
+     "id": "other_icons_043",
+     "x": 2,
+     "y": 114,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_044",
+     "x": 23,
+     "y": 103,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_045",
+     "x": 50,
+     "y": 114,
+     "w": 11,
+     "h": 12
+    },
+    {
+     "id": "other_icons_046",
+     "x": 72,
+     "y": 103,
+     "w": 16,
+     "h": 16
+    },
+    {
+     "id": "other_icons_047",
+     "x": 100,
+     "y": 114,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "other_icons_048",
+     "x": 121,
+     "y": 103,
+     "w": 11,
+     "h": 17
+    },
+    {
+     "id": "other_icons_049",
+     "x": 146,
+     "y": 114,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_050",
+     "x": 167,
+     "y": 103,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_051",
+     "x": 195,
+     "y": 114,
+     "w": 10,
+     "h": 12
+    },
+    {
+     "id": "other_icons_052",
+     "x": 216,
+     "y": 103,
+     "w": 14,
+     "h": 17
+    },
+    {
+     "id": "other_icons_053",
+     "x": 242,
+     "y": 114,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_054",
+     "x": 263,
+     "y": 103,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_055",
+     "x": 290,
+     "y": 114,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_056",
+     "x": 311,
+     "y": 103,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_057",
+     "x": 3,
+     "y": 146,
+     "w": 9,
+     "h": 12
+    },
+    {
+     "id": "other_icons_058",
+     "x": 25,
+     "y": 135,
+     "w": 13,
+     "h": 17
+    },
+    {
+     "id": "other_icons_059",
+     "x": 51,
+     "y": 146,
+     "w": 11,
+     "h": 11
+    },
+    {
+     "id": "other_icons_060",
+     "x": 71,
+     "y": 135,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_061",
+     "x": 98,
+     "y": 146,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_062",
+     "x": 119,
+     "y": 135,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_063",
+     "x": 146,
+     "y": 146,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_064",
+     "x": 167,
+     "y": 135,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_065",
+     "x": 194,
+     "y": 146,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_066",
+     "x": 215,
+     "y": 135,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_067",
+     "x": 242,
+     "y": 146,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_068",
+     "x": 263,
+     "y": 135,
+     "w": 17,
+     "h": 17
+    },
+    {
+     "id": "other_icons_069",
+     "x": 290,
+     "y": 146,
+     "w": 12,
+     "h": 12
+    },
+    {
+     "id": "other_icons_070",
+     "x": 311,
+     "y": 135,
+     "w": 17,
+     "h": 17
+    }
+   ]
+  },
+  "other_objects": {
+   "file": "sheets/other_objects.png",
+   "size": {
+    "w": 96,
+    "h": 208
+   },
+   "columns": 6,
+   "tilecount": 78,
+   "sprites_from": "gap_slice",
+   "sprites": [
+    {
+     "id": "other_objects_001",
+     "x": 3,
+     "y": 3,
+     "w": 11,
+     "h": 10
+    },
+    {
+     "id": "other_objects_002",
+     "x": 21,
+     "y": 3,
+     "w": 7,
+     "h": 10
+    },
+    {
+     "id": "other_objects_003",
+     "x": 38,
+     "y": 3,
+     "w": 4,
+     "h": 10
+    },
+    {
+     "id": "other_objects_004",
+     "x": 51,
+     "y": 7,
+     "w": 11,
+     "h": 8
+    },
+    {
+     "id": "other_objects_005",
+     "x": 68,
+     "y": 6,
+     "w": 11,
+     "h": 10
+    },
+    {
+     "id": "other_objects_006",
+     "x": 84,
+     "y": 6,
+     "w": 7,
+     "h": 10
+    },
+    {
+     "id": "other_objects_007",
+     "x": 1,
+     "y": 18,
+     "w": 15,
+     "h": 12
+    },
+    {
+     "id": "other_objects_008",
+     "x": 20,
+     "y": 18,
+     "w": 8,
+     "h": 12
+    },
+    {
+     "id": "other_objects_009",
+     "x": 38,
+     "y": 18,
+     "w": 4,
+     "h": 12
+    },
+    {
+     "id": "other_objects_010",
+     "x": 48,
+     "y": 20,
+     "w": 15,
+     "h": 10
+    },
+    {
+     "id": "other_objects_011",
+     "x": 66,
+     "y": 19,
+     "w": 13,
+     "h": 12
+    },
+    {
+     "id": "other_objects_012",
+     "x": 84,
+     "y": 19,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "other_objects_013",
+     "x": 1,
+     "y": 33,
+     "w": 15,
+     "h": 15
+    },
+    {
+     "id": "other_objects_014",
+     "x": 19,
+     "y": 33,
+     "w": 11,
+     "h": 15
+    },
+    {
+     "id": "other_objects_015",
+     "x": 38,
+     "y": 32,
+     "w": 5,
+     "h": 16
+    },
+    {
+     "id": "other_objects_016",
+     "x": 49,
+     "y": 37,
+     "w": 14,
+     "h": 9
+    },
+    {
+     "id": "other_objects_017",
+     "x": 67,
+     "y": 36,
+     "w": 12,
+     "h": 11
+    },
+    {
+     "id": "other_objects_018",
+     "x": 84,
+     "y": 36,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "other_objects_019",
+     "x": 3,
+     "y": 59,
+     "w": 11,
+     "h": 10
+    },
+    {
+     "id": "other_objects_020",
+     "x": 21,
+     "y": 60,
+     "w": 7,
+     "h": 10
+    },
+    {
+     "id": "other_objects_021",
+     "x": 38,
+     "y": 51,
+     "w": 4,
+     "h": 10
+    },
+    {
+     "id": "other_objects_022",
+     "x": 50,
+     "y": 60,
+     "w": 11,
+     "h": 8
+    },
+    {
+     "id": "other_objects_023",
+     "x": 66,
+     "y": 59,
+     "w": 11,
+     "h": 10
+    },
+    {
+     "id": "other_objects_024",
+     "x": 85,
+     "y": 59,
+     "w": 7,
+     "h": 10
+    },
+    {
+     "id": "other_objects_025",
+     "x": 1,
+     "y": 89,
+     "w": 15,
+     "h": 12
+    },
+    {
+     "id": "other_objects_026",
+     "x": 20,
+     "y": 89,
+     "w": 8,
+     "h": 12
+    },
+    {
+     "id": "other_objects_027",
+     "x": 38,
+     "y": 81,
+     "w": 4,
+     "h": 12
+    },
+    {
+     "id": "other_objects_028",
+     "x": 49,
+     "y": 91,
+     "w": 15,
+     "h": 10
+    },
+    {
+     "id": "other_objects_029",
+     "x": 66,
+     "y": 91,
+     "w": 13,
+     "h": 12
+    },
+    {
+     "id": "other_objects_030",
+     "x": 85,
+     "y": 91,
+     "w": 7,
+     "h": 12
+    },
+    {
+     "id": "other_objects_031",
+     "x": 1,
+     "y": 120,
+     "w": 15,
+     "h": 15
+    },
+    {
+     "id": "other_objects_032",
+     "x": 19,
+     "y": 120,
+     "w": 11,
+     "h": 15
+    },
+    {
+     "id": "other_objects_033",
+     "x": 38,
+     "y": 112,
+     "w": 5,
+     "h": 16
+    },
+    {
+     "id": "other_objects_034",
+     "x": 49,
+     "y": 124,
+     "w": 14,
+     "h": 9
+    },
+    {
+     "id": "other_objects_035",
+     "x": 66,
+     "y": 123,
+     "w": 12,
+     "h": 11
+    },
+    {
+     "id": "other_objects_036",
+     "x": 84,
+     "y": 123,
+     "w": 7,
+     "h": 11
+    },
+    {
+     "id": "other_objects_037",
+     "x": 8,
+     "y": 150,
+     "w": 17,
+     "h": 21
+    },
+    {
+     "id": "other_objects_038",
+     "x": 36,
+     "y": 145,
+     "w": 23,
+     "h": 26
+    },
+    {
+     "id": "other_objects_039",
+     "x": 70,
+     "y": 157,
+     "w": 5,
+     "h": 9
+    },
+    {
+     "id": "other_objects_040",
+     "x": 83,
+     "y": 156,
+     "w": 12,
+     "h": 11
+    },
+    {
+     "id": "other_objects_041",
+     "x": 3,
+     "y": 185,
+     "w": 10,
+     "h": 11
+    },
+    {
+     "id": "other_objects_042",
+     "x": 17,
+     "y": 179,
+     "w": 15,
+     "h": 29
+    },
+    {
+     "id": "other_objects_043",
+     "x": 33,
+     "y": 177,
+     "w": 15,
+     "h": 30
+    },
+    {
+     "id": "other_objects_044",
+     "x": 50,
+     "y": 178,
+     "w": 13,
+     "h": 14
+    },
+    {
+     "id": "other_objects_045",
+     "x": 70,
+     "y": 180,
+     "w": 5,
+     "h": 9
+    },
+    {
+     "id": "other_objects_046",
+     "x": 83,
+     "y": 179,
+     "w": 12,
+     "h": 11
+    }
+   ]
+  }
+ }
+}

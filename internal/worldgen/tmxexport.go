@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // tmxexport.go — режим `worldgen tmx <biome-dir> [seed] [size]`: выгрузить
 // сгенерированную карту в .tmx, чтобы открыть её в Tiled поверх тех же .tsx и
@@ -17,7 +17,7 @@ import (
 	"strings"
 )
 
-func runTMXExport(args []string) {
+func RunTMXExport(args []string) {
 	if len(args) < 1 {
 		fmt.Fprintln(os.Stderr, "worldgen tmx <biome-dir> [seed] [size]")
 		os.Exit(2)
@@ -38,7 +38,7 @@ func runTMXExport(args []string) {
 	if err != nil {
 		fatal(err)
 	}
-	// сид считается так же, как в основном прогоне (runGenerate), иначе
+	// сид считается так же, как в основном прогоне (RunGenerate), иначе
 	// выгрузка окажется другой картой, чем seed_N.png
 	g := NewGenerator(defaultParams(size, size), uint64(seed)*0x9E3779B97F4A7C15, m)
 	g.Run()

@@ -29,6 +29,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	ui.Cursor = ui.CursorArrow // сцена переопределит, если ей нужен прицел
 	g.scene.Draw(screen)
 	ui.DrawFPS(screen)    // счётчик кадров (если включён в настройках)
 	ui.DrawCursor(screen) // игровой курсор-прицел (системный скрыт)

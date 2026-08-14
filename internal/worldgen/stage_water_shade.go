@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // stage_water_shade.go — вид воды: полосы глубины у берега и рябь на поверхности.
 //
@@ -267,6 +267,12 @@ func (g *Generator) innerWater() *Grid[bool] {
 // художника: блики покрывают около четверти воды).
 const waterDetailCover = 0.24
 
+// waterDetailFill — сколько водяной поверхности добирается второй проходкой,
+// мелкими штампами. Идёт поверх waterDetailCover и попадает в основном в узкие
+// места, куда крупные полосы не влезли: свободных клеток в открытом море после
+// первой проходки почти не остаётся.
+const waterDetailFill = 0.10
+
 // stageWaterDetail раскладывает штампы ряби по воде. Штамп кладётся только туда,
 // где ВСЕ четыре клетки его dual-grid четвёрки — вода: на кромке тайл занят
 // берегом (слой coast рисуется выше), и блик под ним просто пропал бы.
@@ -274,14 +280,130 @@ func (g *Generator) stageWaterDetail() {
 	if g.Decor == nil || len(g.Decor.Stamps["water_detail"]) == 0 {
 		return
 	}
+	// За краем массива — то же открытое море, а не берег (та же конвенция, что в
+	// waterDistance). Иначе весь периметр карты читается как узкая вода.
+	liquid := func(x, y int) bool { return !g.Level.In(x, y) || g.Level.At(x, y).isLiquid() }
 	openWater := func(x, y int) bool {
 		for _, c := range [4][2]int{{x - 1, y - 1}, {x, y - 1}, {x - 1, y}, {x, y}} {
-			if !g.Level.In(c[0], c[1]) || !g.Level.At(c[0], c[1]).isLiquid() {
+			if !liquid(c[0], c[1]) {
 				return false
 			}
 		}
 		return true
 	}
 	rng := rand.New(rand.NewSource(int64(g.Seed) ^ 0x5EA0F0A))
-	g.scatterStamps(rng, map[[2]int]bool{}, "water_detail", "liquid_detail", openWater, waterDetailCover)
+	occ := map[[2]int]bool{}
+	g.scatterStamps(rng, occ, "water_detail", "liquid_detail", openWater, waterDetailCover)
+
+	// Вторая проходка — та же зона, но МЕЛКИМИ штампами и по списку клеток.
+	// Первая берёт штамп из всей библиотеки, а там полосы до 17 тайлов: в протоку
+	// или залив шириной в пару тайлов не влезает ни одна, и узкая вода оставалась
+	// неподвижной. Зона не расширяется ни на клетку: рябь имеет право лежать
+	// только на тайле, где ВСЯ четвёрка — вода. На кромочный тайл она не заходит,
+	// поэтому на берег не наезжает и поверх берегового тайла в игре не рисуется.
+	cells := make([][2]int, 0, 1024)
+	for y := 0; y < g.P.Height; y++ {
+		for x := 0; x < g.P.Width; x++ {
+			if openWater(x, y) {
+				cells = append(cells, [2]int{x, y})
+			}
+		}
+	}
+	g.scatterStampsOn(rng, occ, stampsUpTo(g.Decor.Stamps["water_detail"], 3, 2),
+		"liquid_detail", openWater, cells, waterDetailFill)
+
+	// Третья проходка — по водоёмам, которым не досталось ничего. В библиотеке
+	// все штампы горизонтальные и длиной от двух тайлов, а у реки шириной в пару
+	// тайлов полоса подходящих клеток вертикальная и шириной в одну: туда не
+	// встаёт ни один штамп, и внутренняя вода стояла неподвижной, пока море
+	// рябило. Море под условие не попадает — там покрытие и так выше порога.
+	g.fillQuietWater(rng, occ, openWater, cells)
+}
+
+// quietWaterCover — до какой доли клеток доводится рябь в водоёме, где её почти
+// нет. Сопоставимо с тем, что общие проходки дают морю.
+const quietWaterCover = 0.28
+
+// fillQuietWater добавляет одиночные капли ряби в водоёмы, обойдённые общими
+// проходками: каждый замкнутый водоём считается отдельно, и добирается только
+// тот, что остался ниже порога.
+func (g *Generator) fillQuietWater(rng *rand.Rand, occ map[[2]int]bool,
+	pred func(x, y int) bool, cells [][2]int) {
+	singles := singleStamps(stampsUpTo(g.Decor.Stamps["water_detail"], 3, 1))
+	if len(singles) == 0 {
+		return
+	}
+	in := make(map[[2]int]bool, len(cells))
+	for _, c := range cells {
+		in[c] = true
+	}
+	seen := make(map[[2]int]bool, len(cells))
+	for _, start := range cells {
+		if seen[start] {
+			continue
+		}
+		body := [][2]int{start}
+		seen[start] = true
+		for i := 0; i < len(body); i++ {
+			c := body[i]
+			for _, d := range [4][2]int{{1, 0}, {-1, 0}, {0, 1}, {0, -1}} {
+				n := [2]int{c[0] + d[0], c[1] + d[1]}
+				if in[n] && !seen[n] {
+					seen[n] = true
+					body = append(body, n)
+				}
+			}
+		}
+		covered := 0
+		for _, c := range body {
+			if occ[c] {
+				covered++
+			}
+		}
+		have := float64(covered) / float64(len(body))
+		if have >= quietWaterCover {
+			continue
+		}
+		need := quietWaterCover - have
+		// У лужи в пару клеток доля округлилась бы в ноль, и она осталась бы
+		// мёртвой: просим ровно одну каплю.
+		if int(float64(len(body))*need) == 0 {
+			need = 1 / float64(len(body))
+		}
+		g.scatterStampsOn(rng, occ, singles, "liquid_detail", pred, body, need)
+	}
+}
+
+// singleStamps режет штампы на одиночные тайлы: в узкую воду встаёт только одна
+// клетка, а каждый такой тайл и сам по себе читается как рябь (проверено на
+// арте: это мягкие мазки без обрубленных краёв). Новый арт не нужен.
+func singleStamps(lib []Stamp) []Stamp {
+	type key struct {
+		sheet string
+		tile  int
+	}
+	seen := map[key]bool{}
+	var out []Stamp
+	for _, s := range lib {
+		for _, c := range s.Cells {
+			k := key{c.Sheet, c.Tile}
+			if seen[k] {
+				continue
+			}
+			seen[k] = true
+			out = append(out, Stamp{W: 1, H: 1, Cells: []StampCell{{Dx: 0, Dy: 0, Sheet: c.Sheet, Tile: c.Tile}}})
+		}
+	}
+	return out
+}
+
+// stampsUpTo — штампы не крупнее w×h тайлов.
+func stampsUpTo(lib []Stamp, w, h int) []Stamp {
+	out := make([]Stamp, 0, len(lib))
+	for _, s := range lib {
+		if s.W <= w && s.H <= h {
+			out = append(out, s)
+		}
+	}
+	return out
 }

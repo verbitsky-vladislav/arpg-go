@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // grid.go — сетки и общие операции над ними: уровни высоты, плотные слои
 // тайлов, соседи, битовые маски, flood fill. Всё в тайловых координатах.
@@ -92,8 +92,9 @@ func mask8(g *Grid[Level], x, y int, pred func(Level) bool) uint8 {
 // в его ВЕРХНЕ-ЛЕВОМ углу. Так граница двух террейнов (трава/вода) даёт
 // переходный тайл и на ПРЯМОМ ребре, а не только на выступах. Порядок NW NE SE SW,
 // угол помечен, если соответствующая клетка принадлежит террейну.
-//   NW=(x-1,y-1)  NE=(x,y-1)
-//   SW=(x-1,y)    SE=(x,y)
+//
+//	NW=(x-1,y-1)  NE=(x,y-1)
+//	SW=(x-1,y)    SE=(x,y)
 func cornerKey(inSet func(x, y int) bool, x, y int) [4]bool {
 	return [4]bool{
 		inSet(x-1, y-1), // NW

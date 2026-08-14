@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // noise.go — детерминированный шум без внешних зависимостей.
 // Value-noise на целочисленном хеше + fBm (сумма октав) + domain warp

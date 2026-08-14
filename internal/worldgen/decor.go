@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // decor.go — библиотека декора и её расстановка ШТАМПАМИ. Декор — не отдельные
 // тайлы, а многотайловые куски (травяные кустики, камыш, кувшинки, рябь воды,
@@ -9,8 +9,6 @@ package main
 import (
 	"encoding/json"
 	"math/rand"
-	"os"
-	"path/filepath"
 )
 
 // StampCell — одна клетка штампа: смещение + лист и локальный id тайла.
@@ -34,8 +32,8 @@ type DecorLib struct {
 }
 
 // loadDecor читает decor.json биома (если есть). Отсутствие файла — не ошибка.
-func loadDecor(biomeDir string) *DecorLib {
-	raw, err := os.ReadFile(filepath.Join(biomeDir, "decor.json"))
+func loadDecor(m *Manifest) *DecorLib {
+	raw, err := m.readFile("decor.json")
 	if err != nil {
 		return &DecorLib{Stamps: map[string][]Stamp{}}
 	}
@@ -69,24 +67,43 @@ func (g *Generator) scatterStamps(rng *rand.Rand, occ map[[2]int]bool, group, la
 	for placed < target && attempts < target*40+200 {
 		attempts++
 		s := lib[rng.Intn(len(lib))]
-		px := rng.Intn(g.P.Width)
-		py := rng.Intn(g.P.Height)
-		ok := true
-		for _, c := range s.Cells {
-			x, y := px+c.Dx, py+c.Dy
-			if !pred(x, y) || occ[[2]int{x, y}] {
-				ok = false
-				break
-			}
-		}
-		if !ok {
-			continue
-		}
-		for _, c := range s.Cells {
-			x, y := px+c.Dx, py+c.Dy
-			occ[[2]int{x, y}] = true
-			g.addSparse(layer, c.Sheet, x, y, c.Tile, g.sheetAnim(c.Sheet))
-		}
-		placed += len(s.Cells)
+		placed += g.tryStamp(occ, s, layer, rng.Intn(g.P.Width), rng.Intn(g.P.Height), pred)
 	}
+}
+
+// scatterStampsOn — то же, но точка вброса берётся из готового списка клеток
+// зоны, а не наугад по всей карте, и набор штампов передаётся явно. Для узких
+// зон (грунт троп, русло реки — проценты площади) случайный вброс по всей карте
+// почти всегда мимо, а крупные штампы в них не влезают вовсе.
+func (g *Generator) scatterStampsOn(rng *rand.Rand, occ map[[2]int]bool, lib []Stamp, layer string,
+	pred func(x, y int) bool, cells [][2]int, frac float64) {
+	if len(lib) == 0 || len(cells) == 0 {
+		return
+	}
+	target := int(float64(len(cells)) * frac)
+	placed, attempts := 0, 0
+	for placed < target && attempts < target*40+200 {
+		attempts++
+		s := lib[rng.Intn(len(lib))]
+		c := cells[rng.Intn(len(cells))]
+		placed += g.tryStamp(occ, s, layer, c[0], c[1], pred)
+	}
+}
+
+// tryStamp кладёт штамп левым-верхним углом в (px,py), если ВСЕ его клетки в
+// зоне и не заняты. Возвращает число уложенных клеток (0 — не влез).
+func (g *Generator) tryStamp(occ map[[2]int]bool, s Stamp, layer string, px, py int,
+	pred func(x, y int) bool) int {
+	for _, c := range s.Cells {
+		x, y := px+c.Dx, py+c.Dy
+		if !pred(x, y) || occ[[2]int{x, y}] {
+			return 0
+		}
+	}
+	for _, c := range s.Cells {
+		x, y := px+c.Dx, py+c.Dy
+		occ[[2]int{x, y}] = true
+		g.addSparse(layer, c.Sheet, x, y, c.Tile, g.sheetAnim(c.Sheet))
+	}
+	return len(s.Cells)
 }

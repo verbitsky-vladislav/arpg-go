@@ -80,6 +80,11 @@ type Attack struct {
 	HitAt map[string]int `json:"hit_at"`
 }
 
+// CanStrike — умеет ли лоадаут бить. Нулевой урон означает «оружия нет, драться
+// нечем»: безоружный герой не атакует вообще, а не бьёт слабо. Это свойство
+// данных, а не кода, — вооружившись, тот же герой начнёт бить без правок.
+func (l *Loadout) CanStrike() bool { return l != nil && l.Attack.Damage > 0 }
+
 // Loadout — чем персонаж вооружён: подкаталог тела со своим набором анимаций.
 type Loadout struct {
 	Art        string  `json:"art"` // подкаталог (== ключ записи)
@@ -219,8 +224,16 @@ func (c *Catalog) Validate() []string {
 		}
 		a := l.Attack
 		switch {
-		case a.Damage <= 0:
-			add("%s: attack.damage <= 0 — безоружный удар всё равно должен что-то делать", id)
+		case a.Damage < 0:
+			add("%s: attack.damage=%d отрицателен", id, a.Damage)
+		case !l.CanStrike():
+			// Лоадаут без удара — законное состояние (безоружный). Тогда и
+			// остального удара быть не должно: половина заполненных полей
+			// означала бы, что кто-то выключил урон и забыл про прочее.
+			if a.Reach != 0 || a.Arc != 0 || a.SwingTicks != 0 ||
+				a.CooldownTicks != 0 || a.Knockback != 0 || a.OnMove || len(a.HitAt) > 0 {
+				add("%s: attack.damage=0 (лоадаут не бьёт), но остальные поля удара заполнены", id)
+			}
 		case a.Reach <= 0:
 			add("%s: attack.reach <= 0", id)
 		case a.Arc <= 0 || a.Arc > 360:

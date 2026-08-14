@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // export_json.go — запись карты в map_format v1 (JSON). Плотные слои пишутся
 // плоскими массивами; при желании сжатие/RLE — будущая работа (см. map_format.md).

@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // tilesdump.go — режим `worldgen tiles <biome-dir> <sheet> <id,id,...>`:
 // выложить перечисленные тайлы в ряд крупно, с номерами. Нужен, чтобы глазами
@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func runTilesDump(args []string) {
+func RunTilesDump(args []string) {
 	if len(args) < 3 {
 		fmt.Fprintln(os.Stderr, "worldgen tiles <biome-dir> <sheet> <id,id,...>")
 		os.Exit(2)
@@ -44,7 +44,7 @@ func runTilesDump(args []string) {
 		if t == nil {
 			continue
 		}
-		drawTileScaled(out, t, i*cell+pad, pad, scale)
+		drawTileScaled(out, t, i*cell+pad, pad, scale, 0)
 	}
 	outDir := filepath.Join("out", "worldgen", m.ID)
 	_ = os.MkdirAll(outDir, 0o755)

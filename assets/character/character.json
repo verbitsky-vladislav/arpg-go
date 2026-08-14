@@ -53,16 +53,17 @@
       "title": { "ru": "Без оружия", "en": "Unarmed" },
       "speed_scale": 1.05,
       "attack": {
-        "damage": 5,
-        "reach": 16,
-        "arc": 130,
-        "swing_ticks": 24,
-        "cooldown_ticks": 22,
-        "knockback": 20,
+        "_": "Нулевой урон значит, что лоадаут не бьёт вовсе: безоружный герой не дерётся, пока не возьмёт оружие. Остальные поля обязаны быть нулевыми — это проверяет Validate.",
+        "damage": 0,
+        "reach": 0,
+        "arc": 0,
+        "swing_ticks": 0,
+        "cooldown_ticks": 0,
+        "knockback": 0,
         "on_move": false,
         "hit_at": {}
       },
-      "notes": "В паке нет ни attack, ни walk_attack/run_attack — удар отыгрывается ускоренным walk (рывок), урон наносится на середине подменного клипа. Бить на ходу нечем, поэтому on_move=false."
+      "notes": "Без оружия герой не атакует: damage=0 выключает удар целиком. Клипов удара в паке всё равно нет (только idle/walk/run/hurt/death), так что и показывать было бы нечем."
     },
     "sword": {
       "art": "sword",

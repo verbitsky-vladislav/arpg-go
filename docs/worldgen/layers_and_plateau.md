@@ -41,8 +41,8 @@
 ## 2. Возвышенности (плато) — правила
 
 Плато — приподнятый участок с травяным верхом и скальным обрывом на юг (под
-камеру). Геометрия и раскладка тайлов: [stage_plateau.go](../../tools/worldgen/stage_plateau.go),
-силуэт и ограничения: [stage_shape.go](../../tools/worldgen/stage_shape.go).
+камеру). Геометрия и раскладка тайлов: [stage_plateau.go](../../internal/worldgen/stage_plateau.go),
+силуэт и ограничения: [stage_shape.go](../../internal/worldgen/stage_shape.go).
 
 **Ограничения размера и соседства** (`stagePlateauShape` → `capPlateau`):
 
@@ -90,7 +90,7 @@
 Вода — не одна заливка: `liquid_shade` даёт на каждый тайл ступень палитры
 `water_colors` (мель у берега светлее открытой воды, вся внутренняя вода —
 светлая). Правила и константы — [autotiling.md §5](autotiling.md), код —
-[stage_water_shade.go](../../tools/worldgen/stage_water_shade.go).
+[stage_water_shade.go](../../internal/worldgen/stage_water_shade.go).
 
 ---
 

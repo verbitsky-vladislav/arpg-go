@@ -9,6 +9,7 @@ import (
 	"github.com/vladislav/game/internal/assets"
 	"github.com/vladislav/game/internal/engine"
 	"github.com/vladislav/game/internal/mob"
+	"github.com/vladislav/game/internal/physics"
 	"github.com/vladislav/game/internal/sprite"
 )
 
@@ -16,19 +17,40 @@ const worldSide = 2048
 
 // forestWorld — карта под тесты: остров травы с озером в правом верхнем углу и
 // полосой леса слева. Зоны те же, что размечает worldgen.
-type forestWorld struct{ biome string }
-
-func (forestWorld) Walkable(p engine.Vec2) bool {
-	return p.X >= 0 && p.Y >= 0 && p.X < worldSide && p.Y < worldSide
+type forestWorld struct {
+	biome string
+	field *physics.Field
 }
 
-func (forestWorld) Water(p engine.Vec2) bool {
-	return p.X > 1600 && p.Y < 400
+// newForestWorld собирает поле карты: суша, озеро в правом верхнем углу с
+// каймой мелководья, за границами мира — вода.
+func newForestWorld(biome string) forestWorld {
+	const sub = 16.0
+	const side = worldSide / int(sub)
+	cells := make([]physics.Cell, side*side)
+	for sy := range side {
+		for sx := range side {
+			p := engine.Vec2{X: (float64(sx) + 0.5) * sub, Y: (float64(sy) + 0.5) * sub}
+			c := physics.Ground
+			switch {
+			case p.X > 1650 && p.Y < 350:
+				c = physics.Deep
+			case p.X > 1600 && p.Y < 400:
+				c = physics.Shallow
+			}
+			cells[sy*side+sx] = c
+		}
+	}
+	return forestWorld{biome: biome, field: physics.NewField(side, side, sub, cells)}
 }
+
+func (w forestWorld) Field() *physics.Field { return w.field }
+
+func (w forestWorld) water(p engine.Vec2) bool { return w.field.CellAt(p).Liquid() }
 
 func (w forestWorld) Zone(p engine.Vec2) string {
 	switch {
-	case w.Water(p):
+	case w.water(p):
 		return "water"
 	case p.X > 1500 && p.Y < 500:
 		return "shore"
@@ -54,7 +76,7 @@ func spawner(t *testing.T, biome string) (*mob.Spawner, *mob.SpawnConfig) {
 		t.Fatal(err)
 	}
 	packs := func(art string) (*sprite.Pack, error) { return sprite.Load(l, animalsDir+"/"+art) }
-	return mob.NewSpawner(cfg, cat, forestWorld{biome: biome}, packs, newRNG()), cfg
+	return mob.NewSpawner(cfg, cat, newForestWorld(biome), packs, newRNG()), cfg
 }
 
 // TestSpawnConfigValid — конфиг из ассетов проходит собственные проверки.

@@ -10,9 +10,9 @@
   },
   "directions": [
     "down",
-    "up",
     "left",
-    "right"
+    "right",
+    "up"
   ],
   "animations": {
     "attack": {

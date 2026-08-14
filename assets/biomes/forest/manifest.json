@@ -128,6 +128,921 @@
    }
   }
  },
+ "bridges": {
+  "sheet": "Water_coasts",
+  "width": 2,
+  "start": "bridge_start",
+  "blocks": [
+   "bridge_block_3",
+   "bridge_block_2",
+   "bridge_block_1"
+  ],
+  "end": "bridge_end"
+ },
+ "hangers": {
+  "sheet": "lianas",
+  "on": "cliff_south",
+  "variants": [
+   {
+    "w": 1,
+    "h": 1,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 85
+     }
+    ]
+   },
+   {
+    "w": 1,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 27
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 53
+     }
+    ]
+   },
+   {
+    "w": 1,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 39
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 65
+     }
+    ]
+   },
+   {
+    "w": 1,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 131
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 157
+     }
+    ]
+   },
+   {
+    "w": 1,
+    "h": 3,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 28
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 54
+     },
+     {
+      "dx": 0,
+      "dy": 2,
+      "tile": 80
+     }
+    ]
+   },
+   {
+    "w": 1,
+    "h": 3,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 29
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 55
+     },
+     {
+      "dx": 0,
+      "dy": 2,
+      "tile": 81
+     }
+    ]
+   },
+   {
+    "w": 1,
+    "h": 3,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 132
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 158
+     },
+     {
+      "dx": 0,
+      "dy": 2,
+      "tile": 184
+     }
+    ]
+   },
+   {
+    "w": 1,
+    "h": 3,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 133
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 159
+     },
+     {
+      "dx": 0,
+      "dy": 2,
+      "tile": 185
+     }
+    ]
+   },
+   {
+    "w": 1,
+    "h": 4,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 30
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 56
+     },
+     {
+      "dx": 0,
+      "dy": 2,
+      "tile": 82
+     },
+     {
+      "dx": 0,
+      "dy": 3,
+      "tile": 108
+     }
+    ]
+   },
+   {
+    "w": 1,
+    "h": 4,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 31
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 57
+     },
+     {
+      "dx": 0,
+      "dy": 2,
+      "tile": 83
+     },
+     {
+      "dx": 0,
+      "dy": 3,
+      "tile": 109
+     }
+    ]
+   },
+   {
+    "w": 1,
+    "h": 4,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 134
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 160
+     },
+     {
+      "dx": 0,
+      "dy": 2,
+      "tile": 186
+     },
+     {
+      "dx": 0,
+      "dy": 3,
+      "tile": 212
+     }
+    ]
+   },
+   {
+    "w": 1,
+    "h": 4,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 135
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 161
+     },
+     {
+      "dx": 0,
+      "dy": 2,
+      "tile": 187
+     },
+     {
+      "dx": 0,
+      "dy": 3,
+      "tile": 213
+     }
+    ]
+   },
+   {
+    "w": 2,
+    "h": 1,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 214
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 215
+     }
+    ]
+   },
+   {
+    "w": 2,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 36
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 37
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 62
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 63
+     }
+    ]
+   },
+   {
+    "w": 2,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 50
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 51
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 76
+     }
+    ]
+   },
+   {
+    "w": 2,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 88
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 89
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 114
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 115
+     }
+    ]
+   },
+   {
+    "w": 2,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 126
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 151
+     }
+    ]
+   },
+   {
+    "w": 2,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 142
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 143
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 168
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 169
+     }
+    ]
+   },
+   {
+    "w": 2,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 204
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 229
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 230
+     }
+    ]
+   },
+   {
+    "w": 2,
+    "h": 3,
+    "cells": [
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 126
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 151
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 152
+     },
+     {
+      "dx": 0,
+      "dy": 2,
+      "tile": 177
+     }
+    ]
+   },
+   {
+    "w": 3,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 2,
+      "dy": 0,
+      "tile": 46
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 70
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 71
+     },
+     {
+      "dx": 2,
+      "dy": 1,
+      "tile": 72
+     }
+    ]
+   },
+   {
+    "w": 3,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 91
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 92
+     },
+     {
+      "dx": 2,
+      "dy": 0,
+      "tile": 93
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 117
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 118
+     }
+    ]
+   },
+   {
+    "w": 3,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 140
+     },
+     {
+      "dx": 2,
+      "dy": 0,
+      "tile": 141
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 166
+     },
+     {
+      "dx": 2,
+      "dy": 1,
+      "tile": 167
+     }
+    ]
+   },
+   {
+    "w": 3,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 194
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 195
+     },
+     {
+      "dx": 2,
+      "dy": 0,
+      "tile": 196
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 221
+     },
+     {
+      "dx": 2,
+      "dy": 1,
+      "tile": 222
+     }
+    ]
+   },
+   {
+    "w": 3,
+    "h": 2,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 191
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 192
+     },
+     {
+      "dx": 2,
+      "dy": 0,
+      "tile": 193
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 218
+     },
+     {
+      "dx": 2,
+      "dy": 1,
+      "tile": 219
+     }
+    ]
+   },
+   {
+    "w": 3,
+    "h": 3,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 41
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 42
+     },
+     {
+      "dx": 2,
+      "dy": 0,
+      "tile": 43
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 67
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 68
+     },
+     {
+      "dx": 2,
+      "dy": 1,
+      "tile": 69
+     },
+     {
+      "dx": 1,
+      "dy": 2,
+      "tile": 94
+     },
+     {
+      "dx": 2,
+      "dy": 2,
+      "tile": 95
+     }
+    ]
+   },
+   {
+    "w": 3,
+    "h": 3,
+    "cells": [
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 48
+     },
+     {
+      "dx": 2,
+      "dy": 0,
+      "tile": 49
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 73
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 74
+     },
+     {
+      "dx": 2,
+      "dy": 1,
+      "tile": 75
+     },
+     {
+      "dx": 1,
+      "dy": 2,
+      "tile": 100
+     }
+    ]
+   },
+   {
+    "w": 3,
+    "h": 3,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 33
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 34
+     },
+     {
+      "dx": 2,
+      "dy": 0,
+      "tile": 35
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 59
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 60
+     },
+     {
+      "dx": 2,
+      "dy": 1,
+      "tile": 61
+     },
+     {
+      "dx": 1,
+      "dy": 2,
+      "tile": 86
+     }
+    ]
+   },
+   {
+    "w": 3,
+    "h": 3,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 122
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 148
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 149
+     },
+     {
+      "dx": 2,
+      "dy": 1,
+      "tile": 150
+     },
+     {
+      "dx": 0,
+      "dy": 2,
+      "tile": 174
+     },
+     {
+      "dx": 1,
+      "dy": 2,
+      "tile": 175
+     }
+    ]
+   },
+   {
+    "w": 3,
+    "h": 3,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 136
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 137
+     },
+     {
+      "dx": 2,
+      "dy": 0,
+      "tile": 138
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 163
+     },
+     {
+      "dx": 2,
+      "dy": 1,
+      "tile": 164
+     },
+     {
+      "dx": 1,
+      "dy": 2,
+      "tile": 189
+     },
+     {
+      "dx": 2,
+      "dy": 2,
+      "tile": 190
+     }
+    ]
+   },
+   {
+    "w": 3,
+    "h": 3,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 199
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 200
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 225
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 226
+     },
+     {
+      "dx": 2,
+      "dy": 1,
+      "tile": 227
+     },
+     {
+      "dx": 1,
+      "dy": 2,
+      "tile": 252
+     }
+    ]
+   },
+   {
+    "w": 3,
+    "h": 4,
+    "cells": [
+     {
+      "dx": 2,
+      "dy": 0,
+      "tile": 46
+     },
+     {
+      "dx": 0,
+      "dy": 1,
+      "tile": 70
+     },
+     {
+      "dx": 2,
+      "dy": 1,
+      "tile": 72
+     },
+     {
+      "dx": 0,
+      "dy": 2,
+      "tile": 96
+     },
+     {
+      "dx": 1,
+      "dy": 2,
+      "tile": 97
+     },
+     {
+      "dx": 2,
+      "dy": 2,
+      "tile": 98
+     },
+     {
+      "dx": 1,
+      "dy": 3,
+      "tile": 123
+     }
+    ]
+   },
+   {
+    "w": 4,
+    "h": 3,
+    "cells": [
+     {
+      "dx": 0,
+      "dy": 0,
+      "tile": 144
+     },
+     {
+      "dx": 1,
+      "dy": 0,
+      "tile": 145
+     },
+     {
+      "dx": 2,
+      "dy": 0,
+      "tile": 146
+     },
+     {
+      "dx": 3,
+      "dy": 0,
+      "tile": 147
+     },
+     {
+      "dx": 1,
+      "dy": 1,
+      "tile": 171
+     },
+     {
+      "dx": 2,
+      "dy": 1,
+      "tile": 172
+     },
+     {
+      "dx": 3,
+      "dy": 1,
+      "tile": 173
+     },
+     {
+      "dx": 1,
+      "dy": 2,
+      "tile": 197
+     },
+     {
+      "dx": 2,
+      "dy": 2,
+      "tile": 198
+     }
+    ]
+   }
+  ]
+ },
  "water_color": [
   53,
   87,
@@ -149,5 +1064,1777 @@
    87,
    120
   ]
+ ],
+ "props": [
+  {
+   "id": "Beige_stone_grass1",
+   "file": "props/Beige_stone_grass1.png",
+   "group": "rubble",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 26,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "open",
+    "mid",
+    "dense",
+    "plateau"
+   ],
+   "weight": 18,
+   "swap_on_ground_b": "props/Beige_stone_ground1.png"
+  },
+  {
+   "id": "Beige_stone_grass2",
+   "file": "props/Beige_stone_grass2.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 13,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20,
+   "swap_on_ground_b": "props/Beige_stone_ground2.png"
+  },
+  {
+   "id": "Beige_stone_grass3",
+   "file": "props/Beige_stone_grass3.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 17,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20,
+   "swap_on_ground_b": "props/Beige_stone_ground3.png"
+  },
+  {
+   "id": "Beige_stone_grass4",
+   "file": "props/Beige_stone_grass4.png",
+   "group": "boulder",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 26,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "open",
+    "mid",
+    "plateau"
+   ],
+   "weight": 14,
+   "swap_on_ground_b": "props/Beige_stone_ground4.png"
+  },
+  {
+   "id": "Beige_stone_grass5",
+   "file": "props/Beige_stone_grass5.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 16,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20,
+   "swap_on_ground_b": "props/Beige_stone_ground5.png"
+  },
+  {
+   "id": "Beige_stone_grass6",
+   "file": "props/Beige_stone_grass6.png",
+   "group": "litter",
+   "footprint": [
+    1,
+    1
+   ],
+   "anchor": [
+    0,
+    1
+   ],
+   "body": 9,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20,
+   "swap_on_ground_b": "props/Beige_stone_ground6.png"
+  },
+  {
+   "id": "Beige_stone_grass7",
+   "file": "props/Beige_stone_grass7.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 16,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20,
+   "swap_on_ground_b": "props/Beige_stone_ground7.png"
+  },
+  {
+   "id": "Beige_stone_grass8",
+   "file": "props/Beige_stone_grass8.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 17,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20,
+   "swap_on_ground_b": "props/Beige_stone_ground8.png"
+  },
+  {
+   "id": "Beige_stone_grass9",
+   "file": "props/Beige_stone_grass9.png",
+   "group": "litter",
+   "footprint": [
+    1,
+    1
+   ],
+   "anchor": [
+    0,
+    1
+   ],
+   "body": 9,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20,
+   "swap_on_ground_b": "props/Beige_stone_ground9.png"
+  },
+  {
+   "id": "Broken_tree1",
+   "file": "props/Broken_tree1.png",
+   "group": "trunk",
+   "footprint": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    8
+   ],
+   "body": 72,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Broken_tree2",
+   "file": "props/Broken_tree2.png",
+   "group": "trunk",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 35,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Broken_tree3",
+   "file": "props/Broken_tree3.png",
+   "group": "trunk",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 31,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Broken_tree4",
+   "file": "props/Broken_tree4.png",
+   "group": "trunk",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 28,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Broken_tree5",
+   "file": "props/Broken_tree5.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 20,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20
+  },
+  {
+   "id": "Broken_tree6",
+   "file": "props/Broken_tree6.png",
+   "group": "trunk",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 24,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Brown_mushroom",
+   "file": "props/Brown_mushroom.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 14,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20
+  },
+  {
+   "id": "Brown_mushroom1",
+   "file": "props/Brown_mushroom1.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 24,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20
+  },
+  {
+   "id": "Brown_mushroom2",
+   "file": "props/Brown_mushroom2.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 23,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20
+  },
+  {
+   "id": "Brown_stone_grass1",
+   "file": "props/Brown_stone_grass1.png",
+   "group": "boulder",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 34,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "open",
+    "mid",
+    "plateau"
+   ],
+   "weight": 14,
+   "swap_on_ground_b": "props/Brown_stone_ground1.png"
+  },
+  {
+   "id": "Brown_stone_grass2",
+   "file": "props/Brown_stone_grass2.png",
+   "group": "rubble",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 25,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "open",
+    "mid",
+    "dense",
+    "plateau"
+   ],
+   "weight": 18,
+   "swap_on_ground_b": "props/Brown_stone_ground2.png"
+  },
+  {
+   "id": "Brown_stone_grass4-1",
+   "file": "props/Brown_stone_grass4-1.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 19,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20
+  },
+  {
+   "id": "Brown_stone_grass4",
+   "file": "props/Brown_stone_grass4.png",
+   "group": "rubble",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 25,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "open",
+    "mid",
+    "dense",
+    "plateau"
+   ],
+   "weight": 18,
+   "swap_on_ground_b": "props/Brown_stone_ground4.png"
+  },
+  {
+   "id": "Brown_stone_grass5",
+   "file": "props/Brown_stone_grass5.png",
+   "group": "litter",
+   "footprint": [
+    1,
+    1
+   ],
+   "anchor": [
+    0,
+    1
+   ],
+   "body": 11,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20,
+   "swap_on_ground_b": "props/Brown_stone_ground5.png"
+  },
+  {
+   "id": "Bush1",
+   "file": "props/Bush1.png",
+   "group": "bush",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 32,
+   "collides": false,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open"
+   ],
+   "weight": 24
+  },
+  {
+   "id": "Bush10",
+   "file": "props/Bush10.png",
+   "group": "litter",
+   "footprint": [
+    1,
+    1
+   ],
+   "anchor": [
+    0,
+    1
+   ],
+   "body": 15,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20
+  },
+  {
+   "id": "Bush11",
+   "file": "props/Bush11.png",
+   "group": "bush",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 35,
+   "collides": false,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open"
+   ],
+   "weight": 24
+  },
+  {
+   "id": "Bush12",
+   "file": "props/Bush12.png",
+   "group": "bush",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 21,
+   "collides": false,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open"
+   ],
+   "weight": 24
+  },
+  {
+   "id": "Bush13",
+   "file": "props/Bush13.png",
+   "group": "bush",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 28,
+   "collides": false,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open"
+   ],
+   "weight": 24
+  },
+  {
+   "id": "Bush2",
+   "file": "props/Bush2.png",
+   "group": "bush",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 25,
+   "collides": false,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open"
+   ],
+   "weight": 24
+  },
+  {
+   "id": "Bush3",
+   "file": "props/Bush3.png",
+   "group": "bush",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 27,
+   "collides": false,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open"
+   ],
+   "weight": 24
+  },
+  {
+   "id": "Bush4",
+   "file": "props/Bush4.png",
+   "group": "bush",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 29,
+   "collides": false,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open"
+   ],
+   "weight": 24
+  },
+  {
+   "id": "Bush5",
+   "file": "props/Bush5.png",
+   "group": "bush",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 24,
+   "collides": false,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open"
+   ],
+   "weight": 24
+  },
+  {
+   "id": "Bush6",
+   "file": "props/Bush6.png",
+   "group": "litter",
+   "footprint": [
+    1,
+    1
+   ],
+   "anchor": [
+    0,
+    1
+   ],
+   "body": 13,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20
+  },
+  {
+   "id": "Bush7",
+   "file": "props/Bush7.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 16,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20
+  },
+  {
+   "id": "Bush8",
+   "file": "props/Bush8.png",
+   "group": "litter",
+   "footprint": [
+    1,
+    1
+   ],
+   "anchor": [
+    0,
+    1
+   ],
+   "body": 13,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20
+  },
+  {
+   "id": "Bush9",
+   "file": "props/Bush9.png",
+   "group": "bush",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 30,
+   "collides": false,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open"
+   ],
+   "weight": 24
+  },
+  {
+   "id": "Light_stone_grass1",
+   "file": "props/Light_stone_grass1.png",
+   "group": "boulder",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 49,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "open",
+    "mid",
+    "plateau"
+   ],
+   "weight": 14,
+   "swap_on_ground_b": "props/Light_stone_ground1.png"
+  },
+  {
+   "id": "Light_stone_grass2",
+   "file": "props/Light_stone_grass2.png",
+   "group": "boulder",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 37,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "open",
+    "mid",
+    "plateau"
+   ],
+   "weight": 14,
+   "swap_on_ground_b": "props/Light_stone_ground2.png"
+  },
+  {
+   "id": "Light_stone_grass3",
+   "file": "props/Light_stone_grass3.png",
+   "group": "boulder",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 30,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "open",
+    "mid",
+    "plateau"
+   ],
+   "weight": 14,
+   "swap_on_ground_b": "props/Light_stone_ground3.png"
+  },
+  {
+   "id": "Light_stone_grass4",
+   "file": "props/Light_stone_grass4.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 16,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20,
+   "swap_on_ground_b": "props/Light_stone_ground4.png"
+  },
+  {
+   "id": "Red_mushroom1",
+   "file": "props/Red_mushroom1.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 18,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20
+  },
+  {
+   "id": "Red_mushroom2",
+   "file": "props/Red_mushroom2.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 20,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20
+  },
+  {
+   "id": "Red_mushroom3",
+   "file": "props/Red_mushroom3.png",
+   "group": "litter",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 13,
+   "collides": false,
+   "on_trail": true,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid",
+    "open",
+    "plateau"
+   ],
+   "weight": 20
+  },
+  {
+   "id": "Ruin_grass1",
+   "file": "props/Ruin_grass1.png",
+   "group": "ruin",
+   "footprint": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    8
+   ],
+   "body": 88,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a"
+   ],
+   "zone": [
+    "open",
+    "mid"
+   ],
+   "weight": 4,
+   "prefab": true
+  },
+  {
+   "id": "Ruin_grass2",
+   "file": "props/Ruin_grass2.png",
+   "group": "ruin",
+   "footprint": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    8
+   ],
+   "body": 53,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a"
+   ],
+   "zone": [
+    "open",
+    "mid"
+   ],
+   "weight": 4,
+   "prefab": true
+  },
+  {
+   "id": "Ruin_grass3",
+   "file": "props/Ruin_grass3.png",
+   "group": "ruin",
+   "footprint": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    8
+   ],
+   "body": 57,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a"
+   ],
+   "zone": [
+    "open",
+    "mid"
+   ],
+   "weight": 4,
+   "prefab": true
+  },
+  {
+   "id": "Ruin_grass4",
+   "file": "props/Ruin_grass4.png",
+   "group": "ruin",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 34,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a"
+   ],
+   "zone": [
+    "open",
+    "mid"
+   ],
+   "weight": 4,
+   "prefab": true
+  },
+  {
+   "id": "Ruin_grass5",
+   "file": "props/Ruin_grass5.png",
+   "group": "ruin",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 33,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a"
+   ],
+   "zone": [
+    "open",
+    "mid"
+   ],
+   "weight": 4,
+   "prefab": true
+  },
+  {
+   "id": "Ruin_orange1",
+   "file": "props/Ruin_orange1.png",
+   "group": "ruin",
+   "footprint": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    8
+   ],
+   "body": 88,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a"
+   ],
+   "zone": [
+    "open",
+    "mid"
+   ],
+   "weight": 4,
+   "prefab": true
+  },
+  {
+   "id": "Ruin_orange2",
+   "file": "props/Ruin_orange2.png",
+   "group": "ruin",
+   "footprint": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    8
+   ],
+   "body": 51,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a"
+   ],
+   "zone": [
+    "open",
+    "mid"
+   ],
+   "weight": 4,
+   "prefab": true
+  },
+  {
+   "id": "Ruin_orange3",
+   "file": "props/Ruin_orange3.png",
+   "group": "ruin",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 58,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a"
+   ],
+   "zone": [
+    "open",
+    "mid"
+   ],
+   "weight": 4,
+   "prefab": true
+  },
+  {
+   "id": "Ruin_orange4",
+   "file": "props/Ruin_orange4.png",
+   "group": "ruin",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 36,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a"
+   ],
+   "zone": [
+    "open",
+    "mid"
+   ],
+   "weight": 4,
+   "prefab": true
+  },
+  {
+   "id": "Ruin_orange5",
+   "file": "props/Ruin_orange5.png",
+   "group": "ruin",
+   "footprint": [
+    2,
+    2
+   ],
+   "anchor": [
+    1,
+    2
+   ],
+   "body": 32,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a"
+   ],
+   "zone": [
+    "open",
+    "mid"
+   ],
+   "weight": 4,
+   "prefab": true
+  },
+  {
+   "id": "Tree1",
+   "file": "props/Tree1.png",
+   "group": "trunk",
+   "footprint": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    8
+   ],
+   "body": 59,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Tree10",
+   "file": "props/Tree10.png",
+   "group": "trunk",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 31,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Tree11",
+   "file": "props/Tree11_anim.png",
+   "group": "trunk",
+   "footprint": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    8
+   ],
+   "body": 44,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30,
+   "anim": {
+    "frames": 11,
+    "ms": 150
+   }
+  },
+  {
+   "id": "Tree12",
+   "file": "props/Tree12_anim.png",
+   "group": "trunk",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 31,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30,
+   "anim": {
+    "frames": 12,
+    "ms": 150
+   }
+  },
+  {
+   "id": "Tree13",
+   "file": "props/Tree13.png",
+   "group": "trunk",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 37,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Tree14",
+   "file": "props/Tree14.png",
+   "group": "trunk",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 24,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Tree2",
+   "file": "props/Tree2.png",
+   "group": "trunk",
+   "footprint": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    8
+   ],
+   "body": 42,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Tree3",
+   "file": "props/Tree3.png",
+   "group": "trunk",
+   "footprint": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    8
+   ],
+   "body": 49,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Tree4",
+   "file": "props/Tree4.png",
+   "group": "trunk",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 35,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Tree5",
+   "file": "props/Tree5_anim.png",
+   "group": "trunk",
+   "footprint": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    8
+   ],
+   "body": 61,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30,
+   "anim": {
+    "frames": 11,
+    "ms": 150
+   }
+  },
+  {
+   "id": "Tree6",
+   "file": "props/Tree6.png",
+   "group": "trunk",
+   "footprint": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    8
+   ],
+   "body": 40,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Tree7",
+   "file": "props/Tree7.png",
+   "group": "trunk",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 55,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Tree8",
+   "file": "props/Tree8.png",
+   "group": "trunk",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 35,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30
+  },
+  {
+   "id": "Tree9",
+   "file": "props/Tree9_anim.png",
+   "group": "trunk",
+   "footprint": [
+    4,
+    4
+   ],
+   "anchor": [
+    2,
+    4
+   ],
+   "body": 43,
+   "collides": true,
+   "on_trail": false,
+   "on": [
+    "ground_a",
+    "plateau"
+   ],
+   "zone": [
+    "dense",
+    "mid"
+   ],
+   "weight": 30,
+   "anim": {
+    "frames": 13,
+    "ms": 150
+   }
+  }
  ]
 }

@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // ref.go — режим `worldgen ref <biome-dir> <tmx>`: отрисовать карту художника
 // НАШИМ атласом и рядом напечатать, какой роли (wangset'у манифеста) принадлежит
@@ -58,7 +58,7 @@ func cornerKeyOf(m *Manifest, sheet string, id int) string {
 	return "?"
 }
 
-func runRef(args []string) {
+func RunRef(args []string) {
 	biomeDir := "assets/biomes/forest"
 	tmxPath := ""
 	for _, a := range args {
@@ -103,7 +103,7 @@ func runRef(args []string) {
 			sheet, id := sheetForGid(t.Tilesets, c.Gid)
 			tile := atlas.Tile(sheet, id)
 			if tile != nil {
-				drawTileScaled(canvas, tile, c.X*ts*scale, c.Y*ts*scale, scale)
+				drawTileScaled(canvas, tile, c.X*ts*scale, c.Y*ts*scale, scale, 0)
 			}
 			role := roles[sheet][id]
 			if role == "" {

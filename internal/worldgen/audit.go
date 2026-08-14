@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // audit.go — служебные режимы:
 //   audit           — проверить все биомы на манифест и обязательные роли/файлы
@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 )
 
-// runAudit проходит по assets/biomes/* и репортит пробелы (E11/E12 в мелком виде).
-func runAudit(args []string) {
+// RunAudit проходит по assets/biomes/* и репортит пробелы (E11/E12 в мелком виде).
+func RunAudit(args []string) {
 	root := "assets/biomes"
 	if len(args) > 0 {
 		root = args[0]
@@ -66,9 +66,9 @@ func fileExists(p string) bool {
 	return err == nil
 }
 
-// runIndex выгружает атлас листа, увеличенный, с сеткой и номерами тайлов —
+// RunIndex выгружает атлас листа, увеличенный, с сеткой и номерами тайлов —
 // чтобы вручную выбрать id для манифеста, глядя на арт (читает только PNG).
-func runIndex(args []string) {
+func RunIndex(args []string) {
 	if len(args) < 2 {
 		fmt.Fprintln(os.Stderr, "использование: index <biome-dir> <sheet-name>")
 		os.Exit(2)

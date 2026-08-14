@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "about": "Сундуки: чем сундук выглядит и что в нём лежит. Картинка — ссылка в иконочный пак (pack + sprite, см. tools/iconnorm); кадры открывания берутся из анимации того же листа, поэтому их число здесь не дублируется. Добыча: always — что лежит в сундуке всегда (первый клинок герою нужен гарантированно, иначе драться нечем), rolls — сколько строк вытянуть сверх этого [мин, макс], entries — сами строки, weight задаёт, насколько строка вероятнее прочих. Идентификаторы предметов — из items.json.",
+  "kinds": [
+    {
+      "id": "wooden",
+      "title": "Сундук",
+      "pack": "items/treasure",
+      "sprite": "chests_001",
+      "ms": 110,
+      "loot": {
+        "always": [
+          { "id": "rusty_blade", "min": 1, "max": 1 }
+        ],
+        "rolls": [2, 4],
+        "entries": [
+          { "id": "coin", "min": 8, "max": 40, "weight": 8 },
+          { "id": "iron_scrap", "min": 1, "max": 3, "weight": 5 },
+          { "id": "hardwood", "min": 1, "max": 4, "weight": 5 },
+          { "id": "rubble", "min": 2, "max": 6, "weight": 4 },
+          { "id": "bone", "min": 1, "max": 3, "weight": 4 },
+          { "id": "blood_vial", "min": 1, "max": 2, "weight": 3 },
+          { "id": "arcane_dust", "min": 1, "max": 3, "weight": 3 },
+          { "id": "soul_shard", "min": 1, "max": 1, "weight": 2 },
+          { "id": "eye_gem", "min": 1, "max": 1, "weight": 1 }
+        ]
+      }
+    }
+  ]
+}

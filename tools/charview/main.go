@@ -37,6 +37,7 @@ import (
 	"github.com/vladislav/game/internal/character"
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/engine"
+	"github.com/vladislav/game/internal/physics"
 	"github.com/vladislav/game/internal/sprite"
 	"github.com/vladislav/game/internal/ui"
 )
@@ -219,7 +220,7 @@ func (v *viewer) updateLive() error {
 		in.Aim, in.HasAim = engine.Vec2{X: float64(mx), Y: float64(my)}, true
 	}
 
-	v.p.Update(in, v.world)
+	v.p.Update(in, v.world.f)
 	if h, ok := v.p.Strike(); ok {
 		v.hit, v.hitLeft = &h, 12 // сектор виден недолго — это вспышка, а не поле
 	}
@@ -358,33 +359,67 @@ func drawSector(dst *ebiten.Image, h character.Hit) {
 
 func (v *viewer) Layout(int, int) (int, int) { return config.ScreenW, config.ScreenH }
 
-// field — площадка живого режима: прямоугольник суши с прудом справа. Пруд
-// нужен, чтобы было видно, что персонаж в воду не заходит (плавать он не умеет).
+// field — площадка живого режима: прямоугольник суши, за ним «обрыв» (стена), а
+// справа пруд с каймой мелководья. Пруд нужен, чтобы было видно, что персонаж на
+// глубину не выходит, а по мели бредёт медленнее.
+//
+// Собрана она из настоящего physics.Field — того же, по которому персонаж ходит
+// в игре. Своей проходимости у просмотрщика нет: правила должны совпадать, иначе
+// он показывает не то поведение, которое будет в забеге.
 type field struct {
 	x, y, w, h     float64
-	px, py, pw, ph float64 // пруд
+	px, py, pw, ph float64 // пруд (вместе с каймой мели)
+	f              *physics.Field
 }
 
+// fieldSub — сторона под-клетки площадки. Как в картах биомов: полтайла.
+const fieldSub = 8.0
+
 func newField() *field {
-	return &field{
+	fl := &field{
 		x: 24, y: 40, w: config.ScreenW - 48, h: config.ScreenH - 90,
 		px: config.ScreenW - 150, py: 80, pw: 100, ph: 90,
 	}
+	sw := int(config.ScreenW/fieldSub) + 1
+	sh := int(config.ScreenH/fieldSub) + 1
+	cells := make([]physics.Cell, sw*sh)
+	for sy := range sh {
+		for sx := range sw {
+			cx, cy := (float64(sx)+0.5)*fieldSub, (float64(sy)+0.5)*fieldSub
+			cells[sy*sw+sx] = fl.cellAt(cx, cy)
+		}
+	}
+	fl.f = physics.NewField(sw, sh, fieldSub, cells)
+	return fl
 }
 
-func (f *field) Walkable(p engine.Vec2) bool {
-	return p.X >= f.x && p.X <= f.x+f.w && p.Y >= f.y && p.Y <= f.y+f.h
+// cellAt — что на площадке в этой точке.
+func (f *field) cellAt(x, y float64) physics.Cell {
+	inRect := func(rx, ry, rw, rh float64) bool {
+		return x >= rx && x <= rx+rw && y >= ry && y <= ry+rh
+	}
+	switch {
+	case !inRect(f.x, f.y, f.w, f.h):
+		return physics.Solid // за краем площадки — стена
+	case inRect(f.px+shoreBand, f.py+shoreBand, f.pw-2*shoreBand, f.ph-2*shoreBand):
+		return physics.Deep
+	case inRect(f.px, f.py, f.pw, f.ph):
+		return physics.Shallow
+	}
+	return physics.Ground
 }
 
-func (f *field) Water(p engine.Vec2) bool {
-	return p.X >= f.px && p.X <= f.px+f.pw && p.Y >= f.py && p.Y <= f.py+f.ph
-}
+// shoreBand — ширина каймы мелководья вокруг пруда.
+const shoreBand = 12.0
 
 func (f *field) draw(dst *ebiten.Image) {
 	vector.StrokeRect(dst, float32(f.x), float32(f.y), float32(f.w), float32(f.h), 1,
 		color.RGBA{0x3c, 0x5a, 0x3c, 0xff}, false)
 	vector.FillRect(dst, float32(f.px), float32(f.py), float32(f.pw), float32(f.ph),
-		color.RGBA{0x22, 0x44, 0x7a, 0xff}, false)
+		color.RGBA{0x33, 0x66, 0x9e, 0xff}, false) // мель
+	vector.FillRect(dst, float32(f.px+shoreBand), float32(f.py+shoreBand),
+		float32(f.pw-2*shoreBand), float32(f.ph-2*shoreBand),
+		color.RGBA{0x22, 0x44, 0x7a, 0xff}, false) // глубина
 }
 
 func pausedMark(p bool) string {

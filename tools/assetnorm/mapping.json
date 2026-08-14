@@ -29,8 +29,10 @@
     { "src": "mobs/bosses/slime_bosses", "group": "bosses", "type": "slime_boss", "category": "boss", "scheme": "rank" },
 
     { "src": "character/male",   "group": "character", "type": "male",   "category": "player", "scheme": "named",
-      "names": { "Sword": "sword", "Unarmed": "unarmed" } },
+      "names": { "Sword": "sword", "Unarmed": "unarmed" },
+      "directions": ["down", "left", "right", "up"] },
     { "src": "character/female", "group": "character", "type": "female", "category": "player", "scheme": "named",
-      "names": { "Sword": "sword", "Unarmed": "unarmed" } }
+      "names": { "Sword": "sword", "Unarmed": "unarmed" },
+      "directions": ["down", "left", "right", "up"] }
   ]
 }

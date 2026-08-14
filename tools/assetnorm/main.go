@@ -42,6 +42,11 @@ type Pack struct {
 	Category string            `json:"category"`
 	Scheme   string            `json:"scheme"` // "rank" | "named"
 	Names    map[string]string `json:"names"`
+	// Directions — порядок строк в листах этого пака, если он не совпадает с
+	// общим (dir4). Порядок задаёт художник исходника, и он у паков разный:
+	// у персонажа строки идут down,left,right,up. Ошибка здесь не видна на
+	// глаз в атласе, но в игре герой идёт вверх боком.
+	Directions []string `json:"directions,omitempty"`
 }
 
 type Manifest struct {
@@ -68,6 +73,19 @@ type Animation struct {
 }
 
 var dir4 = []string{"down", "up", "left", "right"}
+
+// packDirs — порядок направлений пака: свой, если задан в mapping.json,
+// иначе общий.
+func packDirs(p Pack, n int) []string {
+	if len(p.Directions) == n {
+		return p.Directions
+	}
+	if len(p.Directions) > 0 {
+		fmt.Printf("  WARN %s: directions %v не совпадает с %d строками; беру общий порядок\n",
+			p.Src, p.Directions, n)
+	}
+	return dir4[:n]
+}
 
 // loopingAnim reports whether an animation should loop by default.
 func loopingAnim(a string) bool {
@@ -251,7 +269,7 @@ func processVariant(assetsRoot, outRoot string, m *Mapping, p Pack, rawVariant, 
 
 	man := Manifest{
 		ID: p.Type + "_" + name, Name: name, Type: p.Type, Category: p.Category,
-		SourcePack: filepath.Base(p.Src), Frame: frame, Directions: dir4[:dirs], Animations: anims,
+		SourcePack: filepath.Base(p.Src), Frame: frame, Directions: packDirs(p, dirs), Animations: anims,
 	}
 	buf, err := json.MarshalIndent(man, "", "  ")
 	if err != nil {

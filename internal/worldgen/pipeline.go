@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // pipeline.go — Generator держит все промежуточные поля генерации одной карты
 // и прогоняет шаги пайплайна (worldgen.spec §5) по порядку. Один Generator =
@@ -54,7 +54,11 @@ type Generator struct {
 	Trail map[[2]int]bool // клетки грунтовых троп (роль mud)
 	Cliff map[[2]int]bool // клетки тела обрыва (юбка под южной кромкой плато)
 	Stair map[[2]int]bool // клетки лестниц: врезаны в обрыв и в отличие от него проходимы
-	Decor *DecorLib       // библиотека штампов декора (decor.json)
+	// Bridge — клетки брода: лежат на воде и в отличие от неё проходимы. Вода под
+	// бродом остаётся водой (по камням идут ПО реке, а не по суше), поэтому
+	// проходимость даёт только это множество.
+	Bridge map[[2]int]bool
+	Decor  *DecorLib // библиотека штампов декора (decor.json)
 
 	// Kind — тип возвышенности в клетке (plateauKind), 0 вне плато. От него
 	// зависит высота обрыва, предел макушки и наличие подъёма.
@@ -79,10 +83,11 @@ func NewGenerator(p Params, seed uint64, m *Manifest) *Generator {
 		P:          p,
 		Seed:       seed,
 		Manifest:   m,
-		Decor:      loadDecor(m.dir),
+		Decor:      loadDecor(m),
 		Sparse:     map[string][]SparseTile{},
 		Cliff:      map[[2]int]bool{},
 		Stair:      map[[2]int]bool{},
+		Bridge:     map[[2]int]bool{},
 		cornerMiss: map[string]int{},
 	}
 }

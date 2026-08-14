@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // stage_terrace.go — выравнивание южной кромки плато в террасы.
 //

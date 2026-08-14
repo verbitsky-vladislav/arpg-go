@@ -21,6 +21,7 @@ import (
 	"github.com/vladislav/game/internal/core"
 	"github.com/vladislav/game/internal/scene"
 	"github.com/vladislav/game/internal/settings"
+	"github.com/vladislav/game/internal/ui"
 )
 
 func main() {
@@ -35,9 +36,21 @@ func main() {
 
 	loader := assets.NewLoader(os.DirFS(*root))
 
+	// Полосы состояния — арт, а не код, и их отсутствие не повод не запускаться:
+	// HUD в этом случае рисует запасную прямоугольную полосу.
+	if err := ui.InitBars(loader, "ui/bars"); err != nil {
+		log.Println("полосы здоровья:", err)
+	}
+	// Окна интерфейса (сундук, сумка) — тоже арт с ручной разметкой.
+	if err := ui.InitPanels(loader, "ui/rpg_basic"); err != nil {
+		log.Println("окна интерфейса:", err)
+	}
+
 	// Экраны за пунктами меню подключаются здесь: сцены знают друг о друге
 	// ровно столько, сколько скажет точка входа.
 	menu := scene.NewMenu()
+	menu.OnStart = func() scene.Scene { return scene.NewHeroes(loader, menu) }
+	menu.OnSettings = func() scene.Scene { return scene.NewSettings(menu) }
 	menu.OnBestiary = func() scene.Scene { return scene.NewBestiary(loader, menu) }
 
 	if err := ebiten.RunGame(core.New(menu)); err != nil {

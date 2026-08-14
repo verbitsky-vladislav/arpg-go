@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // render.go — композит карты в PNG на настоящем арте. Слои рисуются снизу
 // вверх (порядок §3), тайлы берутся из атласов, пропсы — из отдельных PNG
@@ -9,6 +9,7 @@ import (
 	"image/color"
 	"image/draw"
 	"path/filepath"
+	"sort"
 )
 
 // denseRoleSheet — какой лист рисует каждый плотный слой (одна роль → один лист).
@@ -27,12 +28,12 @@ func RenderMap(mp *MapV1, a *AtlasSet, scale int) image.Image {
 	H := mp.Height * ts * scale
 	canvas := image.NewRGBA(image.Rect(0, 0, W, H))
 
-	blit := func(sheet string, localID, tx, ty int) {
+	blit := func(sheet string, localID, tx, ty int, rot uint8) {
 		if localID < 0 {
 			return
 		}
 		tile := a.Tile(sheet, localID)
-		drawTileScaled(canvas, tile, tx*ts*scale, ty*ts*scale, scale)
+		drawTileScaled(canvas, tile, tx*ts*scale, ty*ts*scale, scale, rot)
 	}
 
 	// фон — водный цвет (в Water_coasts нет сплошного водного тайла; берега —
@@ -61,12 +62,12 @@ func RenderMap(mp *MapV1, a *AtlasSet, scale int) image.Image {
 			if v == 0 {
 				continue
 			}
-			blit(sheet, int(v)-1, i%mp.Width, i/mp.Width)
+			blit(sheet, int(v)-1, i%mp.Width, i/mp.Width, 0)
 		}
 	}
 	sparse := func(sl []SparseTile) {
 		for _, st := range sl {
-			blit(a.order[st.Sheet], int(st.Tile), st.X, st.Y)
+			blit(a.order[st.Sheet], int(st.Tile), st.X, st.Y, st.Rot)
 		}
 	}
 
@@ -76,12 +77,56 @@ func RenderMap(mp *MapV1, a *AtlasSet, scale int) image.Image {
 	sparse(mp.Layers.LiquidDetail)      // рябь на воде — сразу над водным фоном, под всей сушей
 	dense(mp.Layers.Mud, "mud")         // грунт тропы — сплошная подложка ПОД травой
 	dense(mp.Layers.Ground, "ground")   // grass_ground поверх грунта: он и вырезает тропу
+	sparse(mp.Layers.GroundSpots)       // напольные пятна на грунте троп
 	sparse(mp.Layers.Coast)             // grass_water/mud_water — берега (Water_coasts)
+	sparse(mp.Layers.Bridges)           // брод по камням — поверх берега и воды
+	sparse(mp.Layers.SurfaceLiquid)     // кувшинки/камыш на воде
 	sparse(mp.Layers.PlateauShadow)     // тень возвышенности (grass_shadow/mud_shadow) — НАД землёй, но ПОД плато: залита и под самой возвышенностью, иначе на кромках просветы
 	dense(mp.Layers.Plateau, "plateau") // верх плато grass_cliff (зад/бока/интерьер)
+	sparse(mp.Layers.GroundDecor)       // кустики травы — НАД плато: на макушке они лежат на нём, на нижней земле его слой пуст
 	sparse(mp.Layers.Cliff)             // скала (spots_rock): grass_top-свес спереди + стенка — ПОВЕРХ grass_cliff
 	sparse(mp.Layers.Stairs)            // лестницы врезаны в обрыв — рисуются ПОВЕРХ скалы и её свеса
+	sparse(mp.Layers.Hangers)           // лианы со свеса обрыва
+	drawProps(canvas, mp, a.m.dir, ts, scale)
 	return canvas
+}
+
+// drawProps рисует объекты поверх тайлов в порядке sort_y (низ спрайта = глубина),
+// при равном sort_y — по X, чтобы картинка не зависела от порядка расстановки.
+func drawProps(dst *image.RGBA, mp *MapV1, biomeDir string, ts, scale int) {
+	if len(mp.Props) == 0 {
+		return
+	}
+	order := make([]int, len(mp.Props))
+	for i := range order {
+		order[i] = i
+	}
+	sort.Slice(order, func(i, j int) bool {
+		a, b := mp.Props[order[i]], mp.Props[order[j]]
+		if a.SortY != b.SortY {
+			return a.SortY < b.SortY
+		}
+		return a.X < b.X
+	})
+	pc := &propCache{dir: biomeDir, imgs: map[string]*image.RGBA{}}
+	for _, i := range order {
+		p := mp.Props[i]
+		img := pc.get(p.File)
+		if img == nil {
+			continue
+		}
+		// у анимированного пропса файл — вертикальная полоса кадров; в статичную
+		// картинку идёт первый кадр
+		if p.Frames > 1 {
+			h := img.Bounds().Dy() / p.Frames
+			img = img.SubImage(image.Rect(0, 0, img.Bounds().Dx(), h)).(*image.RGBA)
+		}
+		// футпримт задан в тайлах, спрайт может быть меньше кратного — выравниваем
+		// по низу-центру футпринта, то есть по якорю, как считает генератор
+		dx := p.X*ts*scale + (p.W*ts*scale-img.Bounds().Dx()*scale)/2
+		dy := (p.Y+p.H)*ts*scale - img.Bounds().Dy()*scale
+		drawTileScaled(dst, img, dx, dy, scale, 0)
+	}
 }
 
 // waterPaletteRGBA — палитра воды манифеста в цветах рендера (мель → глубина).
@@ -94,20 +139,33 @@ func waterPaletteRGBA(m *Manifest) []color.RGBA {
 	return out
 }
 
-// drawTileScaled рисует 16px тайл в позицию с целочисленным масштабом (nearest).
-func drawTileScaled(dst *image.RGBA, tile *image.RGBA, dx, dy, scale int) {
+// drawTileScaled рисует 16px тайл в позицию с целочисленным масштабом (nearest)
+// и поворотом на rot четвертей по часовой стрелке. Поворот кратен прямому углу,
+// поэтому это перестановка пикселей без интерполяции.
+func drawTileScaled(dst *image.RGBA, tile *image.RGBA, dx, dy, scale int, rot uint8) {
 	b := tile.Bounds()
-	if scale == 1 {
+	if scale == 1 && rot%4 == 0 {
 		draw.Draw(dst, image.Rect(dx, dy, dx+b.Dx(), dy+b.Dy()), tile, b.Min, draw.Over)
 		return
 	}
-	for y := 0; y < b.Dy(); y++ {
-		for x := 0; x < b.Dx(); x++ {
+	w, h := b.Dx(), b.Dy()
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
 			c := tile.RGBAAt(b.Min.X+x, b.Min.Y+y)
 			if c.A == 0 {
 				continue
 			}
-			px, py := dx+x*scale, dy+y*scale
+			// (x,y) исходного тайла → место в повёрнутом
+			tx, ty := x, y
+			switch rot % 4 {
+			case 1:
+				tx, ty = h-1-y, x
+			case 2:
+				tx, ty = w-1-x, h-1-y
+			case 3:
+				tx, ty = y, w-1-x
+			}
+			px, py := dx+tx*scale, dy+ty*scale
 			for sy := 0; sy < scale; sy++ {
 				for sx := 0; sx < scale; sx++ {
 					dst.SetRGBA(px+sx, py+sy, c)

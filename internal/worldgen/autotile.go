@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // autotile.go — превращение сетки уровней в конкретные id тайлов.
 // Площадные роли (ground/plateau/liquid) — по 8-соседней blob-маске; переходы

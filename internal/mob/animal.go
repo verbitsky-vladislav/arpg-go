@@ -9,6 +9,7 @@ import (
 	"github.com/vladislav/game/internal/anim"
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/engine"
+	"github.com/vladislav/game/internal/physics"
 	"github.com/vladislav/game/internal/sprite"
 )
 
@@ -25,17 +26,11 @@ const (
 	Dead                // умерло
 )
 
-// World — то, что животному нужно знать про карту. Интерфейс держит mob
-// независимым от worldgen: карту подставит игровой слой.
-type World interface {
-	Walkable(p engine.Vec2) bool // можно ли там стоять
-	Water(p engine.Vec2) bool    // вода под точкой
-}
-
 // Ctx — окружение одного тика. Угроза и добыча приходят снаружи, потому что
 // знать про всех соседей — работа игрового слоя, а не отдельного зверя.
 type Ctx struct {
-	World  World
+	// Field — поле физики карты; nil означает «стен нет» (меню, тесты).
+	Field  *physics.Field
 	Threat engine.Vec2 // обычно игрок
 	// HasThreat=false — угрозы на карте нет (меню, пустая сцена).
 	HasThreat bool
@@ -65,6 +60,7 @@ type Animal struct {
 
 	home    engine.Vec2
 	vel     engine.Vec2
+	floor   uint8 // этаж: 0 — низ, 1 — макушка плато (physics.Floor*)
 	dir     sprite.Dir
 	state   State
 	clip    string // имя проигрываемого клипа ("" — клипа нет)
@@ -110,8 +106,10 @@ func (a *Animal) Dir() sprite.Dir { return a.dir }
 
 // Radius — радиус тела в мировых пикселях, из рамки непрозрачных пикселей.
 // Оттуда же, откуда точка опоры: размеры кадра для этого не годятся.
-func (a *Animal) Radius() float64 {
-	b := a.Pack.Bounds()
+func (a *Animal) Radius() float64 { return packRadius(a.Pack) }
+
+func packRadius(p *sprite.Pack) float64 {
+	b := p.Bounds()
 	return math.Max(2, float64(b.W)/4)
 }
 
@@ -167,7 +165,7 @@ func (a *Animal) decide(c Ctx) {
 	a.timer = decideMin + a.rng.IntN(decideMax-decideMin)
 	sp := a.Species
 	d := math.Inf(1)
-	if c.HasThreat {
+	if c.HasThreat && a.sameFloor(c, c.Threat) {
 		d = engine.Dist(a.Pos, c.Threat)
 	}
 
@@ -216,6 +214,17 @@ func (a *Animal) decide(c Ctx) {
 	a.enter(Wander)
 }
 
+// sameFloor — на одном ли этаже зверь и точка p. Через этаж цель не считается:
+// бежать к ней всё равно некуда — единственный путь наверх это лестница, а
+// искать её звери не умеют. Без этой проверки волк с макушки плато вечно тёрся
+// бы носом в обрыв, под которым стоит игрок.
+func (a *Animal) sameFloor(c Ctx, p engine.Vec2) bool {
+	if c.Field == nil {
+		return true
+	}
+	return c.Field.CellAt(p).Floor() == a.floor
+}
+
 // wantsFight — не пора ли территориальному зверю передумать драться.
 func (a *Animal) wantsFight() bool {
 	sp := a.Species
@@ -230,7 +239,7 @@ func (a *Animal) wantsFight() bool {
 func (a *Animal) retarget(c Ctx) {
 	switch a.state {
 	case Flee:
-		if c.HasThreat {
+		if c.HasThreat && a.sameFloor(c, c.Threat) {
 			a.vel = a.Pos.Sub(c.Threat).Normalized().Scale(a.speed())
 		}
 	case Chase:
@@ -249,52 +258,62 @@ func (a *Animal) retarget(c Ctx) {
 
 func (a *Animal) chaseTarget(c Ctx) (engine.Vec2, bool) {
 	if a.Species.Temper == "predator" {
-		if c.Prey != nil && c.Prey.Alive() {
+		if c.Prey != nil && c.Prey.Alive() && a.sameFloor(c, c.Prey.Pos) {
 			return c.Prey.Pos, true
 		}
 		return engine.Vec2{}, false
 	}
-	if !c.HasThreat || !a.wantsFight() {
+	if !c.HasThreat || !a.wantsFight() || !a.sameFloor(c, c.Threat) {
 		return engine.Vec2{}, false
 	}
 	return c.Threat, true
 }
 
-// step двигает зверя, упираясь в непроходимое, и переключает сушу/воду.
+// step двигает зверя по полю и переключает сушу/воду. Стены, скольжение вдоль
+// них и этажи держит physics: здесь — только скорость и то, что зверь упёрся.
 func (a *Animal) step(c Ctx) {
 	if a.vel.Len() == 0 {
 		return
 	}
-	next := a.Pos.Add(a.vel.Scale(1.0 / config.TPS))
-	if c.World != nil {
-		// Скольжение вдоль препятствия: пробуем оси по отдельности, иначе зверь
-		// намертво встаёт в угол.
-		if !a.canStand(c.World, next) {
-			if x := (engine.Vec2{X: next.X, Y: a.Pos.Y}); a.canStand(c.World, x) {
-				next = x
-			} else if y := (engine.Vec2{X: a.Pos.X, Y: next.Y}); a.canStand(c.World, y) {
-				next = y
-			} else {
-				a.vel = engine.Vec2{}
-				a.timer = 0 // упёрлись — решаем заново на следующем тике
-				return
-			}
-		}
-		a.swim = a.Species.Locomotion.Water && c.World.Water(next)
+	d := a.vel.Scale(c.Field.SpeedScale(a.Pos) / config.TPS)
+	next, floor := c.Field.Move(a.Pos, d, a.Body())
+	if engine.Dist(next, a.Pos) < 0.01 {
+		a.vel = engine.Vec2{}
+		a.timer = 0 // упёрлись — решаем заново на следующем тике
+		return
 	}
-	a.Pos = next
+	a.Pos, a.floor = next, floor
+	a.swim = c.Field.CellAt(next).Liquid()
 	a.dir = sprite.DirFrom(a.vel)
 	a.play(a.clipFor(a.state))
 }
 
-// canStand — можно ли виду находиться в точке. Вода проходима только для
-// водоплавающих, у которых есть чем плыть: намерение без клипа не выпускает
-// зверя на воду, иначе он поплывёт стоя.
-func (a *Animal) canStand(w World, p engine.Vec2) bool {
-	if w.Water(p) {
-		return a.Species.Locomotion.Water && a.Pack.Has("swim")
+// Body — тело зверя для поля.
+func (a *Animal) Body() physics.Body { return bodyOf(a.Species, a.Pack, a.floor) }
+
+// bodyOf — тело вида sp с паком pack на этаже floor. Возможности берутся у
+// вида, но с оглядкой на пак: намерение без клипа не выпускает зверя на глубину,
+// иначе он поплывёт стоя. Мелководье доступно и без клипа swim — там бредут.
+func bodyOf(sp *Species, pack *sprite.Pack, floor uint8) physics.Body {
+	water := sp.Locomotion.Water
+	return physics.Body{
+		Radius: packRadius(pack),
+		Floor:  floor,
+		Caps:   physics.Caps{Wade: water, Swim: water && pack.Has("swim")},
 	}
-	return w.Walkable(p)
+}
+
+// Land ставит зверя на этаж той клетки, в которой он оказался: спавнер выбирает
+// точку, а этаж у неё свой (макушка плато — верхний).
+func (a *Animal) Land(f *physics.Field) { a.floor = f.CellAt(a.Pos).Floor() }
+
+// Floor — этаж, на котором стоит зверь (0 — низ, 1 — макушка плато).
+func (a *Animal) Floor() uint8 { return a.floor }
+
+// Push сдвигает зверя на delta с проверкой стен: этим игровой слой
+// расталкивает тела, которые налезли друг на друга.
+func (a *Animal) Push(f *physics.Field, delta engine.Vec2) {
+	a.Pos, a.floor = f.Move(a.Pos, delta, a.Body())
 }
 
 func (a *Animal) speed() float64 {

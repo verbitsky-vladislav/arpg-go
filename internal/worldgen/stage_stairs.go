@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // stage_stairs.go — лестницы на плато (worldgen.spec §5 шаг 8, §6 связность).
 //

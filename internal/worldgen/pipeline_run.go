@@ -1,7 +1,9 @@
-package main
+package worldgen
 
 // pipeline_run.go — оркестрация шагов и сборка результата в map_format v1.
 // По мере готовности стадий (M3–M6) сюда добавляются вызовы shape/tiles/props.
+
+import "github.com/vladislav/game/internal/physics"
 
 // Run прогоняет пайплайн генерации одной карты (worldgen.spec §5).
 func (g *Generator) Run() {
@@ -58,6 +60,10 @@ func (g *Generator) Run() {
 	// Подложка — свойство СУШИ, а не тропы: любая будущая проплешина в траве
 	// (поляна, стоянка) сразу получит грунт под собой и кайму по краю. Под
 	// сплошной травой подложка не кладётся — её там не видно.
+	// Броды ставятся ДО автотайлинга: чтобы лечь ровно, переправа имеет право
+	// подсыпать берег на клетку, а такую правку суши обязан увидеть автотайл.
+	g.stageBridges()
+
 	g.GroundLayer = NewGrid[uint16](g.P.Width, g.P.Height)
 	g.MudLayer = NewGrid[uint16](g.P.Width, g.P.Height)
 	isLandCell := func(x, y int) bool { return g.Level.In(x, y) && g.Level.At(x, y).isLand() }
@@ -69,10 +75,22 @@ func (g *Generator) Run() {
 	// трава: интерьер grass_ground, кромка по краю тропы, берег grass_water
 	g.paintLand(grassCell, "ground", "ground", "grass_water", "coast", g.GroundLayer)
 
+	// пятна на грунте троп — по готовой подложке mud, но до плато: в стопке слоёв
+	// ground_spots лежит под плато и его тенью, и они закрывают пятна сами.
+	g.stageGroundSpots()
+
 	// плато: травяной верх grass_cliff + скальный обрыв на юг (spots_rock),
 	// вокруг — тень возвышенности на нижней земле (grass_shadow/mud_shadow)
 	g.stagePlateau()
 	g.stagePlateauShadow()
+
+	// кувшинки и камыш — по готовой сетке уровней и полосам глубины
+	g.stageSurface()
+
+	// кустики травы — после плато: слой ground_decor лежит над ним, иначе
+	// макушка закрыла бы собой свои же кустики
+	g.stageGroundDecor()
+	g.stageHangers() // лианы — поверх готовой стены обрыва и врезанных в неё лестниц
 
 	// точка появления, объекты, маркеры. Спавн — отдельная стадия: stageProps
 	// выходит сразу, если у биома нет пропсов, и раньше уносила спавн с собой (E5).
@@ -100,14 +118,16 @@ func (g *Generator) ToMapV1(seed int64) *MapV1 {
 			Plateau:       denseData(g.PlateauLayer),
 			LiquidDetail:  g.Sparse["liquid_detail"],
 			GroundSpots:   g.Sparse["ground_spots"],
+			GroundDecor:   g.Sparse["ground_decor"],
 			Coast:         g.Sparse["coast"],
+			Bridges:       g.Sparse["bridges"],
 			SurfaceLiquid: g.Sparse["surface_liquid"],
 			PlateauShadow: g.Sparse["plateau_shadow"],
 			Cliff:         g.Sparse["cliff"],
 			Stairs:        g.Sparse["stairs"],
 			Hangers:       g.Sparse["hangers"],
 		},
-		Props:   g.Props,
+		Props:   g.sortedProps(),
 		Markers: g.Marks,
 		Nav:     g.buildNav(),
 	}
@@ -144,34 +164,160 @@ func (g *Generator) sheetRefs() []SheetRef {
 	return refs
 }
 
-// buildNav — плотная сетка стоимости прохода по уровням (шаг 19).
+// navScale — под-клеток физики на тайл.
+//
+// Четыре, то есть под-клетка равна четверти тайла (4 px). Для рельефа хватало и
+// двух: тайл dual-grid собран из четырёх четвертей, и мельче половины тайла
+// данных о поверхности всё равно нет. Но объекты задают барьер не по клеткам, а
+// по замеру спрайта, и на сетке в 8 px он получался блочным: любая задетая
+// под-клетка становится стеной целиком, и вокруг ствола нарастал квадрат заметно
+// шире самого ствола — игрок упирался там, где на вид проходил. На 4 px ошибка
+// вчетверо меньше. Сетка рельефа от этого не врёт: четверти тайла просто
+// дублируются по две.
+const navScale = 4
+
+// buildNav — сетка физики в под-клетках (шаг 19).
+//
+// Здесь же снимается главный перекос старой версии: сетка уровней и картинка
+// сдвинуты друг относительно друга на полтайла. Тайл в позиции (x,y) описывает
+// не клетку (x,y), а область вокруг своего верхне-левого угла — четыре клетки
+// (x-1,y-1)…(x,y). Поэтому содержимое клетки (x,y) НАРИСОВАНО в квадрате,
+// сдвинутом на полтайла вправо и вниз, а физика, читавшая клетку как p/tile,
+// проверяла соседнюю: у воды это давало полтайла «хождения по воде» на каждом
+// берегу.
+//
+// Сдвиг запекается сюда, в данные: под-клетка (sx,sy) берёт содержимое клетки
+// ((sx-1)/2, (sy-1)/2) — то есть той, которая в этом месте нарисована. Дальше
+// движок читает поле напрямую, без поправок.
 func (g *Generator) buildNav() NavData {
-	cost := make([]uint8, g.P.Width*g.P.Height)
-	for i, lv := range g.Level.Data {
-		switch lv {
-		case LiquidDeep:
-			cost[i] = 0 // непроходимо
-		case LiquidShallow:
-			cost[i] = 160 // ×0.6
-		default:
-			cost[i] = 255
+	sw, sh := g.P.Width*navScale, g.P.Height*navScale
+	cells := make([]uint8, sw*sh)
+	for sy := 0; sy < sh; sy++ {
+		y := (sy - navScale/2) / navScale
+		if sy < navScale/2 {
+			y = -1 // полоса перед первой клеткой: за картой, там вода
+		}
+		for sx := 0; sx < sw; sx++ {
+			x := (sx - navScale/2) / navScale
+			if sx < navScale/2 {
+				x = -1
+			}
+			cells[sy*sw+sx] = uint8(g.navCell(x, y))
 		}
 	}
-	// тело обрыва — стена, а не земля: клетки под южной кромкой плато закрыты
-	// скалой, ходить по ним нельзя.
-	for c := range g.Cliff {
-		if g.Level.In(c[0], c[1]) {
-			cost[c[1]*g.P.Width+c[0]] = 0
+	g.markPropCells(cells, sw, sh)
+	return NavData{Width: sw, Height: sh, Scale: navScale, Cells: cells}
+}
+
+// navCell — что физика видит в клетке уровней (x,y).
+func (g *Generator) navCell(x, y int) physics.Cell {
+	if !g.Level.In(x, y) {
+		return physics.Deep // за краем карты — вода, как и в водяном кольце
+	}
+	switch {
+	// Лестница проверяется ПЕРВОЙ: её клетки лежат внутри тела обрыва и иначе
+	// остались бы стеной. Это единственный проход между этажами.
+	case g.Stair[[2]int{x, y}]:
+		return physics.Ramp
+	case g.Cliff[[2]int{x, y}]:
+		return physics.Solid // тело обрыва: скала, а не земля
+	// Брод — камни, положенные НА воду: уровень под ним так и остаётся водой и
+	// водой же рисуется, поэтому проверять его надо до веток воды. Этаж нижний
+	// у обоих берегов, связка этажей тут ни при чём — это Ground, не Ramp.
+	case g.Bridge[[2]int{x, y}]:
+		return physics.Ground
+	}
+	switch g.Level.At(x, y) {
+	case LiquidDeep:
+		return physics.Deep
+	case LiquidShallow:
+		return physics.Shallow
+	case Plateau:
+		return physics.Plateau
+	}
+	return physics.Ground
+}
+
+// markPropCells закрывает клетку под якорем пропса, объявленного непроходимым.
+//
+// Габарит футпринта для этого не годится: у дерева w×h — это размер картинки в
+// тайлах (крона в 8 тайлов), а мешает пройти только ствол. Якорь стоит ровно
+// под ним — его клетку и закрываем. Если у объектов появится собственный
+// габарит основания, читать надо будет его.
+//
+// Лестницы и вода не перекрываются никогда: пропс, севший на единственный
+// подъём, отрезал бы макушку плато от мира, а «стена посреди пруда» смысла не
+// имеет — по воде и так ходят только вплавь.
+func (g *Generator) markPropCells(cells []uint8, sw, sh int) {
+	for _, p := range g.Props {
+		if !p.Collides {
+			continue
+		}
+		x, y := p.X+p.Anchor[0], p.Y+p.Anchor[1]-1
+		// Брод — проход, а не земля: пропс на его камнях закрыл бы переправу,
+		// как закрыл бы лестницу.
+		if g.Bridge[[2]int{x, y}] {
+			continue
+		}
+		// Тело кладётся ПО ЗАМЕРУ спрайта, а не одной клеткой. Клетка — это 16 px
+		// на любой объект, и сквозь пень в 28 px игрок проходил краем, а мимо
+		// поваленного ствола в 72 px — и вовсе насквозь.
+		//
+		// Форма — приплюснутый овал: смотрим на мир сверху под углом, и то, чем
+		// объект занимает ЗЕМЛЮ, по вертикали короче, чем по горизонтали. Центр —
+		// середина нарисованной клетки якоря, то есть основание спрайта.
+		sub := float64(g.Manifest.TileSize) / navScale
+		cxp := float64(x*g.Manifest.TileSize + g.Manifest.TileSize)
+		cyp := float64(y*g.Manifest.TileSize + g.Manifest.TileSize)
+		rx := float64(p.Body) / 2
+		if rx < sub {
+			rx = sub // минимум — прежняя клетка под якорем
+		}
+		ry := rx / 2
+		if ry < sub {
+			ry = sub
+		}
+		// Растеризуем с запасом ВНУТРЬ: под-клетка становится стеной, только если
+		// её центр попал в овал, ужатый на полклетки. Иначе барьер systematically
+		// шире объекта — задетая краем клетка перекрывается целиком, и игрок
+		// упирается в воздух рядом со стволом. Лучше отдать пару пикселей внутрь
+		// ствола, чем забрать их снаружи.
+		irx, iry := rx-sub/2, ry-sub/2
+		if irx < sub/2 {
+			irx = sub / 2
+		}
+		if iry < sub/2 {
+			iry = sub / 2
+		}
+		s0, s1 := int((cxp-rx)/sub), int((cxp+rx)/sub)
+		t0, t1 := int((cyp-ry)/sub), int((cyp+ry)/sub)
+		for s := s0; s <= s1; s++ {
+			for t := t0; t <= t1; t++ {
+				if s < 0 || t < 0 || s >= sw || t >= sh {
+					continue
+				}
+				// центр под-клетки внутри ужатого овала?
+				dx := (float64(s)+0.5)*sub - cxp
+				dy := (float64(t)+0.5)*sub - cyp
+				if dx*dx/(irx*irx)+dy*dy/(iry*iry) > 1 {
+					continue
+				}
+				switch physics.Cell(cells[t*sw+s]) {
+				case physics.Ground, physics.Plateau:
+					cells[t*sw+s] = uint8(physics.Solid)
+				}
+			}
 		}
 	}
-	// лестницы — единственный проход сквозь обрыв, поэтому открываются ПОСЛЕ
-	// него: их клетки лежат внутри g.Cliff и иначе остались бы стеной.
-	for c := range g.Stair {
-		if g.Level.In(c[0], c[1]) {
-			cost[c[1]*g.P.Width+c[0]] = 255
-		}
+}
+
+// navSub — индексы под-клеток, на которые ложится клетка уровней v.
+func navSub(v int) []int {
+	out := make([]int, navScale)
+	for i := range out {
+		out[i] = v*navScale + navScale/2 + i
 	}
-	return NavData{Width: g.P.Width, Height: g.P.Height, Cost: cost}
+	return out
 }
 
 // sheetIndexInManifest — индекс листа по имени в порядке автора (для SparseTile.Sheet).
@@ -196,7 +342,13 @@ func (g *Generator) sheetAnim(sheet string) *AnimRef {
 
 // addSparse добавляет клетку в разрежённый слой layer.
 func (g *Generator) addSparse(layer, sheet string, x, y, tile int, anim *AnimRef) {
+	g.addSparseRot(layer, sheet, x, y, tile, 0, anim)
+}
+
+// addSparseRot — то же, но с поворотом тайла на rot четвертей по часовой.
+func (g *Generator) addSparseRot(layer, sheet string, x, y, tile int, rot uint8, anim *AnimRef) {
 	g.Sparse[layer] = append(g.Sparse[layer], SparseTile{
-		X: x, Y: y, Sheet: g.sheetIndexInManifest(sheet), Tile: uint16(tile), Anim: anim,
+		X: x, Y: y, Sheet: g.sheetIndexInManifest(sheet), Tile: uint16(tile),
+		Rot: rot % 4, Anim: anim,
 	})
 }

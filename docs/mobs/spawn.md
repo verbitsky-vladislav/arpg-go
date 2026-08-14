@@ -95,12 +95,16 @@
 Спавнер работает поверх интерфейса `mob.SpawnWorld`:
 
 ```go
-Walkable(p) bool   // из mob.World
-Water(p) bool      // из mob.World
-Biome() string     // ключ в habitat.biomes
-Zone(p) string     // water|shore|meadow|woods|trail|plateau|farmyard
-Size() (w, h)      // размеры мира
+Field() *physics.Field // сетка проходимости: где вообще можно стоять
+Biome() string         // ключ в habitat.biomes
+Zone(p) string         // water|shore|meadow|woods|trail|plateau|farmyard
+Size() (w, h)          // размеры мира
 ```
+
+Точка годится под подсев, если она в границах мира, не в скале, подходит виду по
+зоне обитания — и если тело вида **помещается в неё целиком** (круг радиуса
+зверя не задевает воду, скалу и чужой этаж). Последнее и не даёт оленю родиться
+по пояс в пруду: раньше проверялась одна точка опоры.
 
 Зоны совпадают со слоями worldgen (см.
 [layers_and_plateau.md](../worldgen/layers_and_plateau.md)), так что своя

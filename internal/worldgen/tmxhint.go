@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // tmxhint.go — ПОДСКАЗКА для авторинга манифеста. Читает пример карты .tmx
 // (сделанную художником) и вытаскивает, какой локальный id тайла в атласе
@@ -137,9 +137,9 @@ func splitCSV(s string) []int {
 	return out
 }
 
-// runTMXHint печатает разбор слоёв и черновики blob-наборов, либо (в режиме
+// RunTMXHint печатает разбор слоёв и черновики blob-наборов, либо (в режиме
 // emit) целый черновик manifest.json.
-func runTMXHint(args []string) {
+func RunTMXHint(args []string) {
 	if len(args) < 1 {
 		fmt.Fprintln(os.Stderr, "укажите каталог биома с Tiled_files/*.tmx")
 		os.Exit(2)
@@ -333,8 +333,12 @@ func emitDraftManifest(biomeDir, tmxPath string) {
 		Transitions: map[string]Transition{
 			"liquid->ground_a": {Sheet: coastSheet, Set: coastSet},
 		},
-		Stairs:  Stairs{Sheet: "stairs_grass", Width: 2},
-		Hangers: Hangers{Sheet: "lianas", Variants: [][]int{{113}}, On: "cliff_south"},
+		Stairs: Stairs{Sheet: "stairs_grass", Width: 2},
+		Hangers: Hangers{
+			Sheet:    "lianas",
+			Variants: []Stamp{{W: 1, H: 1, Cells: []StampCell{{Tile: 113}}}},
+			On:       "cliff_south",
+		},
 		Props:   scanProps(biomeDir),
 		Surface: map[string][]string{"liquid": {"water_lilis"}, "shallow": {"reeds"}},
 		Spots:   spotSetFrom(m, "spots1", "spots2", "spots3"),

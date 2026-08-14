@@ -5,20 +5,53 @@ import (
 
 	"github.com/vladislav/game/internal/character"
 	"github.com/vladislav/game/internal/engine"
+	"github.com/vladislav/game/internal/physics"
 	"github.com/vladislav/game/internal/sprite"
 )
 
-// plainWorld — вся суша, воды нет.
-type plainWorld struct{}
+// plain — поля нет: стен и воды тоже, персонаж ходит свободно. Так же устроен
+// просмотрщик и любая сцена без карты.
+var plain *physics.Field
 
-func (plainWorld) Walkable(engine.Vec2) bool { return true }
-func (plainWorld) Water(engine.Vec2) bool    { return false }
+// field собирает поле 512×384 px из правила «что в этой точке».
+func field(kind func(p engine.Vec2) physics.Cell) *physics.Field {
+	const sub = 8.0
+	const w, h = 64, 48
+	cells := make([]physics.Cell, w*h)
+	for sy := range h {
+		for sx := range w {
+			cells[sy*w+sx] = kind(engine.Vec2{
+				X: (float64(sx) + 0.5) * sub,
+				Y: (float64(sy) + 0.5) * sub,
+			})
+		}
+	}
+	return physics.NewField(w, h, sub, cells)
+}
 
-// pondWorld — правее x=200 вода: персонаж плавать не умеет и обязан упереться.
-type pondWorld struct{}
+// pond — правее x=200 глубокая вода: персонаж плавать не умеет и обязан
+// упереться в берег.
+func pond() *physics.Field {
+	return field(func(p engine.Vec2) physics.Cell {
+		if p.X > 200 {
+			return physics.Deep
+		}
+		return physics.Ground
+	})
+}
 
-func (pondWorld) Walkable(engine.Vec2) bool { return true }
-func (pondWorld) Water(p engine.Vec2) bool  { return p.X > 200 }
+// marsh — та же вода, но с полосой мелководья 200..280: по ней герой бредёт.
+func marsh() *physics.Field {
+	return field(func(p engine.Vec2) physics.Cell {
+		switch {
+		case p.X > 280:
+			return physics.Deep
+		case p.X > 200:
+			return physics.Shallow
+		}
+		return physics.Ground
+	})
+}
 
 var (
 	right = engine.Vec2{X: 1}
@@ -52,8 +85,20 @@ func each(t *testing.T, fn func(t *testing.T, name string, p *character.Player))
 	}
 }
 
+// armed — то же по всем парам, но только с лоадаутами, которые вообще бьют:
+// безоружному нечем, и проверять на нём темп удара или сектор нечего.
+func armed(t *testing.T, fn func(t *testing.T, name string, p *character.Player)) {
+	t.Helper()
+	each(t, func(t *testing.T, name string, p *character.Player) {
+		if !p.Loadout.CanStrike() {
+			t.Skip("лоадаут без удара")
+		}
+		fn(t, name, p)
+	})
+}
+
 // run прокручивает n тиков с одним и тем же вводом, забирая удары.
-func run(p *character.Player, in character.Input, w character.World, n int) []character.Hit {
+func run(p *character.Player, in character.Input, w *physics.Field, n int) []character.Hit {
 	var hits []character.Hit
 	for range n {
 		p.Update(in, w)
@@ -69,7 +114,7 @@ func run(p *character.Player, in character.Input, w character.World, n int) []ch
 // быстрее, чем шагает.
 func TestWalkAndRun(t *testing.T) {
 	each(t, func(t *testing.T, name string, p *character.Player) {
-		run(p, character.Input{Move: right}, plainWorld{}, 60)
+		run(p, character.Input{Move: right}, plain, 60)
 		walked := p.Pos.X - start.X
 		if walked <= 0 {
 			t.Fatalf("%s: за секунду ходьбы вправо не сдвинулся (x=%.1f)", name, p.Pos.X)
@@ -82,7 +127,7 @@ func TestWalkAndRun(t *testing.T) {
 		}
 
 		p.Revive(start)
-		run(p, character.Input{Move: right, Run: true}, plainWorld{}, 60)
+		run(p, character.Input{Move: right, Run: true}, plain, 60)
 		ran := p.Pos.X - start.X
 		if ran <= walked {
 			t.Errorf("%s: бег %.1f px не быстрее шага %.1f px", name, ran, walked)
@@ -96,7 +141,7 @@ func TestWalkAndRun(t *testing.T) {
 // TestIdleOnNoInput — без ввода персонаж стоит.
 func TestIdleOnNoInput(t *testing.T) {
 	each(t, func(t *testing.T, name string, p *character.Player) {
-		run(p, character.Input{}, plainWorld{}, 30)
+		run(p, character.Input{}, plain, 30)
 		if p.State() != character.Idle {
 			t.Errorf("%s: без ввода состояние %v", name, p.State())
 		}
@@ -111,7 +156,7 @@ func TestIdleOnNoInput(t *testing.T) {
 // кадра быть не должно ни на одном тике.
 func TestAlwaysHasFrame(t *testing.T) {
 	each(t, func(t *testing.T, name string, p *character.Player) {
-		w := plainWorld{}
+		w := plain
 		check := func(stage string) {
 			if p.Frame() == nil && p.Alive() {
 				t.Fatalf("%s: %s (состояние %v, клип %q) — нечего рисовать",
@@ -147,12 +192,12 @@ func TestAlwaysHasFrame(t *testing.T) {
 }
 
 // TestAttackStrikesOnce — за один замах ровно один удар, и он накрывает цель
-// перед персонажем, но не за спиной. Верно и для unarmed, у которого клипа
-// удара нет вовсе: намерение не зависит от наличия анимации.
+// перед персонажем, но не за спиной. Проверяется на лоадаутах с ударом; клип
+// удара при этом не обязателен — намерение не зависит от наличия анимации.
 func TestAttackStrikesOnce(t *testing.T) {
-	each(t, func(t *testing.T, name string, p *character.Player) {
+	armed(t, func(t *testing.T, name string, p *character.Player) {
 		hits := run(p, character.Input{Attack: true, Aim: engine.Vec2{X: 300, Y: 100}, HasAim: true},
-			plainWorld{}, 120)
+			plain, 120)
 		if len(hits) != 1 {
 			t.Fatalf("%s: за один замах %d ударов, ожидался один", name, len(hits))
 		}
@@ -175,19 +220,48 @@ func TestAttackStrikesOnce(t *testing.T) {
 	})
 }
 
+// TestUnarmedNeverStrikes — лоадаут без урона не бьёт вовсе: ни замаха, ни
+// сектора, ни остановки на ходу. Это свойство данных (attack.damage=0), а не
+// отсутствия анимации, поэтому проверяется на поведении, а не на клипах.
+func TestUnarmedNeverStrikes(t *testing.T) {
+	each(t, func(t *testing.T, name string, p *character.Player) {
+		if p.Loadout.CanStrike() {
+			t.Skip("лоадаут с ударом")
+		}
+		if p.CanAttack() {
+			t.Errorf("%s: готов бить, хотя оружия нет", name)
+		}
+		if hits := run(p, character.Input{Attack: true}, plain, 300); len(hits) != 0 {
+			t.Errorf("%s: без оружия прошло %d ударов", name, len(hits))
+		}
+		p.Update(character.Input{Attack: true}, plain)
+		if p.State() == character.Attacking {
+			t.Errorf("%s: без оружия вошёл в замах", name)
+		}
+		// Ход не должен сбиваться попыткой ударить.
+		at := p.Pos.X
+		for range 10 {
+			p.Update(character.Input{Move: right, Attack: true}, plain)
+		}
+		if p.Pos.X <= at {
+			t.Errorf("%s: попытка удара остановила ход", name)
+		}
+	})
+}
+
 // TestAttackRate — удержание удара даёт серию замахов, но не чаще темпа,
 // который задают данные. Темп — это максимум из длительности замаха и
 // перезарядки: следующий замах не начнётся ни посреди предыдущего, ни раньше
 // cooldown_ticks.
 func TestAttackRate(t *testing.T) {
-	each(t, func(t *testing.T, name string, p *character.Player) {
+	armed(t, func(t *testing.T, name string, p *character.Player) {
 		const ticks = 300
 		a := p.Loadout.Attack
 		period := max(a.SwingTicks, a.CooldownTicks)
 
 		hits := 0
 		for range ticks {
-			p.Update(character.Input{Attack: true}, plainWorld{})
+			p.Update(character.Input{Attack: true}, plain)
 			if _, ok := p.Strike(); ok {
 				hits++
 			}
@@ -204,8 +278,8 @@ func TestAttackRate(t *testing.T) {
 
 // TestAttackBlockedWhileBusy — в замахе и в оцепенении новый удар не начать.
 func TestAttackBlockedWhileBusy(t *testing.T) {
-	each(t, func(t *testing.T, name string, p *character.Player) {
-		p.Update(character.Input{Attack: true}, plainWorld{})
+	armed(t, func(t *testing.T, name string, p *character.Player) {
+		p.Update(character.Input{Attack: true}, plain)
 		if p.State() != character.Attacking {
 			t.Fatalf("%s: удар не начался, состояние %v", name, p.State())
 		}
@@ -228,13 +302,13 @@ func TestAttackBlockedWhileBusy(t *testing.T) {
 // TestAttackOnMove — лоадаут с ударом на ходу продолжает двигаться в замахе,
 // лоадаут без него останавливается.
 func TestAttackOnMove(t *testing.T) {
-	each(t, func(t *testing.T, name string, p *character.Player) {
+	armed(t, func(t *testing.T, name string, p *character.Player) {
 		in := character.Input{Move: right, Attack: true}
-		p.Update(in, plainWorld{}) // старт замаха
+		p.Update(in, plain) // старт замаха
 		in.Attack = false
 		at := p.Pos.X
 		for range 10 {
-			p.Update(in, plainWorld{})
+			p.Update(in, plain)
 			p.Strike()
 		}
 		moved := p.Pos.X - at
@@ -269,12 +343,12 @@ func TestHurtLocksAndInvuln(t *testing.T) {
 			t.Errorf("%s: урон прошёл сквозь неуязвимость (hp %d)", name, p.HP)
 		}
 		// Отброс идёт от источника (слева), то есть вправо, а не по вводу влево.
-		run(p, character.Input{Move: engine.Vec2{X: -1}}, plainWorld{}, 5)
+		run(p, character.Input{Move: engine.Vec2{X: -1}}, plain, 5)
 		if p.Pos.X < start.X {
 			t.Errorf("%s: в оцепенении послушался ввода (x=%.1f < %.1f)", name, p.Pos.X, start.X)
 		}
 		// Оцепенение конечно.
-		run(p, character.Input{}, plainWorld{}, p.Cat.Base.Hurt.LockTicks+2)
+		run(p, character.Input{}, plain, p.Cat.Base.Hurt.LockTicks+2)
 		if p.State() == character.Hurt {
 			t.Errorf("%s: оцепенение не кончилось за lock_ticks", name)
 		}
@@ -289,7 +363,7 @@ func TestDeathEnds(t *testing.T) {
 		if p.Alive() {
 			t.Fatalf("%s: пережил Kill", name)
 		}
-		w := plainWorld{}
+		w := plain
 		gone := false
 		for range 600 {
 			p.Update(character.Input{Move: right, Attack: true}, w)
@@ -316,11 +390,13 @@ func TestDeathEnds(t *testing.T) {
 	})
 }
 
-// TestWaterBlocks — плавать персонаж не умеет, значит в воду не заходит.
+// TestWaterBlocks — плавать персонаж не умеет, значит в глубокую воду не
+// заходит. Останавливает его тело, а не точка опоры: между героем и водой
+// остаётся его радиус.
 func TestWaterBlocks(t *testing.T) {
 	each(t, func(t *testing.T, name string, p *character.Player) {
 		p.Revive(engine.Vec2{X: 190, Y: 100})
-		run(p, character.Input{Move: right, Run: true}, pondWorld{}, 300)
+		run(p, character.Input{Move: right, Run: true}, pond(), 300)
 		if p.Pos.X > 200 {
 			t.Errorf("%s: зашёл в воду (x=%.1f)", name, p.Pos.X)
 		}
@@ -335,9 +411,9 @@ func TestWaterBlocks(t *testing.T) {
 func TestEquipKeepsCharacter(t *testing.T) {
 	l, cat := catalog(t)
 	p := player(t, "male", "unarmed")
-	run(p, character.Input{Move: right}, plainWorld{}, 20)
+	run(p, character.Input{Move: right}, plain, 20)
 	p.Damage(10, start)
-	run(p, character.Input{}, plainWorld{}, p.Cat.Base.Hurt.LockTicks+2) // переждать оцепенение
+	run(p, character.Input{}, plain, p.Cat.Base.Hurt.LockTicks+2) // переждать оцепенение
 	pos, hp := p.Pos, p.HP
 
 	sword := cat.Loadout("sword")
@@ -353,7 +429,7 @@ func TestEquipKeepsCharacter(t *testing.T) {
 	if p.Loadout.ID != "sword" || p.Pack != pack {
 		t.Errorf("лоадаут не сменился: %s", p.Loadout.ID)
 	}
-	hits := run(p, character.Input{Attack: true}, plainWorld{}, 120)
+	hits := run(p, character.Input{Attack: true}, plain, 120)
 	if len(hits) != 1 || hits[0].Damage != sword.Attack.Damage {
 		t.Errorf("после смены оружия удары %v, ожидался один на %d урона", hits, sword.Attack.Damage)
 	}
@@ -382,4 +458,35 @@ func TestSetBodyKeepsHealthShare(t *testing.T) {
 	if p.MaxHP != max(1, int(float64(cat.Base.HP)*female.HPScale)) {
 		t.Errorf("макс. здоровье %d не пересчитано под тело", p.MaxHP)
 	}
+}
+
+// TestShallowWadesSlower — мелководье проходимо, но вязкое: герой в него
+// заходит и бредёт медленнее, чем по суше. Раньше берег был для него стеной.
+func TestShallowWadesSlower(t *testing.T) {
+	each(t, func(t *testing.T, name string, p *character.Player) {
+		w := marsh()
+		p.Revive(engine.Vec2{X: 190, Y: 100})
+		run(p, character.Input{Move: right}, w, 60)
+		if p.Pos.X <= 200 {
+			t.Fatalf("%s: не зашёл в мелководье (x=%.1f)", name, p.Pos.X)
+		}
+		if p.Pos.X > 280 {
+			t.Errorf("%s: вышел на глубину (x=%.1f)", name, p.Pos.X)
+		}
+
+		// Скорость по суше и по мели за одно и то же время.
+		p.Revive(engine.Vec2{X: 100, Y: 100})
+		run(p, character.Input{Move: right}, w, 20)
+		dry := p.Pos.X - 100
+		p.Revive(engine.Vec2{X: 210, Y: 100})
+		run(p, character.Input{Move: right}, w, 20)
+		wet := p.Pos.X - 210
+		if dry <= 0 || wet <= 0 {
+			t.Fatalf("%s: персонаж не сдвинулся (суша %.2f, мель %.2f)", name, dry, wet)
+		}
+		if got := wet / dry; got < physics.ShallowSpeed-0.05 || got > physics.ShallowSpeed+0.05 {
+			t.Errorf("%s: по мели %.2f от скорости по суше, ждали %.2f",
+				name, got, physics.ShallowSpeed)
+		}
+	})
 }

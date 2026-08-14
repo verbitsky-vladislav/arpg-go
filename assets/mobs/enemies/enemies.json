@@ -1,0 +1,704 @@
+{
+  "version": 1,
+  "doc": "docs/mobs/enemies.md",
+  "about": "Описательные данные о враждебных мобах: кто это, где водится, как дерётся и что даёт при убийстве. Графика (кадры, размеры, анимации, bbox, anchor) — в manifest.json рядом со спрайтами; здесь её нет. Отличие от animals/species.json: у врага два уровня — тип (смысл, один на всю родню) и тир (числа конкретной особи), потому что каждый тип нарисован в трёх силах подряд.",
+
+  "vocab": {
+    "family": ["undead", "demon", "spirit", "beast", "humanoid", "plant", "fungus", "construct", "ooze", "aberration"],
+    "size_class": ["small", "medium", "large"],
+    "temper": ["aggressive", "territorial", "ambusher", "ranged"],
+    "activity": ["day", "night", "any"],
+    "zones": ["water", "shore", "meadow", "woods", "trail", "plateau", "farmyard", "indoor"],
+    "_zones": "indoor — любая проходимая клетка подземелья или пещеры: worldgen пока размечает зоны только на открытых картах, и врагам подземелий разметки нет.",
+    "biomes": "id каталога в assets/biomes",
+    "element": ["fire", "magic", "smoke", "spectral", "slash"],
+    "tier": "t1 < t2 < t3 — три силы одного типа; ключ тира == имя папки со спрайтами",
+    "drops": "что падает с трупа; id — предмет из assets/items/items.json",
+    "_drops": "Ровно одна строка с chance 1.0 — обязательная добыча: с пустыми руками от убитого не уходят. Количества в ней маленькие (1-2 штуки), редкое лежит в остальных строках с низким шансом. Гарантированная строка разыгрывается один раз, редкие — tiers.*.drop_rolls раз, поэтому тир меняет не размер стопки, а вероятность увидеть редкость.",
+    "power": "что достаётся игроку с убитого: слой-эффект его атаки плюс параметры удара уже в руках героя"
+  },
+
+  "power_format": {
+    "_": "Пояснение к блоку power у каждого типа. Слой берётся из parts/ пака: у врага атака нарисована послойно (тело, голова, оружие, тень) и эффект лежит отдельным PNG — именно его наследует герой, оставаясь собой.",
+    "layer": "суффикс файла в <пак>/parts (demon1_attack_fire.png → attack_fire)",
+    "element": "стихия эффекта; по ней вешаются сопротивления и звук",
+    "steal_chance": "шанс, что убитый отдаст силу (0..1)",
+    "charges": "сколько ударов силой даётся за одну добычу",
+    "attack": "тот же формат, что loadouts.*.attack в character/character.json — украденная сила становится альтернативным ударом героя",
+    "attack.hit_at": "кадр слоя-эффекта, на котором наносится урон; замерен по пику вспышки, а не назначен на глаз",
+    "attack.reach": "замерено по самому дальнему пикселю эффекта от ног владельца",
+    "attack.arc": "замерен по угловому разбросу эффекта; больше 180 не бывает — такой эффект окружает владельца целиком"
+  },
+
+  "types": {
+    "beholder": {
+      "art": "beholder",
+      "title": { "ru": "Бехолдер", "en": "Beholder" },
+      "family": "aberration",
+      "size_class": "medium",
+      "temper": "ranged",
+      "activity": "any",
+      "locomotion": { "ground": false, "air": true },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 240, "reach": 90, "flee_hp": 0.15 },
+      "habitat": {
+        "biomes": { "dungeon_2": 4, "dungeon_3": 4, "cave_glowing": 3, "flying_islands": 3 },
+        "zones": ["indoor", "plateau", "meadow"],
+        "group": { "min": 1, "max": 2 }
+      },
+      "drops": [
+        { "id": "arcane_dust", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "eye_gem", "min": 1, "max": 1, "chance": 0.1 }
+      ],
+      "power": {
+        "layer": "attack_fire",
+        "element": "fire",
+        "steal_chance": 0.18,
+        "charges": 6,
+        "attack": {
+          "damage": 16, "reach": 27, "arc": 68,
+          "swing_ticks": 40, "cooldown_ticks": 50, "knockback": 25,
+          "on_move": false, "hit_at": 8
+        }
+      },
+      "notes": "Летает, поэтому вода и обрывы ему не преграда. Бьёт с дистанции — в ближний бой не лезет.",
+      "tiers": {
+        "t1": { "title": { "ru": "Бехолдер", "en": "Beholder" }, "hp": 30, "damage": 9, "speed": { "walk": 24, "run": 58 }, "xp": 18, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Старший бехолдер", "en": "Greater beholder" }, "hp": 46, "damage": 12, "speed": { "walk": 26, "run": 62 }, "xp": 30, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Око бездны", "en": "Abyss eye" }, "hp": 68, "damage": 16, "speed": { "walk": 28, "run": 66 }, "xp": 48, "drop_rolls": 2 }
+      }
+    },
+
+    "demon": {
+      "art": "demon",
+      "title": { "ru": "Демон", "en": "Demon" },
+      "family": "demon",
+      "size_class": "large",
+      "temper": "aggressive",
+      "activity": "any",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 220, "reach": 36, "flee_hp": 0.0 },
+      "habitat": {
+        "biomes": { "cursed_area": 5, "dungeon_3": 4, "ruined_tample": 2 },
+        "zones": ["indoor", "woods", "trail"],
+        "group": { "min": 1, "max": 2 }
+      },
+      "drops": [
+        { "id": "ember", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "demon_horn", "min": 1, "max": 1, "chance": 0.15 }
+      ],
+      "power": {
+        "layer": "attack_fire",
+        "element": "fire",
+        "steal_chance": 0.15,
+        "charges": 5,
+        "attack": {
+          "damage": 22, "reach": 54, "arc": 80,
+          "swing_ticks": 40, "cooldown_ticks": 60, "knockback": 50,
+          "on_move": false, "hit_at": 4
+        }
+      },
+      "notes": "Столб огня от ног вперёд — самый дальнобойный из наследуемых ударов. На этом типе механика кражи и обкатывалась.",
+      "tiers": {
+        "t1": { "title": { "ru": "Бес-воин", "en": "Demon warrior" }, "hp": 90, "damage": 16, "speed": { "walk": 26, "run": 78 }, "xp": 55, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Демон крови", "en": "Blood demon" }, "hp": 135, "damage": 21, "speed": { "walk": 28, "run": 82 }, "xp": 90, "drop_rolls": 2 },
+        "t3": { "title": { "ru": "Владыка пламени", "en": "Flame lord" }, "hp": 200, "damage": 27, "speed": { "walk": 30, "run": 86 }, "xp": 150, "drop_rolls": 3 }
+      }
+    },
+
+    "ent": {
+      "art": "ent",
+      "title": { "ru": "Энт", "en": "Ent" },
+      "family": "plant",
+      "size_class": "large",
+      "temper": "territorial",
+      "activity": "any",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": false, "sight": 150, "reach": 40, "flee_hp": 0.0 },
+      "habitat": {
+        "biomes": { "forest": 5, "glades": 4, "swamp": 2 },
+        "zones": ["woods", "meadow"],
+        "group": { "min": 1, "max": 1 }
+      },
+      "drops": [
+        { "id": "hardwood", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "living_sap", "min": 1, "max": 1, "chance": 0.15 }
+      ],
+      "power": {
+        "layer": "attack_swing",
+        "element": "slash",
+        "tint": "#7ad34a",
+        "steal_chance": 0.25,
+        "charges": 8,
+        "attack": {
+          "damage": 19, "reach": 44, "arc": 47,
+          "swing_ticks": 44, "cooldown_ticks": 56, "knockback": 70,
+          "on_move": false, "hit_at": 4
+        }
+      },
+      "notes": "Не нападает первым: пока не тронут, стоит деревом. Медленный, но бьёт тяжело и далеко отбрасывает.",
+      "tiers": {
+        "t1": { "title": { "ru": "Молодой энт", "en": "Young ent" }, "hp": 80, "damage": 13, "speed": { "walk": 16, "run": 40 }, "xp": 40, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Энт", "en": "Ent" }, "hp": 120, "damage": 17, "speed": { "walk": 17, "run": 42 }, "xp": 65, "drop_rolls": 2 },
+        "t3": { "title": { "ru": "Древень", "en": "Elder ent" }, "hp": 180, "damage": 22, "speed": { "walk": 18, "run": 44 }, "xp": 105, "drop_rolls": 2 }
+      }
+    },
+
+    "ghost": {
+      "art": "ghost",
+      "title": { "ru": "Призрак", "en": "Ghost" },
+      "family": "spirit",
+      "size_class": "medium",
+      "temper": "ambusher",
+      "activity": "night",
+      "locomotion": { "ground": false, "air": true },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 200, "reach": 30, "flee_hp": 0.0 },
+      "habitat": {
+        "biomes": { "ruined_tample": 4, "dungeon_2": 3, "dead_island": 3, "winterland": 3, "flying_islands": 3 },
+        "zones": ["indoor", "woods", "meadow"],
+        "group": { "min": 1, "max": 3 }
+      },
+      "drops": [
+        { "id": "ectoplasm", "min": 1, "max": 1, "chance": 1.0 },
+        { "id": "soul_shard", "min": 1, "max": 1, "chance": 0.08 }
+      ],
+      "power": {
+        "layer": "attack_attack",
+        "element": "spectral",
+        "steal_chance": 0.3,
+        "charges": 8,
+        "attack": {
+          "damage": 14, "reach": 42, "arc": 131,
+          "swing_ticks": 30, "cooldown_ticks": 40, "knockback": 20,
+          "on_move": true, "hit_at": 5
+        }
+      },
+      "notes": "Проходит сквозь воду и пропасти — единственный, кого не держит рельеф. Широкий взмах, бьёт на ходу.",
+      "tiers": {
+        "t1": { "title": { "ru": "Тень", "en": "Shade" }, "hp": 24, "damage": 7, "speed": { "walk": 30, "run": 72 }, "xp": 14, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Призрак", "en": "Ghost" }, "hp": 38, "damage": 10, "speed": { "walk": 32, "run": 78 }, "xp": 24, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Банши", "en": "Banshee" }, "hp": 56, "damage": 13, "speed": { "walk": 34, "run": 84 }, "xp": 40, "drop_rolls": 2 }
+      }
+    },
+
+    "gnoll": {
+      "art": "gnoll",
+      "title": { "ru": "Гнолл", "en": "Gnoll" },
+      "family": "beast",
+      "size_class": "medium",
+      "temper": "aggressive",
+      "activity": "night",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 210, "reach": 26, "flee_hp": 0.1 },
+      "habitat": {
+        "biomes": { "desert": 4, "rocky": 4, "forest": 2, "glades": 2, "winterland": 2 },
+        "zones": ["meadow", "woods", "trail"],
+        "group": { "min": 2, "max": 4 }
+      },
+      "drops": [
+        { "id": "fang", "min": 1, "max": 1, "chance": 1.0 },
+        { "id": "raw_meat", "min": 1, "max": 1, "chance": 0.3 }
+      ],
+      "power": {
+        "layer": "attack_swing",
+        "element": "slash",
+        "tint": "#e2593c",
+        "steal_chance": 0.35,
+        "charges": 10,
+        "attack": {
+          "damage": 13, "reach": 38, "arc": 58,
+          "swing_ticks": 26, "cooldown_ticks": 30, "knockback": 30,
+          "on_move": false, "hit_at": 4
+        }
+      },
+      "notes": "Ходят стаей и быстро бегают — опасны числом, а не силой удара.",
+      "tiers": {
+        "t1": { "title": { "ru": "Гнолл-падальщик", "en": "Gnoll scavenger" }, "hp": 30, "damage": 8, "speed": { "walk": 34, "run": 100 }, "xp": 14, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Гнолл-охотник", "en": "Gnoll hunter" }, "hp": 46, "damage": 11, "speed": { "walk": 36, "run": 106 }, "xp": 24, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Вожак гноллов", "en": "Gnoll pack leader" }, "hp": 70, "damage": 15, "speed": { "walk": 38, "run": 112 }, "xp": 40, "drop_rolls": 2 }
+      }
+    },
+
+    "goblin": {
+      "art": "goblin",
+      "title": { "ru": "Гоблин", "en": "Goblin" },
+      "family": "humanoid",
+      "size_class": "small",
+      "temper": "aggressive",
+      "activity": "any",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 190, "reach": 24, "flee_hp": 0.25 },
+      "habitat": {
+        "biomes": { "cave": 5, "forest": 3, "dungeon_1": 3, "rocky": 2, "farm": 3 },
+        "zones": ["indoor", "woods", "trail", "farmyard"],
+        "group": { "min": 2, "max": 5 }
+      },
+      "drops": [
+        { "id": "coin", "min": 2, "max": 5, "chance": 1.0 },
+        { "id": "crude_spear", "min": 1, "max": 1, "chance": 0.05 }
+      ],
+      "power": {
+        "layer": "attack_swing",
+        "element": "slash",
+        "tint": "#ffbe4a",
+        "steal_chance": 0.4,
+        "charges": 12,
+        "attack": {
+          "damage": 10, "reach": 21, "arc": 73,
+          "swing_ticks": 22, "cooldown_ticks": 24, "knockback": 20,
+          "on_move": true, "hit_at": 2
+        }
+      },
+      "notes": "Единственный из мелких, кто умеет бить на ходу (walk_attack и run_attack есть в паке) — его сила это умение и наследует. В t1 слой назван attack6_swing, в t2/t3 — attack_swing: поиск слоя сравнивает имена без цифр, поэтому разнобой художника проходит мимо.",
+      "tiers": {
+        "t1": { "title": { "ru": "Гоблин", "en": "Goblin" }, "hp": 22, "damage": 5, "speed": { "walk": 36, "run": 96 }, "xp": 8, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Гоблин-налётчик", "en": "Goblin raider" }, "hp": 34, "damage": 7, "speed": { "walk": 38, "run": 100 }, "xp": 14, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Гоблин-вожак", "en": "Goblin chief" }, "hp": 52, "damage": 10, "speed": { "walk": 40, "run": 104 }, "xp": 24, "drop_rolls": 2 }
+      }
+    },
+
+    "golem": {
+      "art": "golem",
+      "title": { "ru": "Голем", "en": "Golem" },
+      "family": "construct",
+      "size_class": "large",
+      "temper": "territorial",
+      "activity": "any",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": false, "sight": 160, "reach": 38, "flee_hp": 0.0 },
+      "habitat": {
+        "biomes": { "rocky": 5, "cave": 3, "dungeon_2": 3, "ruined_tample": 3, "flying_islands": 2 },
+        "zones": ["indoor", "plateau", "trail", "meadow"],
+        "group": { "min": 1, "max": 1 }
+      },
+      "drops": [
+        { "id": "rubble", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "stone_core", "min": 1, "max": 1, "chance": 0.1 }
+      ],
+      "power": {
+        "layer": "attack_swing",
+        "element": "slash",
+        "tint": "#caa05a",
+        "steal_chance": 0.22,
+        "charges": 6,
+        "attack": {
+          "damage": 24, "reach": 42, "arc": 151,
+          "swing_ticks": 48, "cooldown_ticks": 64, "knockback": 90,
+          "on_move": false, "hit_at": 5
+        }
+      },
+      "notes": "Самый тяжёлый удар и самый широкий сектор из наследуемых: бьёт почти вокруг себя, но замах длинный.",
+      "tiers": {
+        "t1": { "title": { "ru": "Каменный голем", "en": "Stone golem" }, "hp": 110, "damage": 14, "speed": { "walk": 18, "run": 44 }, "xp": 45, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Рудный голем", "en": "Ore golem" }, "hp": 165, "damage": 18, "speed": { "walk": 19, "run": 46 }, "xp": 75, "drop_rolls": 2 },
+        "t3": { "title": { "ru": "Древний голем", "en": "Ancient golem" }, "hp": 250, "damage": 24, "speed": { "walk": 20, "run": 48 }, "xp": 120, "drop_rolls": 3 }
+      }
+    },
+
+    "imp": {
+      "art": "imp",
+      "title": { "ru": "Импи", "en": "Imp" },
+      "family": "demon",
+      "size_class": "small",
+      "temper": "aggressive",
+      "activity": "any",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 200, "reach": 24, "flee_hp": 0.2 },
+      "habitat": {
+        "biomes": { "cursed_area": 4, "dungeon_3": 3, "cave_glowing": 3, "flying_islands": 2 },
+        "zones": ["indoor", "plateau", "woods"],
+        "group": { "min": 2, "max": 4 }
+      },
+      "drops": [
+        { "id": "ember", "min": 1, "max": 1, "chance": 1.0 },
+        { "id": "imp_tail", "min": 1, "max": 1, "chance": 0.15 }
+      ],
+      "power": {
+        "layer": "attack_fire",
+        "element": "fire",
+        "steal_chance": 0.35,
+        "charges": 10,
+        "attack": {
+          "damage": 12, "reach": 35, "arc": 68,
+          "swing_ticks": 24, "cooldown_ticks": 28, "knockback": 25,
+          "on_move": false, "hit_at": 3
+        }
+      },
+      "notes": "Дешёвый огонь: слабее демонского, но и падает вчетверо чаще, и замах вдвое короче.",
+      "tiers": {
+        "t1": { "title": { "ru": "Импи", "en": "Imp" }, "hp": 20, "damage": 6, "speed": { "walk": 34, "run": 94 }, "xp": 10, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Огненный импи", "en": "Fire imp" }, "hp": 32, "damage": 9, "speed": { "walk": 36, "run": 98 }, "xp": 18, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Импи-поджигатель", "en": "Imp firestarter" }, "hp": 48, "damage": 12, "speed": { "walk": 38, "run": 102 }, "xp": 30, "drop_rolls": 2 }
+      }
+    },
+
+    "lich": {
+      "art": "lich",
+      "title": { "ru": "Лич", "en": "Lich" },
+      "family": "undead",
+      "size_class": "medium",
+      "temper": "ranged",
+      "activity": "night",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 250, "reach": 80, "flee_hp": 0.3 },
+      "habitat": {
+        "biomes": { "dungeon_3": 5, "ruined_tample": 4, "cursed_area": 3, "dead_island": 2 },
+        "zones": ["indoor"],
+        "group": { "min": 1, "max": 1 }
+      },
+      "drops": [
+        { "id": "arcane_dust", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "soul_shard", "min": 1, "max": 1, "chance": 0.15 }
+      ],
+      "power": {
+        "layer": "attack_fire",
+        "element": "fire",
+        "steal_chance": 0.2,
+        "charges": 6,
+        "attack": {
+          "damage": 18, "reach": 48, "arc": 63,
+          "swing_ticks": 36, "cooldown_ticks": 50, "knockback": 35,
+          "on_move": false, "hit_at": 6
+        }
+      },
+      "notes": "Держит дистанцию и отступает раньше всех (flee_hp 0.3). Огонь у него бледный, некротический — стихия та же, вид другой.",
+      "tiers": {
+        "t1": { "title": { "ru": "Лич-ученик", "en": "Lich acolyte" }, "hp": 40, "damage": 12, "speed": { "walk": 26, "run": 62 }, "xp": 30, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Лич", "en": "Lich" }, "hp": 62, "damage": 16, "speed": { "walk": 27, "run": 64 }, "xp": 50, "drop_rolls": 2 },
+        "t3": { "title": { "ru": "Архилич", "en": "Archlich" }, "hp": 95, "damage": 21, "speed": { "walk": 28, "run": 66 }, "xp": 85, "drop_rolls": 3 }
+      }
+    },
+
+    "lizardman": {
+      "art": "lizardman",
+      "title": { "ru": "Ящер", "en": "Lizardman" },
+      "family": "humanoid",
+      "size_class": "medium",
+      "temper": "territorial",
+      "activity": "day",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 190, "reach": 28, "flee_hp": 0.1 },
+      "habitat": {
+        "biomes": { "swamp": 5, "sewer": 3, "fishing-docks": 3, "desert": 2 },
+        "zones": ["shore", "woods", "trail", "indoor"],
+        "group": { "min": 1, "max": 3 }
+      },
+      "drops": [
+        { "id": "scale", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "raw_meat", "min": 1, "max": 1, "chance": 0.25 }
+      ],
+      "power": {
+        "layer": "attack_swing",
+        "element": "slash",
+        "tint": "#ffbe4a",
+        "steal_chance": 0.3,
+        "charges": 10,
+        "attack": {
+          "damage": 15, "reach": 42, "arc": 122,
+          "swing_ticks": 30, "cooldown_ticks": 36, "knockback": 40,
+          "on_move": false, "hit_at": 4
+        }
+      },
+      "notes": "Единственный, кто одинаково уверенно дерётся у воды и в ней: болото для него дом, а не преграда.",
+      "tiers": {
+        "t1": { "title": { "ru": "Ящер-разведчик", "en": "Lizardman scout" }, "hp": 34, "damage": 8, "speed": { "walk": 32, "run": 88 }, "xp": 16, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Ящер-воин", "en": "Lizardman warrior" }, "hp": 52, "damage": 11, "speed": { "walk": 33, "run": 92 }, "xp": 28, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Ящер-жрец", "en": "Lizardman priest" }, "hp": 78, "damage": 15, "speed": { "walk": 34, "run": 96 }, "xp": 46, "drop_rolls": 2 }
+      }
+    },
+
+    "mushroom": {
+      "art": "mushroom",
+      "title": { "ru": "Грибник", "en": "Mushroom" },
+      "family": "fungus",
+      "size_class": "small",
+      "temper": "ambusher",
+      "activity": "any",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 120, "reach": 24, "flee_hp": 0.0 },
+      "habitat": {
+        "biomes": { "cave_glowing": 5, "swamp": 3, "forest": 3, "cave": 2, "glades": 2 },
+        "zones": ["indoor", "woods", "meadow"],
+        "group": { "min": 2, "max": 4 }
+      },
+      "drops": [
+        { "id": "spore", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "cap", "min": 1, "max": 1, "chance": 0.3 }
+      ],
+      "power": {
+        "layer": "attack_swing",
+        "element": "slash",
+        "tint": "#d6de5a",
+        "steal_chance": 0.4,
+        "charges": 12,
+        "attack": {
+          "damage": 11, "reach": 35, "arc": 137,
+          "swing_ticks": 28, "cooldown_ticks": 30, "knockback": 25,
+          "on_move": false, "hit_at": 5
+        }
+      },
+      "notes": "Замечает поздно (sight 120) — до него можно дойти вплотную. Зато бьёт широко и не убегает никогда.",
+      "tiers": {
+        "t1": { "title": { "ru": "Грибник", "en": "Mushroom" }, "hp": 24, "damage": 5, "speed": { "walk": 22, "run": 52 }, "xp": 8, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Споровик", "en": "Sporeling" }, "hp": 38, "damage": 8, "speed": { "walk": 23, "run": 54 }, "xp": 14, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Гриб-исполин", "en": "Giant fungus" }, "hp": 58, "damage": 11, "speed": { "walk": 24, "run": 56 }, "xp": 24, "drop_rolls": 2 }
+      }
+    },
+
+    "orc": {
+      "art": "orc",
+      "title": { "ru": "Орк", "en": "Orc" },
+      "family": "humanoid",
+      "size_class": "medium",
+      "temper": "aggressive",
+      "activity": "any",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 210, "reach": 30, "flee_hp": 0.05 },
+      "habitat": {
+        "biomes": { "rocky": 4, "desert": 4, "dungeon_1": 3, "forest": 2 },
+        "zones": ["indoor", "meadow", "trail", "plateau"],
+        "group": { "min": 2, "max": 4 }
+      },
+      "drops": [
+        { "id": "iron_scrap", "min": 1, "max": 1, "chance": 1.0 },
+        { "id": "coin", "min": 2, "max": 6, "chance": 0.35 }
+      ],
+      "power": {
+        "layer": "attack_swing",
+        "element": "slash",
+        "tint": "#ffbe4a",
+        "steal_chance": 0.28,
+        "charges": 10,
+        "attack": {
+          "damage": 18, "reach": 42, "arc": 129,
+          "swing_ticks": 34, "cooldown_ticks": 40, "knockback": 55,
+          "on_move": true, "hit_at": 3
+        }
+      },
+      "notes": "Как и гоблин, умеет бить на ходу, но тяжелее: наследуемый удар орка — лучший размен урона и темпа среди рубящих.",
+      "tiers": {
+        "t1": { "title": { "ru": "Орк", "en": "Orc" }, "hp": 40, "damage": 10, "speed": { "walk": 30, "run": 86 }, "xp": 20, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Орк-берсерк", "en": "Orc berserker" }, "hp": 62, "damage": 14, "speed": { "walk": 32, "run": 92 }, "xp": 34, "drop_rolls": 2 },
+        "t3": { "title": { "ru": "Орк-вождь", "en": "Orc warlord" }, "hp": 94, "damage": 19, "speed": { "walk": 34, "run": 96 }, "xp": 56, "drop_rolls": 3 }
+      }
+    },
+
+    "plant": {
+      "art": "plant",
+      "title": { "ru": "Хищный цветок", "en": "Carnivorous plant" },
+      "family": "plant",
+      "size_class": "medium",
+      "temper": "ambusher",
+      "activity": "any",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 100, "reach": 30, "flee_hp": 0.0 },
+      "habitat": {
+        "biomes": { "swamp": 5, "forest": 3, "glades": 3, "cave_glowing": 2 },
+        "zones": ["woods", "shore", "meadow"],
+        "group": { "min": 1, "max": 2 }
+      },
+      "drops": [
+        { "id": "seed", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "living_sap", "min": 1, "max": 1, "chance": 0.12 }
+      ],
+      "power": {
+        "layer": "attack_swing",
+        "element": "slash",
+        "tint": "#7ad34a",
+        "steal_chance": 0.35,
+        "charges": 10,
+        "attack": {
+          "damage": 14, "reach": 37, "arc": 180,
+          "swing_ticks": 30, "cooldown_ticks": 36, "knockback": 30,
+          "on_move": false, "hit_at": 4
+        }
+      },
+      "notes": "Эффект укуса охватывает владельца кругом — сектор обрезан до 180°, дальше бить уже некуда. Сидит на месте: убежать от него легко, наступить на него — нет.",
+      "tiers": {
+        "t1": { "title": { "ru": "Хищный цветок", "en": "Carnivorous plant" }, "hp": 30, "damage": 7, "speed": { "walk": 14, "run": 30 }, "xp": 12, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Лиана-душитель", "en": "Strangler vine" }, "hp": 46, "damage": 10, "speed": { "walk": 15, "run": 32 }, "xp": 20, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Трупоцвет", "en": "Corpse flower" }, "hp": 70, "damage": 14, "speed": { "walk": 16, "run": 34 }, "xp": 34, "drop_rolls": 2 }
+      }
+    },
+
+    "rat": {
+      "art": "rat",
+      "title": { "ru": "Крыса", "en": "Rat" },
+      "family": "beast",
+      "size_class": "medium",
+      "temper": "aggressive",
+      "activity": "night",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 170, "reach": 26, "flee_hp": 0.2 },
+      "habitat": {
+        "biomes": { "sewer": 5, "cave": 4, "dungeon_1": 3, "fishing-docks": 2, "farm": 3 },
+        "zones": ["indoor", "shore", "trail", "farmyard"],
+        "group": { "min": 3, "max": 6 }
+      },
+      "drops": [
+        { "id": "rat_tail", "min": 1, "max": 1, "chance": 1.0 },
+        { "id": "raw_meat", "min": 1, "max": 1, "chance": 0.2 }
+      ],
+      "power": {
+        "layer": "attack_swing",
+        "element": "slash",
+        "tint": "#e2593c",
+        "steal_chance": 0.5,
+        "charges": 14,
+        "attack": {
+          "damage": 9, "reach": 39, "arc": 116,
+          "swing_ticks": 24, "cooldown_ticks": 26, "knockback": 20,
+          "on_move": false, "hit_at": 5
+        }
+      },
+      "notes": "Самая частая добыча и самая слабая сила — то, чем игрок пробует механику в первый раз.",
+      "tiers": {
+        "t1": { "title": { "ru": "Крыса", "en": "Rat" }, "hp": 18, "damage": 4, "speed": { "walk": 30, "run": 90 }, "xp": 6, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Чумная крыса", "en": "Plague rat" }, "hp": 28, "damage": 6, "speed": { "walk": 32, "run": 96 }, "xp": 11, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Крысиный король", "en": "Rat king" }, "hp": 44, "damage": 9, "speed": { "walk": 34, "run": 100 }, "xp": 20, "drop_rolls": 2 }
+      }
+    },
+
+    "skeleton": {
+      "art": "skeleton",
+      "title": { "ru": "Скелет", "en": "Skeleton" },
+      "family": "undead",
+      "size_class": "medium",
+      "temper": "aggressive",
+      "activity": "any",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 200, "reach": 26, "flee_hp": 0.0 },
+      "habitat": {
+        "biomes": { "dungeon_1": 5, "dungeon_2": 4, "ruined_tample": 3, "dead_island": 3, "desert": 2, "winterland": 2 },
+        "zones": ["indoor", "trail", "meadow"],
+        "group": { "min": 2, "max": 4 }
+      },
+      "drops": [
+        { "id": "bone", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "rusty_blade", "min": 1, "max": 1, "chance": 0.04 }
+      ],
+      "power": {
+        "layer": "attack_swing",
+        "element": "slash",
+        "tint": "#9fe6d8",
+        "steal_chance": 0.4,
+        "charges": 12,
+        "attack": {
+          "damage": 12, "reach": 24, "arc": 180,
+          "swing_ticks": 26, "cooldown_ticks": 28, "knockback": 25,
+          "on_move": false, "hit_at": 6
+        }
+      },
+      "notes": "Крутит клинком вокруг себя: близко и во все стороны. Сектор обрезан до 180° — замер дал больше, но бить за спину нельзя.",
+      "tiers": {
+        "t1": { "title": { "ru": "Скелет", "en": "Skeleton" }, "hp": 26, "damage": 6, "speed": { "walk": 28, "run": 76 }, "xp": 10, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Скелет-страж", "en": "Skeleton guard" }, "hp": 40, "damage": 9, "speed": { "walk": 30, "run": 80 }, "xp": 18, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Костяной рыцарь", "en": "Bone knight" }, "hp": 60, "damage": 13, "speed": { "walk": 32, "run": 84 }, "xp": 30, "drop_rolls": 2 }
+      }
+    },
+
+    "slime": {
+      "art": "slime",
+      "title": { "ru": "Слизень", "en": "Slime" },
+      "family": "ooze",
+      "size_class": "small",
+      "temper": "aggressive",
+      "activity": "any",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 140, "reach": 22, "flee_hp": 0.0 },
+      "habitat": {
+        "biomes": { "cave": 4, "sewer": 4, "dungeon_1": 3, "swamp": 2, "fishing-docks": 2 },
+        "zones": ["indoor", "shore"],
+        "group": { "min": 2, "max": 5 }
+      },
+      "drops": [{ "id": "slime_gel", "min": 1, "max": 2, "chance": 1.0 }],
+      "power": null,
+      "_power": "Отбирать нечего: атака слизня нарисована одним слоем тела, отдельного эффекта в parts нет. Единственный тип без наследуемой силы — так и задумано, это разменная мелочь.",
+      "notes": "Тиров нет: вместо них девять цветов из трёх паков. Цвет — это стихия (element), и по ней же идут сопротивления.",
+      "tiers": {
+        "green": { "title": { "ru": "Зелёный слизень", "en": "Green slime" }, "element": "slash", "hp": 20, "damage": 4, "speed": { "walk": 20, "run": 46 }, "xp": 6, "drop_rolls": 1 },
+        "aqua": { "title": { "ru": "Водный слизень", "en": "Aqua slime" }, "element": "slash", "hp": 24, "damage": 5, "speed": { "walk": 22, "run": 50 }, "xp": 8, "drop_rolls": 1 },
+        "arcane": { "title": { "ru": "Магический слизень", "en": "Arcane slime" }, "element": "magic", "hp": 28, "damage": 7, "speed": { "walk": 21, "run": 48 }, "xp": 12, "drop_rolls": 1 },
+        "gold": { "title": { "ru": "Золотой слизень", "en": "Gold slime" }, "element": "slash", "hp": 26, "damage": 5, "speed": { "walk": 24, "run": 58 }, "xp": 20, "drop_rolls": 3 },
+        "ember": { "title": { "ru": "Тлеющий слизень", "en": "Ember slime" }, "element": "fire", "hp": 30, "damage": 8, "speed": { "walk": 21, "run": 48 }, "xp": 14, "drop_rolls": 1 },
+        "crimson": { "title": { "ru": "Багровый слизень", "en": "Crimson slime" }, "element": "slash", "hp": 34, "damage": 8, "speed": { "walk": 22, "run": 50 }, "xp": 16, "drop_rolls": 2 },
+        "lava": { "title": { "ru": "Лавовый слизень", "en": "Lava slime" }, "element": "fire", "hp": 40, "damage": 11, "speed": { "walk": 20, "run": 46 }, "xp": 22, "drop_rolls": 2 },
+        "shadow": { "title": { "ru": "Теневой слизень", "en": "Shadow slime" }, "element": "spectral", "hp": 38, "damage": 10, "speed": { "walk": 24, "run": 56 }, "xp": 24, "drop_rolls": 2 },
+        "violet": { "title": { "ru": "Лиловый слизень", "en": "Violet slime" }, "element": "magic", "hp": 36, "damage": 9, "speed": { "walk": 23, "run": 52 }, "xp": 20, "drop_rolls": 2 }
+      }
+    },
+
+    "vampire": {
+      "art": "vampire",
+      "title": { "ru": "Вампир", "en": "Vampire" },
+      "family": "undead",
+      "size_class": "medium",
+      "temper": "ambusher",
+      "activity": "night",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 230, "reach": 28, "flee_hp": 0.1 },
+      "habitat": {
+        "biomes": { "ruined_tample": 4, "dungeon_2": 4, "dungeon_3": 3, "cursed_area": 3, "winterland": 3 },
+        "zones": ["indoor", "woods", "trail"],
+        "group": { "min": 1, "max": 2 }
+      },
+      "drops": [
+        { "id": "blood_vial", "min": 1, "max": 1, "chance": 1.0 },
+        { "id": "coin", "min": 3, "max": 8, "chance": 0.35 }
+      ],
+      "power": {
+        "layer": "attack_magic",
+        "element": "magic",
+        "steal_chance": 0.2,
+        "charges": 7,
+        "attack": {
+          "damage": 17, "reach": 33, "arc": 56,
+          "swing_ticks": 34, "cooldown_ticks": 44, "knockback": 30,
+          "on_move": false, "hit_at": 9
+        }
+      },
+      "notes": "Урон наносится на девятом кадре из двенадцати — самый поздний удар в игре: замах видно издалека, и в этом его слабость.",
+      "tiers": {
+        "t1": { "title": { "ru": "Отродье", "en": "Vampire spawn" }, "hp": 44, "damage": 11, "speed": { "walk": 32, "run": 92 }, "xp": 26, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Вампир", "en": "Vampire" }, "hp": 68, "damage": 15, "speed": { "walk": 34, "run": 96 }, "xp": 44, "drop_rolls": 2 },
+        "t3": { "title": { "ru": "Древний вампир", "en": "Elder vampire" }, "hp": 102, "damage": 20, "speed": { "walk": 36, "run": 100 }, "xp": 72, "drop_rolls": 3 }
+      }
+    },
+
+    "zombie": {
+      "art": "zombie",
+      "title": { "ru": "Зомби", "en": "Zombie" },
+      "family": "undead",
+      "size_class": "medium",
+      "temper": "aggressive",
+      "activity": "any",
+      "locomotion": { "ground": true, "air": false },
+      "threat": { "attacks": true, "unprovoked": true, "sight": 150, "reach": 24, "flee_hp": 0.0 },
+      "habitat": {
+        "biomes": { "dead_island": 5, "sewer": 3, "dungeon_1": 3, "farm": 2, "fishing-docks": 2 },
+        "zones": ["indoor", "trail", "shore", "farmyard"],
+        "group": { "min": 2, "max": 5 }
+      },
+      "drops": [
+        { "id": "rotten_flesh", "min": 1, "max": 2, "chance": 1.0 },
+        { "id": "bone", "min": 1, "max": 1, "chance": 0.25 }
+      ],
+      "power": {
+        "layer": "attack_smoke",
+        "element": "smoke",
+        "steal_chance": 0.45,
+        "charges": 12,
+        "attack": {
+          "damage": 10, "reach": 16, "arc": 93,
+          "swing_ticks": 30, "cooldown_ticks": 32, "knockback": 15,
+          "on_move": false, "hit_at": 6
+        }
+      },
+      "notes": "Самый короткий вылет эффекта (16 px) — бить приходится вплотную. Медленный: от зомби всегда можно уйти шагом.",
+      "tiers": {
+        "t1": { "title": { "ru": "Зомби", "en": "Zombie" }, "hp": 34, "damage": 6, "speed": { "walk": 16, "run": 38 }, "xp": 10, "drop_rolls": 1 },
+        "t2": { "title": { "ru": "Гниющий зомби", "en": "Rotting zombie" }, "hp": 52, "damage": 9, "speed": { "walk": 17, "run": 40 }, "xp": 18, "drop_rolls": 1 },
+        "t3": { "title": { "ru": "Мертвяк-исполин", "en": "Zombie brute" }, "hp": 80, "damage": 13, "speed": { "walk": 18, "run": 42 }, "xp": 30, "drop_rolls": 2 }
+      }
+    }
+  }
+}

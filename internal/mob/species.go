@@ -171,6 +171,9 @@ func (c *Catalog) Validate() []string {
 		if len(s.Habitat.Biomes) == 0 {
 			probs = append(probs, fmt.Sprintf("%s: не задан ни один биом", id))
 		}
+		for _, p := range dropProblems(s.Drops) {
+			probs = append(probs, fmt.Sprintf("%s: %s", id, p))
+		}
 	}
 	return probs
 }

@@ -20,6 +20,14 @@ type Settings struct {
 	VSync       bool `json:"vsync"`
 	WindowScale int  `json:"window_scale"` // множитель логического разрешения (2..4)
 	ShowFPS     bool `json:"show_fps"`
+	// BarStyle — вид полосы здоровья (id из assets/ui/bars/bars.json). Пустая
+	// строка и неизвестный id разрешаются в стиль по умолчанию, поэтому старый
+	// файл настроек и подчищенный список стилей обходятся без миграции.
+	BarStyle string `json:"bar_style"`
+	// Keys — привязки клавиш: действие (см. keys.go) → клавиша. Отсутствующее
+	// действие берёт клавишу по умолчанию, поэтому старый файл настроек и новое
+	// действие обходятся без миграции.
+	Keys map[string]ebiten.Key `json:"keys"`
 }
 
 func defaults() Settings {
@@ -62,6 +70,12 @@ func load() Settings {
 	if s.WindowScale < 1 || s.WindowScale > 4 {
 		s.WindowScale = defaults().WindowScale
 	}
+	// Неизвестные действия из файла игнорируем: список действий задаёт код.
+	for id := range s.Keys {
+		if !knownAction(id) {
+			delete(s.Keys, id)
+		}
+	}
 	return s
 }
 
@@ -88,6 +102,14 @@ func apply() {
 func ToggleFullscreen() { current.Fullscreen = !current.Fullscreen; apply(); save() }
 func ToggleVSync()      { current.VSync = !current.VSync; apply(); save() }
 func ToggleFPS()        { current.ShowFPS = !current.ShowFPS; apply(); save() }
+
+// SetBarStyle запоминает вид полосы здоровья. Какие стили есть и какой из них
+// сейчас показан, знает ui — он их грузит и умеет разрешать пустое значение в
+// стиль по умолчанию; здесь только хранение.
+func SetBarStyle(id string) {
+	current.BarStyle = id
+	save()
+}
 
 // CycleWindowScale переключает масштаб окна 2→3→4→2 (в оконном режиме).
 func CycleWindowScale() {

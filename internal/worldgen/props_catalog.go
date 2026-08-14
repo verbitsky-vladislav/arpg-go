@@ -1,4 +1,4 @@
-package main
+package worldgen
 
 // props_catalog.go — автосборка списка пропсов из PNG/Objects_separated:
 // размеры меряются из самих PNG (спека врёт про футпринты), тип и параметры
@@ -6,6 +6,7 @@ package main
 
 import (
 	"image"
+	_ "image/png"
 	"os"
 	"path/filepath"
 	"sort"
@@ -55,8 +56,13 @@ func scanProps(biomeDir string) []Prop {
 		if strings.HasPrefix(lower, "reeds") {
 			continue
 		}
+		// полоса кадров — не отдельный объект, её подхватит сам пропс
+		if strings.HasSuffix(lower, "_anim") {
+			continue
+		}
 
-		w, h := pngTiles(filepath.Join(dir, n))
+		path := filepath.Join(dir, n)
+		w, h := pngTiles(path)
 		if w == 0 {
 			continue
 		}
@@ -65,35 +71,49 @@ func scanProps(biomeDir string) []Prop {
 			File:      prefix + n,
 			Footprint: [2]int{w, h},
 			Anchor:    [2]int{w / 2, h},
+			Body:      propBodyWidth(path),
 			On:        []string{"ground_a"},
 			Weight:    10,
 		}
 		classifyProp(lower, base, fileset, prefix, &p)
+		// покачивание: рядом лежит вертикальная полоса кадров того же спрайта
+		if anim := prefix + base + "_anim.png"; fileset[base+"_anim.png"] {
+			if fw, fh := pngSize(filepath.Join(dir, base+"_anim.png")); fw > 0 && fw == w*16 {
+				p.File = anim
+				p.Anim = &PropAnim{Frames: fh / (h * 16), MS: propAnimMS}
+			}
+		}
 		props = append(props, p)
 	}
 	return props
 }
 
-// classifyProp настраивает параметры пропса по имени.
+// propAnimMS — период кадра покачивания. Лист художника — 11-13 кадров, при
+// 150 мс полный оборот занимает около двух секунд: дерево дышит, а не трясётся.
+const propAnimMS = 150
+
+// classifyProp назначает пропсу группу, а из группы — правила размещения.
+// Имя файла даёт только СМЫСЛ объекта; проходимость решает замеренное тело.
 func classifyProp(lower, base string, fileset map[string]bool, prefix string, p *Prop) {
 	switch {
+	case strings.HasPrefix(lower, "ruin"):
+		p.Group = "ruin"
+		p.Prefab = true
 	case strings.HasPrefix(lower, "tree"), strings.HasPrefix(lower, "broken_tree"):
-		p.Collides = true
-		p.Zone = []string{"dense", "mid"}
-		p.Weight = 30
+		p.Group = "trunk"
 	case strings.HasPrefix(lower, "bush"):
-		p.Collides = false
-		p.Zone = []string{"dense", "mid", "open"}
-		p.Weight = 24
-	case strings.Contains(lower, "mushroom"):
-		p.Collides = false
-		p.Zone = []string{"dense"}
-		p.Weight = 8
+		p.Group = "bush"
 	case strings.Contains(lower, "stone"):
-		p.Collides = false
-		p.Zone = []string{"open", "plateau"}
-		p.Weight = 14
-		p.On = []string{"ground_a", "plateau"}
+		// глыба, кучка камней и галька живут по-разному: первая — валун в рост
+		// человека, последняя — под ногами
+		switch {
+		case p.Footprint[0] >= 4:
+			p.Group = "boulder"
+		case p.Body > propLitterBody:
+			p.Group = "rubble"
+		default:
+			p.Group = "litter"
+		}
 		// подмена травяного камня на «земляной» под ground_b
 		if strings.Contains(lower, "stone_grass") {
 			cand := strings.Replace(base, "grass", "ground", 1) + ".png"
@@ -101,15 +121,83 @@ func classifyProp(lower, base string, fileset map[string]bool, prefix string, p 
 				p.SwapOnGroundB = prefix + cand
 			}
 		}
-	case strings.HasPrefix(lower, "ruin"):
-		p.Collides = true
-		p.Prefab = true
-		p.Zone = []string{"open", "mid"}
-		p.Weight = 4
 	default:
-		p.Collides = false
-		p.Zone = []string{"open", "mid"}
+		p.Group = "litter" // грибы и всё мелкое
 	}
+	// мелочь по телу переезжает в litter независимо от вида: пень в 19 px и
+	// гриб в 19 px ощущаются одинаково, то есть никак
+	if p.Group != "ruin" && p.Body > 0 && p.Body <= propLitterBody {
+		p.Group = "litter"
+	}
+	if gr, ok := propGroupByName(p.Group); ok {
+		p.Collides = gr.Collides
+		p.OnTrail = gr.OnTrail
+		p.On = gr.On
+		p.Weight = gr.Weight
+	}
+}
+
+// propBodyWidth — ширина рисунка у самой земли: самая широкая строка в нижней
+// трети спрайта. Это и есть то, обо что игрок стукается, в отличие от габарита
+// картинки (у дерева крона вчетверо шире ствола).
+func propBodyWidth(path string) int {
+	f, err := os.Open(path)
+	if err != nil {
+		return 0
+	}
+	defer f.Close()
+	src, _, err := image.Decode(f)
+	if err != nil {
+		return 0
+	}
+	b := src.Bounds()
+	top, bottom := -1, -1
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			if _, _, _, a := src.At(x, y).RGBA(); a > 0 {
+				if top < 0 {
+					top = y
+				}
+				bottom = y
+				break
+			}
+		}
+	}
+	if top < 0 {
+		return 0
+	}
+	best := 0
+	for y := bottom - (bottom-top)/3; y <= bottom; y++ {
+		lo, hi := b.Max.X, -1
+		for x := b.Min.X; x < b.Max.X; x++ {
+			if _, _, _, a := src.At(x, y).RGBA(); a > 0 {
+				if x < lo {
+					lo = x
+				}
+				if x > hi {
+					hi = x
+				}
+			}
+		}
+		if hi >= 0 && hi-lo+1 > best {
+			best = hi - lo + 1
+		}
+	}
+	return best
+}
+
+// pngSize — размер PNG в пикселях.
+func pngSize(path string) (int, int) {
+	f, err := os.Open(path)
+	if err != nil {
+		return 0, 0
+	}
+	defer f.Close()
+	cfg, _, err := image.DecodeConfig(f)
+	if err != nil {
+		return 0, 0
+	}
+	return cfg.Width, cfg.Height
 }
 
 // pngTiles возвращает размер PNG в тайлах (округление вверх к 16px).

@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "about": "Каталог предметов: что такое drop.id из species.json / enemies.json / bosses.json. Одна запись на предмет: как называется, к какому роду относится, сколько лежит в одной ячейке и какой иконкой рисуется. Иконка — ссылка в манифест иконочного пака (tools/iconnorm): pack — папка пака внутри assets, icon — id спрайта в его manifest.json. Картинки тут нет, только ссылка, поэтому переставить предмет на другую иконку — это правка одной строки.",
+  "kinds": {
+    "material": "Сырьё с мобов: копится, тратится в крафте",
+    "valuable": "Ценность: деньги и трофеи",
+    "gear": "Носибельная вещь: slot говорит, в какое гнездо, loadout — каким оружием герой начинает махать"
+  },
+  "items": [
+    { "id": "raw_meat",     "name": "Сырое мясо",        "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_012" },
+    { "id": "hide",         "name": "Шкура",             "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_088" },
+    { "id": "pelt",         "name": "Мех",               "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_160" },
+    { "id": "wool",         "name": "Шерсть",            "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_108" },
+    { "id": "feather",      "name": "Перо",              "kind": "material", "stack": 50, "pack": "items/resources",      "icon": "Icons_016" },
+    { "id": "antler",       "name": "Рога",              "kind": "material", "stack": 10, "pack": "items/resources",      "icon": "Icons_050" },
+    { "id": "tusk",         "name": "Бивень",            "kind": "material", "stack": 10, "pack": "items/resources",      "icon": "Icons_134" },
+    { "id": "fang",         "name": "Клык",              "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_168" },
+    { "id": "bone",         "name": "Кость",             "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_010" },
+    { "id": "scale",        "name": "Чешуя",             "kind": "material", "stack": 50, "pack": "items/resources",      "icon": "Icons_172" },
+    { "id": "rat_tail",     "name": "Крысиный хвост",    "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_174" },
+    { "id": "imp_tail",     "name": "Хвост импа",        "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_068" },
+    { "id": "rotten_flesh", "name": "Гнилая плоть",      "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_142" },
+    { "id": "blood_vial",   "name": "Флакон крови",      "kind": "material", "stack": 10, "pack": "items/resources",      "icon": "Icons_182" },
+    { "id": "demon_horn",   "name": "Рог демона",        "kind": "material", "stack": 10, "pack": "items/resources",      "icon": "Icons_170" },
+    { "id": "ember",        "name": "Угли",              "kind": "material", "stack": 50, "pack": "items/resources",      "icon": "Icons_132" },
+    { "id": "arcane_dust",  "name": "Чародейская пыль",  "kind": "material", "stack": 50, "pack": "items/resources",      "icon": "Icons_164" },
+    { "id": "soul_shard",   "name": "Осколок души",      "kind": "material", "stack": 10, "pack": "items/resources",      "icon": "Icons_052" },
+    { "id": "ectoplasm",    "name": "Эктоплазма",        "kind": "material", "stack": 20, "pack": "items/magic",          "icon": "other_icons_042" },
+    { "id": "slime_gel",    "name": "Слизь",             "kind": "material", "stack": 50, "pack": "items/resources",      "icon": "Icons_138" },
+    { "id": "iron_scrap",   "name": "Железный лом",      "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_086" },
+    { "id": "stone_core",   "name": "Каменное ядро",     "kind": "material", "stack": 10, "pack": "items/resources",      "icon": "Icons_162" },
+    { "id": "rubble",       "name": "Щебень",            "kind": "material", "stack": 50, "pack": "items/resources",      "icon": "Icons_180" },
+    { "id": "hardwood",     "name": "Твёрдая древесина", "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_046" },
+    { "id": "living_sap",   "name": "Живой сок",         "kind": "material", "stack": 20, "pack": "items/resources",      "icon": "Icons_058" },
+    { "id": "seed",         "name": "Семена",            "kind": "material", "stack": 50, "pack": "items/resources",      "icon": "Icons_202" },
+    { "id": "spore",        "name": "Споры",             "kind": "material", "stack": 50, "pack": "items/fishing",        "icon": "Icons_138" },
+    { "id": "cap",          "name": "Шляпка",            "kind": "material", "stack": 20, "pack": "items/fishing",        "icon": "Icons_178" },
+
+    { "id": "milk",         "name": "Молоко",            "kind": "material", "stack": 10, "pack": "items/resources",      "icon": "Icons_030" },
+    { "id": "egg",          "name": "Яйцо",              "kind": "material", "stack": 20, "pack": "items/fishing",        "icon": "Icons_064" },
+
+    { "id": "eye_gem",      "name": "Глаз-самоцвет",     "kind": "valuable", "stack": 10, "pack": "items/resources",      "icon": "Icons_158" },
+    { "id": "slime_crown",  "name": "Корона слизня",     "kind": "valuable", "stack":  1, "pack": "items/treasure",       "icon": "Icons_082" },
+    { "id": "coin",         "name": "Монеты",            "kind": "valuable", "stack": 999, "pack": "items/treasure",      "icon": "Icons_026" },
+
+    { "id": "rusty_blade",  "name": "Ржавый клинок",     "kind": "gear",     "stack":  1, "pack": "ui/icons_16",          "icon": "Gui_icons_items/Sword1_2", "slot": "weapon", "loadout": "sword" },
+    { "id": "crude_spear",  "name": "Грубое копьё",      "kind": "gear",     "stack":  1, "pack": "items/armour_weapons", "icon": "Weapons_019", "slot": "weapon" }
+  ]
+}
