@@ -1,0 +1,32 @@
+# Сборка и тесты на каждый пуш.
+#
+# Ebitengine — оконный движок, и его код тянет системные библиотеки OpenGL,
+# X11 и ALSA даже там, где окно не открывается: тесты создают изображения, а
+# значит и графический контекст. Поэтому в раннере ставятся dev-пакеты, а сами
+# тесты идут под xvfb — виртуальным экраном.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: системные библиотеки
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1-mesa-dev xorg-dev libasound2-dev libxxf86vm-dev xvfb
+
+      - run: go build ./...
+      - run: go vet ./...
+      - run: xvfb-run -a go test ./...
