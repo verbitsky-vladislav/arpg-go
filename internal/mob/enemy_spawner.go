@@ -212,7 +212,7 @@ func (s *EnemySpawner) collect() {
 			continue
 		}
 		s.counts[e.Type.ID]--
-		s.danger -= float64(e.Tier.XP)
+		s.danger -= e.Danger()
 	}
 	if s.danger < 0 {
 		s.danger = 0
@@ -283,7 +283,7 @@ func (s *EnemySpawner) trySpawnAt(p engine.Vec2, night bool) bool {
 		}
 		s.squad.Add(e)
 		s.counts[ty.ID]++
-		s.danger += float64(e.XP)
+		s.danger += e.Danger()
 		placed++
 	}
 	return placed > 0
@@ -360,7 +360,7 @@ func (s *EnemySpawner) nearDanger(player engine.Vec2) float64 {
 	var d float64
 	for _, e := range s.squad.Members() {
 		if e.Alive() && engine.Dist(e.Pos, player) <= s.cfg.Radius.Keep {
-			d += float64(e.XP)
+			d += e.Danger()
 		}
 	}
 	return d

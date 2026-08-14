@@ -149,6 +149,14 @@ func glyphImage(r rune) *ebiten.Image {
 	return img
 }
 
+// PixelHasGlyph — умеет ли шрифт нарисовать символ r. Нужен вводу текста: имя
+// героя игрок печатает сам, и принимать надо только то, что потом видно на
+// экране, — иначе буква превратится в «?» уже после ввода.
+func PixelHasGlyph(r rune) bool {
+	_, ok := glyphs[unicode.ToUpper(r)]
+	return ok
+}
+
 // PixelTextWidth — ширина строки s в экранных пикселях при масштабе scale
 // (без разрядки после последнего глифа).
 func PixelTextWidth(s string, scale float64) float64 {

@@ -32,6 +32,9 @@ func main() {
 	ebiten.SetWindowSize(config.WindowW, config.WindowH)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden) // курсор рисуем сами (ui.DrawCursor)
+	// Закрытие окна разбирает игра, а не движок: перед выходом забег
+	// сохраняется (см. core.Game.Update и scene.Closer).
+	ebiten.SetWindowClosingHandled(true)
 	settings.Init()
 
 	loader := assets.NewLoader(os.DirFS(*root))
@@ -49,7 +52,10 @@ func main() {
 	// Экраны за пунктами меню подключаются здесь: сцены знают друг о друге
 	// ровно столько, сколько скажет точка входа.
 	menu := scene.NewMenu()
-	menu.OnStart = func() scene.Scene { return scene.NewHeroes(loader, menu) }
+	// Игра начинается не с героя, а с персонажа: сначала слот в книге
+	// сохранений (их три), и уже он решает — продолжить забег или завести
+	// нового героя с выбором тела и имени.
+	menu.OnStart = func() scene.Scene { return scene.NewProfiles(loader, menu) }
 	menu.OnSettings = func() scene.Scene { return scene.NewSettings(menu) }
 	menu.OnBestiary = func() scene.Scene { return scene.NewBestiary(loader, menu) }
 

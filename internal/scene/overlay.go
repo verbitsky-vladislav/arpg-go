@@ -59,9 +59,17 @@ func newPause(g *Game) *overlay {
 	}
 	o.items = []ovItem{
 		{"ПРОДОЛЖИТЬ", func() (Scene, error) { return g, nil }},
+		{"ЖУРНАЛ", func() (Scene, error) {
+			// Журнал читает запись персонажа, а она обновляется снимком — иначе
+			// в паузе показывалось бы состояние получасовой давности.
+			g.snapshot()
+			return newJournal(g.l, g.char, o), nil
+		}},
 		{"НАСТРОЙКИ", func() (Scene, error) { return NewSettings(o), nil }},
 		{"В МЕНЮ", func() (Scene, error) { return g.toMenu(), nil }},
-		{"ВЫХОД", quit},
+		// Выход из игры — последний момент, когда забег можно сохранить: после
+		// Termination ни одного тика больше не будет.
+		{"ВЫХОД", func() (Scene, error) { g.persist(); return quit() }},
 	}
 	o.cancel = o.items[0].act
 	return o
@@ -79,8 +87,12 @@ func newDeath(g *Game) *overlay {
 	}
 	o.items = []ovItem{
 		{"ВОЗРОДИТЬСЯ", func() (Scene, error) { return g.revive(), nil }},
+		{"ЖУРНАЛ", func() (Scene, error) {
+			g.snapshot()
+			return newJournal(g.l, g.char, o), nil
+		}},
 		{"В МЕНЮ", func() (Scene, error) { return g.toMenu(), nil }},
-		{"ВЫХОД", quit},
+		{"ВЫХОД", func() (Scene, error) { g.persist(); return quit() }},
 	}
 	return o
 }

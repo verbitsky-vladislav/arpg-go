@@ -16,8 +16,12 @@ import (
 // Обратная связь боя: сколько живёт число урона, как долго трясёт экран и
 // светится край после удара по игроку.
 const (
-	popTicks   = 45
-	popScale   = 2 // число урона мельче просто не заметить
+	popTicks = 45
+	popScale = 2 // число урона мельче просто не заметить
+	// Взятый уровень висит дольше и крупнее урона: это событие забега, а не
+	// одна из десятка цифр, мелькающих в драке.
+	levelTicks = 100
+	levelScale = 3
 	shakeTicks = 12
 	flashTicks = 20
 	shakeAmp   = 3 // размах тряски в пикселях
@@ -29,6 +33,9 @@ var (
 	fxHurt   = color.RGBA{0xff, 0x6a, 0x5a, 0xff} // урон, полученный игроком
 	fxEdge   = color.RGBA{0xc8, 0x28, 0x28, 0xff} // свечение края экрана
 	fxSlash  = color.RGBA{0xff, 0xf4, 0xd0, 0xff} // след замаха
+	fxXP     = color.RGBA{0x8c, 0xd8, 0xff, 0xff} // полученный опыт
+	fxNoXP   = color.RGBA{0x7a, 0x84, 0x98, 0xff} // добыча ниже героя — опыта нет
+	fxLevel  = color.RGBA{0xff, 0xe4, 0x6a, 0xff} // взят уровень
 )
 
 // slash — след удара: тот самый сектор, которым игровой слой ищет цели.
@@ -42,12 +49,15 @@ type slash struct {
 	ttl    int
 }
 
-// popup — всплывающее число урона: всплывает над целью и тает.
+// popup — всплывающая надпись: всплывает над целью и тает. Числом урона она
+// быть не обязана — тем же способом сообщается о подобранной добыче.
 type popup struct {
-	pos engine.Vec2
-	txt string
-	col color.RGBA
-	ttl int
+	pos   engine.Vec2
+	txt   string
+	col   color.RGBA
+	scale float64
+	ttl   int
+	max   int // сколько тиков жила изначально: по нему считается угасание
 }
 
 // effects — короткая обратная связь боя. Ничего не решает про игру: только
@@ -70,7 +80,36 @@ func (e *effects) pop(pos engine.Vec2, dmg int, col color.RGBA) {
 	if dmg <= 0 {
 		return
 	}
-	e.pops = append(e.pops, popup{pos: pos, txt: strconv.Itoa(dmg), col: col, ttl: popTicks})
+	e.pops = append(e.pops, popup{pos: pos, txt: strconv.Itoa(dmg), col: col, scale: popScale, ttl: popTicks, max: popTicks})
+}
+
+// xp показывает опыт за добитую тварь. Ноль тоже показывается, только серым:
+// «эта добыча тебя переросла» — ответ на вопрос игрока, а молчание ответом не
+// будет.
+func (e *effects) xp(pos engine.Vec2, got int) {
+	txt, col := "+"+strconv.Itoa(got), fxXP
+	if got <= 0 {
+		txt, col = "0", fxNoXP
+	}
+	e.pops = append(e.pops, popup{pos: pos, txt: txt, col: col, scale: popScale, ttl: popTicks, max: popTicks})
+}
+
+// level — взятый уровень над героем.
+func (e *effects) level(pos engine.Vec2, lvl int) {
+	e.pops = append(e.pops, popup{
+		pos: pos, txt: "УРОВЕНЬ " + strconv.Itoa(lvl), col: fxLevel,
+		scale: levelScale, ttl: levelTicks, max: levelTicks,
+	})
+}
+
+// text добавляет надпись над точкой pos — так сообщается о подобранной добыче.
+// Мельче числа урона: имя предмета в две клетки шрифта заняло бы полэкрана, да
+// и спорить за внимание с боем ему незачем.
+func (e *effects) text(pos engine.Vec2, txt string, col color.RGBA) {
+	if txt == "" {
+		return
+	}
+	e.pops = append(e.pops, popup{pos: pos, txt: txt, col: col, scale: 1, ttl: popTicks, max: popTicks})
 }
 
 // hurt — по игроку попали: тряска экрана и свечение по краю.
@@ -126,13 +165,14 @@ func (e *effects) drawPopups(dst *ebiten.Image, cam *engine.Camera) {
 	for _, p := range e.pops {
 		s := cam.WorldToScreen(p.pos)
 		col := p.col
-		// Последнюю треть жизни число тает.
-		if p.ttl < popTicks/3 {
-			col.A = uint8(255 * p.ttl / (popTicks / 3))
+		// Последнюю треть жизни надпись тает — своей жизни, а не общей: взятый
+		// уровень висит вдвое дольше числа урона.
+		if fade := max(p.max, 3) / 3; p.ttl < fade {
+			col.A = uint8(255 * p.ttl / fade)
 		}
-		// Тень в пиксель: число читается и на светлой траве, и на тёмной воде.
-		ui.PixelTextCentered(dst, p.txt, s.X+1, s.Y+1, popScale, color.RGBA{0, 0, 0, col.A})
-		ui.PixelTextCentered(dst, p.txt, s.X, s.Y, popScale, col)
+		// Тень в пиксель: надпись читается и на светлой траве, и на тёмной воде.
+		ui.PixelTextCentered(dst, p.txt, s.X+1, s.Y+1, p.scale, color.RGBA{0, 0, 0, col.A})
+		ui.PixelTextCentered(dst, p.txt, s.X, s.Y, p.scale, col)
 	}
 }
 

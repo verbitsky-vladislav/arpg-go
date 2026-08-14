@@ -17,6 +17,7 @@ import (
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/item"
 	"github.com/vladislav/game/internal/mob"
+	"github.com/vladislav/game/internal/progress"
 	"github.com/vladislav/game/internal/sprite"
 	"github.com/vladislav/game/internal/ui"
 )
@@ -184,7 +185,7 @@ func loadAnimals(l *assets.Loader) ([]bestEntry, string) {
 		}
 		e := bestEntry{
 			title: sp.Title.RU,
-			sub:   fmt.Sprintf("%s  HP %d", kind, sp.Stats.HP),
+			sub:   fmt.Sprintf("%s  УР %d  HP %d", kind, sp.Level(), sp.Stats.HP),
 			facts: speciesFacts(sp, cat, items),
 			note:  sp.Notes,
 		}
@@ -214,7 +215,7 @@ func loadEnemies(l *assets.Loader, file, root string) ([]bestEntry, string) {
 		ty := tier.Type
 		e := bestEntry{
 			title: tier.Title.RU,
-			sub:   fmt.Sprintf("%s  HP %d", word(bestFamily, ty.Family), tier.HP),
+			sub:   fmt.Sprintf("%s  УР %d  HP %d", word(bestFamily, ty.Family), tier.Level(), tier.HP),
 			facts: enemyFacts(tier, items),
 			note:  ty.Notes,
 		}
@@ -266,7 +267,8 @@ func enemyFacts(t *mob.Tier, items *item.Catalog) []string {
 		f = append(f, fmt.Sprintf("НИЖЕ %.0f%%    МЕНЯЕТ АТАКУ, СКОРОСТЬ ×%.2f",
 			ph.AtHP*100, ph.SpeedScale))
 	}
-	f = append(f, fmt.Sprintf("ОПЫТ        %d", t.XP))
+	f = append(f, fmt.Sprintf("ОПЫТ        %d-%d (ДО %d УР.)",
+		t.XP.Min, t.XP.Max, t.Level()+progress.OutlevelGap-1))
 	if len(ty.Drops) > 0 {
 		out := make([]string, 0, len(ty.Drops))
 		for _, d := range ty.Drops {
@@ -417,6 +419,8 @@ func speciesFacts(s *mob.Species, cat *mob.Catalog, items *item.Catalog) []strin
 	if len(s.Threat.Prey) > 0 {
 		f = append(f, "ОХОТИТСЯ НА "+names(s.Threat.Prey))
 	}
+	f = append(f, fmt.Sprintf("ОПЫТ        %d-%d (ДО %d УР.)",
+		s.XP.Min, s.XP.Max, s.Level()+progress.OutlevelGap-1))
 	if s.GrowsInto != "" {
 		f = append(f, "ВЫРАСТАЕТ В "+name(s.GrowsInto))
 	}

@@ -87,8 +87,8 @@ type Tier struct {
 		Walk float64 `json:"walk"`
 		Run  float64 `json:"run"`
 	} `json:"speed"`
-	XP        int `json:"xp"`
-	DropRolls int `json:"drop_rolls"`
+	XP        XPRange `json:"xp"`
+	DropRolls int     `json:"drop_rolls"`
 
 	ID   string     `json:"-"` // ключ записи (t1, green, ...)
 	Type *EnemyType `json:"-"`
@@ -288,8 +288,8 @@ func (c *EnemyCatalog) Validate() []string {
 				add("%s: нулевая скорость шага", who)
 			case tr.Speed.Run < tr.Speed.Walk:
 				add("%s: бег медленнее шага", who)
-			case tr.XP < 0:
-				add("%s: отрицательный опыт", who)
+			case tr.XP.Min <= 0 || tr.XP.Max < tr.XP.Min:
+				add("%s: полоса опыта %d..%d", who, tr.XP.Min, tr.XP.Max)
 			case tr.DropRolls < 0:
 				add("%s: отрицательное число бросков дропа", who)
 			}

@@ -53,6 +53,9 @@ type Species struct {
 			Swim float64 `json:"swim"`
 		} `json:"speed"`
 	} `json:"stats"`
+	// XP — полоса опыта за убийство. У безобидной дичи она вдвое ниже полосы
+	// своего уровня: заяц — это добыча, а не бой.
+	XP      XPRange `json:"xp"`
 	Habitat struct {
 		Biomes          map[string]int `json:"biomes"` // биом → вес спавна
 		Zones           []string       `json:"zones"`
@@ -161,6 +164,9 @@ func (c *Catalog) Validate() []string {
 		}
 		if s.Stats.Speed.Walk <= 0 {
 			probs = append(probs, fmt.Sprintf("%s: нулевая скорость шага", id))
+		}
+		if s.XP.Min <= 0 || s.XP.Max < s.XP.Min {
+			probs = append(probs, fmt.Sprintf("%s: полоса опыта %d..%d", id, s.XP.Min, s.XP.Max))
 		}
 		// Урон и признак «нападает» — одно и то же утверждение, записанное
 		// дважды; разошлись — значит правка задела только половину.

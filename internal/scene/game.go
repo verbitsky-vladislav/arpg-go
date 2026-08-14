@@ -18,6 +18,8 @@ import (
 	"github.com/vladislav/game/internal/item"
 	"github.com/vladislav/game/internal/mob"
 	"github.com/vladislav/game/internal/physics"
+	"github.com/vladislav/game/internal/progress"
+	"github.com/vladislav/game/internal/save"
 	"github.com/vladislav/game/internal/settings"
 	"github.com/vladislav/game/internal/sprite"
 	"github.com/vladislav/game/internal/ui"
@@ -67,10 +69,28 @@ type Game struct {
 	ebars map[*mob.Enemy]int  // то же для врагов
 	hp    int                 // здоровье героя в прошлом тике — так ловится урон
 
+	// prog — уровень, опыт и очки прокачки героя. Живёт в сцене, а не в
+	// character.Player: тот отвечает за тело и анимации, а знать, кого герой
+	// добил и какого тот был уровня, может только игровой слой.
+	prog progress.Character
+
+	// Сохранение забега: книга на диске, слот в ней и запись персонажа.
+	// Счётчики убитых и время игры копятся прямо в записи — она и есть то, что
+	// переживает выход. store == nil — забег никуда не сохраняется (тесты).
+	store *save.Store
+	slot  int
+	char  *save.Char
+	psec  int // тиков до следующей секунды игрового времени
+	auto  int // тиков до автосохранения
+
 	items *item.Catalog   // что такое выпадающие идентификаторы
 	bag   *item.Inventory // сумка героя
 	eq    *item.Equipment // надетое: от гнезда оружия зависит, чем герой бьёт
 	chest *chest          // сундук забега (nil — места на карте не нашлось)
+
+	loot  *lootRules    // правила добычи: разброс, притяжение, подбор
+	drops []*groundItem // что уже лежит на карте
+	lrng  *rand.Rand    // своё зерно на добычу
 
 	// Каталог и тело нужны после старта: надел оружие — сменился лоадаут, а
 	// значит и пак анимаций пары «тело × лоадаут».
@@ -84,15 +104,31 @@ type Game struct {
 // окне: у героя сетка 4×4, у сундука 5×4. Расхождение поймает TestBagFitsPanel.
 const bagSlots, chestSlots = 16, 20
 
-// NewGame готовит забег: генерирует карту, ставит героя тела bodyID на точку
-// старта и заселяет карту зверями.
+// NewGame готовит одиночный забег без сохранения: тело bodyID, случайный мир,
+// чистый герой. Осталась для тестов и отладки — игра заходит через
+// NewSavedGame, потому что у неё забег всегда чей-то.
 func NewGame(l *assets.Loader, back Scene, bodyID string) (*Game, error) {
-	// Карта своя на каждый запуск: сид случайный, генерация — тем же worldgen,
-	// которым карты делаются из командной строки.
-	// Короткий сид: его видно в HUD, и по нему карта повторяется (шум всё равно
-	// перемешивает его splitmix-хешем, качество не теряется).
-	seed := rand.Uint64N(1_000_000)
-	m, err := world.Generate(l, gameBiome, seed, gameSize)
+	return NewSavedGame(l, back, nil, -1, NewChar("", bodyID))
+}
+
+// NewSavedGame готовит забег персонажа c: собирает его мир по сохранённому
+// сиду, заселяет карту и возвращает герою всё нажитое (см. restore). Забег
+// сохраняется в слот slot книги st; st == nil — не сохраняется вовсе.
+//
+// Мир — это сид: карта, звери, враги и содержимое сундука собираются из него
+// заново и получаются теми же, поэтому в файле их нет.
+func NewSavedGame(l *assets.Loader, back Scene, st *save.Store, slot int, c *save.Char) (*Game, error) {
+	if c == nil {
+		return nil, fmt.Errorf("scene: забег без персонажа")
+	}
+	biome := c.Biome
+	if biome == "" {
+		biome = gameBiome
+	}
+	// Короткий сид: его видно в журнале, и по нему карта повторяется (шум всё
+	// равно перемешивает его splitmix-хешем, качество не теряется).
+	seed := uint64(c.Seed)
+	m, err := world.Generate(l, biome, seed, gameSize)
 	if err != nil {
 		return nil, err
 	}
@@ -101,9 +137,9 @@ func NewGame(l *assets.Loader, back Scene, bodyID string) (*Game, error) {
 	if err != nil {
 		return nil, err
 	}
-	body, lo := cat.Body(bodyID), cat.Loadout(gameLoadout)
+	body, lo := cat.Body(c.Body), cat.Loadout(gameLoadout)
 	if body == nil || lo == nil {
-		return nil, fmt.Errorf("scene: нет героя %q/%q", bodyID, gameLoadout)
+		return nil, fmt.Errorf("scene: нет героя %q/%q", c.Body, gameLoadout)
 	}
 	pack, err := character.LoadPack(l, "character", body, lo)
 	if err != nil {
@@ -120,6 +156,10 @@ func NewGame(l *assets.Loader, back Scene, bodyID string) (*Game, error) {
 		l:      l,
 		bars:   map[*mob.Animal]int{},
 		ebars:  map[*mob.Enemy]int{},
+		prog:   progress.New(),
+		store:  st,
+		slot:   slot,
+		char:   c,
 	}
 	g.hp = g.pl.HP
 
@@ -156,11 +196,23 @@ func NewGame(l *assets.Loader, back Scene, bodyID string) (*Game, error) {
 	g.bag = item.NewInventory(items, bagSlots)
 	g.eq = item.NewEquipment(items)
 	g.chars, g.body = cat, body
+	// Правила выпадения общие на всю игру, а бросок — свой на забег: добыча не
+	// должна зависеть от того, сколько случайных чисел потратили звери и враги.
+	lr, err := loadLoot(l.FS(), lootFile)
+	if err != nil {
+		return nil, err
+	}
+	g.loot = lr
+	g.lrng = rand.New(rand.NewPCG(seed, 0x14057B7EF767814F))
 	ch, err := newChest(l, m, items, chestSlots, m.Spawn(), rand.New(rand.NewPCG(seed, 0x2545F4914F6CDD1D)))
 	if err != nil {
 		return nil, err
 	}
 	g.chest = ch
+
+	// Всё нажитое возвращается последним: сумка и надетое уже есть, сундук
+	// стоит, и накладывать сохранённое поверх готового забега безопасно.
+	g.restore()
 
 	mw, mh := m.Size()
 	g.cam.Follow(g.pl.Pos, mw, mh)
@@ -196,6 +248,7 @@ func (g *Game) Update() (Scene, error) {
 	g.fx.update()
 	g.tickBars()
 	g.tickEnemyBars()
+	g.tickSave() // время игры и автосохранение считаются только в самом забеге
 
 	g.pl.Update(g.input(), g.m.Field())
 	g.strike()
@@ -207,6 +260,10 @@ func (g *Game) Update() (Scene, error) {
 	// позициям до него, и выталкивание не уводит цель из-под засчитанного удара.
 	g.separate()
 	g.separateEnemies()
+
+	// Добыча ведётся после расталкивания: герой уже стоит там, где закончил
+	// шаг, и подбор считается по итоговому положению, а не по промежуточному.
+	g.updateLoot()
 
 	if next := g.useChest(); next != nil {
 		return next, nil
@@ -222,6 +279,7 @@ func (g *Game) Update() (Scene, error) {
 
 	// Смерть: экран поражения ждёт, пока доиграет анимация и растает труп.
 	if g.pl.Gone() {
+		g.died() // смерть попадает в сохранение сразу: отсюда часто уходят
 		return newDeath(g), nil
 	}
 
@@ -234,6 +292,7 @@ func (g *Game) Update() (Scene, error) {
 // toMenu уводит в меню, запомнив забег: мир, герой и звери остаются в памяти
 // сцены, и ESC в меню возвращает игрока ровно туда, где он вышел.
 func (g *Game) toMenu() Scene {
+	g.persist() // из меню игрок может и не вернуться — забег ложится на диск
 	back := g.back
 	if back == nil {
 		back = NewMenu()
@@ -293,8 +352,16 @@ func (g *Game) strike() {
 		if !a.Alive() || !h.Covers(a.Pos, a.Radius()) {
 			continue
 		}
-		a.Hit(h.Damage)
-		g.fx.pop(g.headOf(a), h.Damage, fxDamage)
+		if a.Hit(h.Damage) {
+			// Добил — с туши падает добыча. У зверя нет тиров, поэтому бросок
+			// один: сколько раз кидать кости, сказано только у врагов.
+			g.dropLoot(a.Pos, a.Floor(), a.Species.Drops, 1, false)
+			// Число опыта заменяет собой число урона: добил — и всё.
+			g.reward(g.headOf(a), a.Level, a.XP)
+			g.count(save.KillAnimal(a.Species.ID))
+		} else {
+			g.fx.pop(g.headOf(a), h.Damage, fxDamage)
+		}
 		g.bars[a] = barShow
 	}
 	g.strikeEnemies(h)
@@ -424,6 +491,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		// обязан уйти за спину, а не лечь поверх.
 		order = append(order, actor{y: c.depth(), pos: c.pos, draw: c.draw})
 	}
+	// Лежащая добыча — в том же проходе: вещь за деревом или за спиной героя
+	// обязана скрыться, иначе она читается как значок интерфейса, а не как
+	// предмет на земле.
+	for _, d := range g.drops {
+		order = append(order, actor{y: d.depth(), pos: d.at, draw: d.draw})
+	}
 	slices.SortFunc(order, func(a, b actor) int {
 		switch {
 		case a.y < b.y:
@@ -527,6 +600,7 @@ var (
 	hudText      = color.RGBA{0xe8, 0xef, 0xff, 0xff}
 	hudDim       = color.RGBA{0x9a, 0xa6, 0xc4, 0xff}
 	hudBeast     = color.RGBA{0xe8, 0xd0, 0x70, 0xff}
+	hudXP        = color.RGBA{0x5c, 0xa8, 0xe0, 0xff}
 	hudBeastCalm = color.RGBA{0x9a, 0xc8, 0x70, 0xff}
 	hudSelf      = color.RGBA{0xff, 0xff, 0xff, 0xff}
 	hudView      = color.RGBA{0xff, 0xff, 0xff, 0x88}
@@ -553,7 +627,12 @@ func (g *Game) drawHUD(dst *ebiten.Image) {
 	if !inSlot {
 		panelH += float32(ui.PixelTextHeight(1)) + 4
 	}
+	// Полоса опыта живёт под блоком здоровья и той же ширины: это одна панель
+	// героя, а не два прибора рядом.
+	xpY := float32(hudPad-4) + panelH + xpBarGap
+	panelH += xpBlockH()
 	vector.FillRect(dst, hudPad-4, hudPad-4, float32(barW)+8, panelH, hudBack, false)
+	g.drawXPBar(dst, hudPad, xpY, float32(barW))
 
 	g.drawMapView(dst, config.ScreenW-hudPad-hudMini, hudPad, hudMini)
 

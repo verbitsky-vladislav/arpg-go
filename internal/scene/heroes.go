@@ -29,9 +29,15 @@ type heroCard struct {
 
 // Heroes — экран выбора героя перед стартом. Лоадаут один — «без оружия»:
 // выбирается только тело, поэтому карточек ровно столько, сколько тел.
+//
+// Что случится с выбором, экран не решает: он отдаёт тело наружу (pick), а
+// заводить персонажа, спрашивать имя и начинать забег — дело того, кто его
+// открыл. Так один и тот же экран годится и для нового персонажа, и для чего
+// угодно ещё, чему нужно тело.
 type Heroes struct {
 	l     *assets.Loader
 	back  Scene
+	pick  func(bodyID string) (Scene, error)
 	cat   *character.Catalog
 	cards []heroCard
 	sel   int
@@ -40,8 +46,8 @@ type Heroes struct {
 
 // NewHeroes собирает экран выбора. Ошибка загрузки не роняет сцену: экран
 // покажет её текстом — из меню игрок всё равно сможет уйти.
-func NewHeroes(l *assets.Loader, back Scene) *Heroes {
-	h := &Heroes{l: l, back: back}
+func NewHeroes(l *assets.Loader, back Scene, pick func(bodyID string) (Scene, error)) *Heroes {
+	h := &Heroes{l: l, back: back, pick: pick}
 	cat, err := character.Load(l.FS(), "character/character.json")
 	if err != nil {
 		h.err = "НЕТ ДАННЫХ ПЕРСОНАЖА"
@@ -92,13 +98,13 @@ func (h *Heroes) Update() (Scene, error) {
 	if hovered >= 0 && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		start = true
 	}
-	if start {
-		g, err := NewGame(h.l, h.backScene(), h.cards[h.sel].body.ID)
+	if start && h.pick != nil {
+		next, err := h.pick(h.cards[h.sel].body.ID)
 		if err != nil {
 			h.err = "НЕ УДАЛОСЬ НАЧАТЬ ИГРУ"
 			return h, nil
 		}
-		return g, nil
+		return next, nil
 	}
 
 	for i := range h.cards {

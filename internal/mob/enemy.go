@@ -10,6 +10,7 @@ import (
 	"github.com/vladislav/game/internal/config"
 	"github.com/vladislav/game/internal/engine"
 	"github.com/vladislav/game/internal/physics"
+	"github.com/vladislav/game/internal/progress"
 	"github.com/vladislav/game/internal/sprite"
 )
 
@@ -123,8 +124,18 @@ type Enemy struct {
 	HP     int
 	MaxHP  int
 	Damage int
-	XP     int
-	Elite  bool
+	// XP — что отдаст эта особь: бросок по полосе тира, сделанный при рождении.
+	// Один раз и навсегда, потому что число всплывает над трупом и оно же
+	// уходит в полосу опыта героя — расходиться им нельзя.
+	XP int
+	// Level — уровень особи по её собственным числам, а не по табличным: у
+	// элиты и здоровье, и урон выше, значит выше и уровень.
+	Level int
+	Elite bool
+
+	// danger — место, которое особь занимает в бюджете спавнера. Не XP:
+	// бросок у каждого свой, а население должно держаться вида, а не удачи.
+	danger float64
 
 	home  engine.Vec2
 	vel   engine.Vec2
@@ -202,25 +213,34 @@ func NewEnemy(t *Tier, pack *sprite.Pack, bhv Behavior, pos engine.Vec2, rng *ra
 	e := &Enemy{
 		Type: t.Type, Tier: t, Pack: pack, Bhv: bhv,
 		Pos: pos, home: pos,
-		HP: t.HP, MaxHP: t.HP, Damage: t.Damage, XP: t.XP,
+		HP: t.HP, MaxHP: t.HP, Damage: t.Damage,
+		Level: t.Level(), danger: t.XP.Mid(),
 		player: anim.NewPlayer(nil),
 		slot:   -1,
 		rng:    rng,
 	}
 	e.flanker = rng.Float64() < bhv.Group.Flank
 	e.circleCW = rng.IntN(2) == 0
+	e.XP = t.XP.Pick(XPSeed(t.Type.ID+"_"+t.ID, pos))
 	e.enter(EIdle)
 	return e
 }
 
-// MakeElite усиливает особь по правилам спавна.
+// MakeElite усиливает особь по правилам спавна. Уровень пересчитывается по
+// новым числам: элита действительно опаснее ровесника, и герой, переросший
+// обычного гоблина, за элитного всё ещё получит опыт.
 func (e *Enemy) MakeElite(hpScale, dmgScale, xpScale float64) {
 	e.Elite = true
 	e.MaxHP = max(1, int(float64(e.MaxHP)*hpScale))
 	e.HP = e.MaxHP
 	e.Damage = max(1, int(float64(e.Damage)*dmgScale))
 	e.XP = int(float64(e.XP) * xpScale)
+	e.Level = progress.MobLevel(e.MaxHP, e.Damage)
+	e.danger *= xpScale
 }
+
+// Danger — место особи в бюджете спавнера.
+func (e *Enemy) Danger() float64 { return e.danger }
 
 func (e *Enemy) Alive() bool           { return e.state != EDead }
 func (e *Enemy) Gone() bool            { return e.gone }

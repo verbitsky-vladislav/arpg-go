@@ -54,6 +54,10 @@ type Animal struct {
 	Pack    *sprite.Pack
 	Pos     engine.Vec2
 	HP      int
+	// XP и Level — то же, что у врага: бросок по полосе вида, сделанный при
+	// рождении, и уровень, выведенный из чисел вида.
+	XP    int
+	Level int
 	// Persistent — особь не снимается спавнером по удалению от игрока
 	// (прирученные, сюжетные, поставленные вручную).
 	Persistent bool
@@ -82,9 +86,11 @@ func NewAnimal(sp *Species, pack *sprite.Pack, pos engine.Vec2, rng *rand.Rand) 
 		Pos:     pos,
 		home:    pos,
 		HP:      sp.Stats.HP,
+		Level:   sp.Level(),
 		player:  anim.NewPlayer(nil),
 		rng:     rng,
 	}
+	a.XP = sp.XP.Pick(XPSeed(sp.ID, pos))
 	a.enter(Idle)
 	return a
 }

@@ -20,6 +20,15 @@ func New(start scene.Scene) *Game {
 }
 
 func (g *Game) Update() error {
+	// Закрытие окна перехвачено (ebiten.SetWindowClosingHandled в main), чтобы
+	// забег успел сохраниться: крестик в углу — такой же выход из игры, как
+	// пункт меню, и терять на нём прогресс нельзя.
+	if ebiten.IsWindowBeingClosed() {
+		if c, ok := g.scene.(scene.Closer); ok {
+			c.Closing()
+		}
+		return ebiten.Termination
+	}
 	next, err := g.scene.Update()
 	if err != nil {
 		return err

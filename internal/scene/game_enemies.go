@@ -12,6 +12,7 @@ import (
 	"github.com/vladislav/game/internal/engine"
 	"github.com/vladislav/game/internal/mob"
 	"github.com/vladislav/game/internal/physics"
+	"github.com/vladislav/game/internal/save"
 	"github.com/vladislav/game/internal/sprite"
 	"github.com/vladislav/game/internal/ui"
 )
@@ -99,7 +100,11 @@ func (g *Game) strikeEnemies(h character.Hit) {
 			continue
 		}
 		if e.Hurt(h.Damage, h.Center) {
-			g.fx.pop(g.enemyHead(e), e.XP, fxDamage) // добил — всплывает опыт
+			// Добил — таблица типа разыгрывается броском его тира; усиленная
+			// особь щедрее (см. items/loot.json).
+			g.dropLoot(e.Pos, e.Floor(), e.Type.Drops, e.Tier.DropRolls, e.Elite)
+			g.reward(g.enemyHead(e), e.Level, e.XP) // добил — всплывает опыт
+			g.count(save.KillEnemy(e.Type.ID, e.Tier.ID))
 		} else {
 			g.fx.pop(g.enemyHead(e), h.Damage, fxDamage)
 		}

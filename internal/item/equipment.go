@@ -56,6 +56,22 @@ func (e *Equipment) TakeOff(slot string) Slot {
 	return s
 }
 
+// Worn — всё надетое: гнездо → вещь. Копия, а не сама карта: снаряжение
+// меняется только через Wear/TakeOff, и правка со стороны его бы рассинхронила
+// с лоадаутом персонажа. Нужен тем, кто обходит надетое целиком, — сохранению.
+func (e *Equipment) Worn() map[string]Slot {
+	if e == nil {
+		return nil
+	}
+	out := make(map[string]Slot, len(e.worn))
+	for slot, s := range e.worn {
+		if !s.Empty() {
+			out[slot] = s
+		}
+	}
+	return out
+}
+
 // Loadout — каким оружием герой сейчас машет ("" — ничем). Смотрит только в
 // гнездо weapon: остальное снаряжение анимации не меняет.
 func (e *Equipment) Loadout() string {
