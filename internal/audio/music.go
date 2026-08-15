@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"path"
+	"strings"
 
 	eaudio "github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio/vorbis"
 	"github.com/hajimehoshi/ebiten/v2/audio/wav"
 
 	"github.com/vladislav/game/internal/config"
@@ -33,9 +36,32 @@ const fadeTicks = 3 * config.TPS / 2
 // Эффекты, наоборот, распакованы заранее — им нужна нулевая задержка, а весит
 // весь набор мегабайт.
 type musicTrack struct {
-	raw  []byte  // содержимое WAV как есть
+	file string  // имя файла: по нему выбирается разборщик (см. decodeMusic)
+	raw  []byte  // содержимое файла как есть
 	size int64   // длина потока после приведения частоты, байт
 	gain float64 // громкость трека из манифеста: треки сведены по-разному
+}
+
+// musicStream — то общее, что нужно от разобранного трека: читать, перематывать
+// и знать свою длину (без неё нечем задать точку зацикливания). Ни у wav, ни у
+// vorbis общего интерфейса в ebiten нет, хотя оба его и реализуют.
+type musicStream interface {
+	io.ReadSeeker
+	Length() int64
+}
+
+// decodeMusic разбирает трек по расширению имени.
+//
+// В репозитории музыка лежит WAV — её пишет tools/musgen, и хранить исходник
+// сжатым было бы враньём. В раздачу она едет OGG: минута стерео весит 5 МБ
+// против одного, а это половина всего, что скачивает игрок (tools/pack).
+// Формат читается из имени, а не угадывается по содержимому: имя всё равно
+// записано в манифесте, и расхождение с ним — ошибка данных, а не догадка.
+func decodeMusic(file string, raw []byte) (musicStream, error) {
+	if strings.EqualFold(path.Ext(file), ".ogg") {
+		return vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(raw))
+	}
+	return wav.DecodeWithSampleRate(SampleRate, bytes.NewReader(raw))
 }
 
 // music — состояние музыкального слоя.
@@ -78,7 +104,7 @@ func loadMusic(fsys fs.FS, dir string) (*music, error) {
 		// Заголовок разбирается сразу, сэмплы — нет: так битый файл виден при
 		// загрузке (а не тишиной посреди забега), и сразу известна длина
 		// потока, без которой нечем задать точку зацикливания.
-		st, err := wav.DecodeWithSampleRate(SampleRate, bytes.NewReader(raw))
+		st, err := decodeMusic(e.File, raw)
 		if err != nil {
 			return m, fmt.Errorf("музыка %s: %w", id, err)
 		}
@@ -86,7 +112,7 @@ func loadMusic(fsys fs.FS, dir string) (*music, error) {
 		if g <= 0 {
 			g = 1
 		}
-		m.tracks[id] = musicTrack{raw: raw, size: st.Length(), gain: g}
+		m.tracks[id] = musicTrack{file: e.File, raw: raw, size: st.Length(), gain: g}
 	}
 	return m, nil
 }
@@ -121,7 +147,7 @@ func (m *music) play(id string) {
 	if ctx == nil {
 		return
 	}
-	st, err := wav.DecodeWithSampleRate(SampleRate, bytes.NewReader(t.raw))
+	st, err := decodeMusic(t.file, t.raw)
 	if err != nil {
 		return // при загрузке файл разбирался — сюда попасть неоткуда
 	}

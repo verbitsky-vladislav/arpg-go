@@ -27,11 +27,13 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
 
+	"github.com/vladislav/game/internal/audio"
 	"github.com/vladislav/game/internal/character"
 	"github.com/vladislav/game/internal/item"
 	"github.com/vladislav/game/internal/mob"
@@ -62,6 +64,7 @@ func main() {
 	out := flag.String("out", filepath.Join("dist", "assets"), "куда сложить сборку")
 	biomes := flag.String("biomes", scene.GameBiome, "биомы сборки через запятую")
 	check := flag.Bool("check", true, "проверить собранное загрузчиками игры")
+	music := flag.String("music", "auto", "музыка в сборке: ogg | wav | auto (ogg, если есть ffmpeg)")
 	flag.Parse()
 
 	keepBiomes := set(strings.Split(*biomes, ","))
@@ -69,7 +72,14 @@ func main() {
 		fatal(fmt.Errorf("не задано ни одного биома"))
 	}
 
-	p := &packer{src: *src, out: *out, biomes: keepBiomes}
+	p := &packer{src: *src, out: *out, biomes: keepBiomes, ogg: *music != "wav"}
+	if p.ogg && !haveFFmpeg() {
+		if *music == "ogg" {
+			fatal(fmt.Errorf("сжатие музыки просили, а ffmpeg в системе нет"))
+		}
+		fmt.Println("ffmpeg не найден — музыка едет WAV'ом, сборка выйдет тяжелее")
+		p.ogg = false
+	}
 	if err := p.run(); err != nil {
 		fatal(err)
 	}
@@ -89,6 +99,9 @@ type packer struct {
 	enemies map[string]bool // типы врагов
 	bosses  map[string]bool // типы боссов
 
+	ogg   bool                       // сжимать ли музыку (есть ли ffmpeg)
+	icons map[string]map[string]bool // иконочный пак → нужные из него спрайты
+
 	srcBytes, outBytes int64
 	total              int // сколько существ описано в проекте — для отчёта
 	dropped            []string
@@ -103,6 +116,9 @@ func (p *packer) run() error {
 		return err
 	}
 	if p.bosses, err = p.pickEnemies(bossesFile); err != nil {
+		return err
+	}
+	if p.icons, err = p.iconRefs(); err != nil {
 		return err
 	}
 	if err := os.RemoveAll(p.out); err != nil {
@@ -235,12 +251,23 @@ func (p *packer) copyTree() error {
 			return err
 		}
 		if d.IsDir() {
-			if p.keep(rel + "/") {
-				return nil
+			if !p.keep(rel + "/") {
+				p.dropped = append(p.dropped, rel)
+				p.srcBytes += dirSize(filepath.Join(p.src, filepath.FromSlash(rel)))
+				return fs.SkipDir
 			}
-			p.dropped = append(p.dropped, rel)
-			p.srcBytes += dirSize(filepath.Join(p.src, filepath.FromSlash(rel)))
-			return fs.SkipDir
+			// Пак разбирается целиком здесь же: из пака существа едет только
+			// то, что назвал манифест, из иконочного — только нужные листы.
+			for _, take := range []func(string) (bool, error){p.copyPack, p.copyIconPack} {
+				ok, err := take(rel)
+				if err != nil {
+					return err
+				}
+				if ok {
+					return fs.SkipDir
+				}
+			}
+			return nil
 		}
 		info, ierr := d.Info()
 		if ierr != nil {
@@ -254,6 +281,133 @@ func (p *packer) copyTree() error {
 		return copyFile(filepath.Join(p.src, filepath.FromSlash(rel)),
 			filepath.Join(p.out, filepath.FromSlash(rel)))
 	})
+}
+
+// copyPack разбирает каталог, если это спрайт-пак: копирует манифест и ровно
+// те листы, которые он называет, а всё остальное оставляет дома.
+//
+// Остального в паке много, и оно тяжелее самих кадров: сетки диагоналей
+// (dir8/), слои оружия для перекраски (parts/), да и прежние четырёхсторонние
+// листы, которые лежат рядом с восьмисторонними и никем больше не читаются.
+// Это материал для правки графики, а не графика: в паке героя он весит вдесятеро
+// больше, чем то, что игра рисует.
+//
+// Возвращает false, если каталог паком не оказался, — тогда обход идёт как
+// обычно. Атласы биома и иконочные паки тоже описаны манифестом, но у них
+// вместо animations листы (sheets), и разбирать их этим правилом нельзя.
+func (p *packer) copyPack(dir string) (bool, error) {
+	b, err := os.ReadFile(filepath.Join(p.src, filepath.FromSlash(dir), "manifest.json"))
+	if err != nil {
+		return false, nil // не пак
+	}
+	var m struct {
+		Animations map[string]struct {
+			File string `json:"file"`
+		} `json:"animations"`
+	}
+	if err := json.Unmarshal(b, &m); err != nil || len(m.Animations) == 0 {
+		return false, nil
+	}
+	files := map[string]bool{"manifest.json": true}
+	for _, a := range m.Animations {
+		files[a.File] = true
+	}
+	p.srcBytes += dirSize(filepath.Join(p.src, filepath.FromSlash(dir)))
+	for f := range files {
+		src := filepath.Join(p.src, filepath.FromSlash(dir), filepath.FromSlash(f))
+		st, err := os.Stat(src)
+		if err != nil {
+			return false, fmt.Errorf("пак %s: %w", dir, err)
+		}
+		p.outBytes += st.Size()
+		if err := copyFile(src, filepath.Join(p.out, filepath.FromSlash(dir), filepath.FromSlash(f))); err != nil {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+// iconRefs собирает ссылки на иконки: пак → какие спрайты из него нужны.
+// Ссылки лежат в двух файлах — вещи и сундуки, — и это все, кто в игре
+// достаёт картинки из иконочных паков.
+func (p *packer) iconRefs() (map[string]map[string]bool, error) {
+	out := map[string]map[string]bool{}
+	add := func(pack, id string) {
+		if pack == "" || id == "" {
+			return
+		}
+		if out[pack] == nil {
+			out[pack] = map[string]bool{}
+		}
+		out[pack][id] = true
+	}
+	var items struct {
+		Items []struct{ Pack, Icon string } `json:"items"`
+	}
+	if err := readJSON(filepath.Join(p.src, "items", "items.json"), &items); err != nil {
+		return nil, err
+	}
+	for _, it := range items.Items {
+		add(it.Pack, it.Icon)
+	}
+	var chests struct {
+		Kinds []struct{ Pack, Sprite string } `json:"kinds"`
+	}
+	if err := readJSON(filepath.Join(p.src, "items", "chests.json"), &chests); err != nil {
+		return nil, err
+	}
+	for _, k := range chests.Kinds {
+		add(k.Pack, k.Sprite)
+	}
+	return out, nil
+}
+
+// copyIconPack копирует иконочный пак без листов, из которых ничего не берут:
+// в паке рыбалки десять листов с рыбой, а игре из него нужен один.
+//
+// Лист берётся целиком, если на нём есть хоть один нужный спрайт: резать
+// картинку под конкретные иконки — это уже другой инструмент (iconnorm) и
+// другой разговор про разметку. Если спрайт с таким именем лежит на двух
+// листах, едут оба: атлас ищет по всем листам, и выбор из них — его дело, а не
+// сборщика.
+func (p *packer) copyIconPack(dir string) (bool, error) {
+	want := p.icons[filepath.ToSlash(dir)]
+	if len(want) == 0 {
+		return false, nil // не иконочный пак (или из него ничего не берут)
+	}
+	var m struct {
+		Sheets map[string]struct {
+			File    string `json:"file"`
+			Sprites []struct {
+				ID string `json:"id"`
+			} `json:"sprites"`
+		} `json:"sheets"`
+	}
+	if err := readJSON(filepath.Join(p.src, filepath.FromSlash(dir), "manifest.json"), &m); err != nil {
+		return false, nil
+	}
+	p.srcBytes += dirSize(filepath.Join(p.src, filepath.FromSlash(dir)))
+	files := []string{"manifest.json"}
+	for name, sh := range m.Sheets {
+		for _, s := range sh.Sprites {
+			if want[s.ID] || want[name+"/"+s.ID] {
+				files = append(files, sh.File)
+				break
+			}
+		}
+	}
+	for _, f := range files {
+		src := filepath.Join(p.src, filepath.FromSlash(dir), filepath.FromSlash(f))
+		st, err := os.Stat(src)
+		if err != nil {
+			return false, fmt.Errorf("пак %s: %w", dir, err)
+		}
+		p.outBytes += st.Size()
+		if err := copyFile(src, filepath.Join(p.out, filepath.FromSlash(dir), filepath.FromSlash(f))); err != nil {
+			return false, err
+		}
+	}
+	return true, nil
 }
 
 // keep — единственное место, где решается судьба файла. Путь всегда со
@@ -406,8 +560,17 @@ func (p *packer) filterSpawn() error {
 	return p.writeOut(enemySpawn, doc)
 }
 
-// filterMusic оставляет темы биомов, которые едут в сборку. Тема, названная не
-// по биому (меню, титры), остаётся: она не про биом и выброшена быть не может.
+// filterMusic оставляет темы биомов, которые едут в сборку (тема, названная не
+// по биому — меню, титры, — остаётся: она не про биом), и сжимает оставшиеся.
+//
+// Сжатие — самая крупная экономия во всей сборке: минута стерео в WAV весит
+// 5 МБ, в OGG — около одного, а всё остальное вместе тянет на семь. В
+// репозитории музыка при этом остаётся WAV: исходник, который пишет
+// tools/musgen, сжатым хранить незачем.
+//
+// Кодировщика Vorbis на Go нет, поэтому зовётся ffmpeg. Нет его в системе —
+// музыка едет как есть: сборка потяжелеет, но не сломается, и об этом
+// печатается строчка, а не молчание.
 func (p *packer) filterMusic() error {
 	doc, err := p.readOut(musicFile)
 	if err != nil {
@@ -431,12 +594,55 @@ func (p *packer) filterMusic() error {
 		delete(tracks, id)
 		_ = os.Remove(filepath.Join(p.out, "audio", "music", filepath.FromSlash(t.File)))
 	}
+	if p.ogg {
+		for id, t := range tracks {
+			ogg, saved, err := toOGG(filepath.Join(p.out, "audio", "music", filepath.FromSlash(t.File)))
+			if err != nil {
+				return fmt.Errorf("музыка %s: %w", id, err)
+			}
+			p.outBytes -= saved
+			t.File = ogg
+			tracks[id] = t
+		}
+	}
 	b, err := json.MarshalIndent(tracks, "", " ")
 	if err != nil {
 		return err
 	}
 	doc["tracks"] = b
 	return p.writeOut(musicFile, doc)
+}
+
+// haveFFmpeg — есть ли чем сжимать.
+func haveFFmpeg() bool {
+	_, err := exec.LookPath("ffmpeg")
+	return err == nil
+}
+
+// toOGG перекодирует трек и убирает исходный WAV. Возвращает новое имя файла
+// (без каталога — как в манифесте) и сколько байт сэкономлено.
+//
+// Качество 4 — примерно 128 кбит/с: на паде и басе биома разницы не слышно, а
+// файл худеет впятеро. Кодировщик зовётся с -v error, чтобы в отчёт сборки не
+// сыпался его обычный поток сознания.
+func toOGG(wav string) (string, int64, error) {
+	before, err := os.Stat(wav)
+	if err != nil {
+		return "", 0, err
+	}
+	ogg := strings.TrimSuffix(wav, filepath.Ext(wav)) + ".ogg"
+	cmd := exec.Command("ffmpeg", "-v", "error", "-y", "-i", wav, "-c:a", "libvorbis", "-q:a", "4", ogg)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return "", 0, fmt.Errorf("ffmpeg: %v: %s", err, strings.TrimSpace(string(out)))
+	}
+	after, err := os.Stat(ogg)
+	if err != nil {
+		return "", 0, err
+	}
+	if err := os.Remove(wav); err != nil {
+		return "", 0, err
+	}
+	return filepath.Base(ogg), before.Size() - after.Size(), nil
 }
 
 // biomeDirs — все биомы, какие есть в проекте (не только сборочные).
@@ -581,6 +787,48 @@ func verify(out string, biomes map[string]bool) error {
 	if _, err := item.Load(fsys, "items/items.json"); err != nil {
 		return err
 	}
+	if err := audio.Verify(fsys, "audio"); err != nil {
+		return err
+	}
+	return icons(out)
+}
+
+// icons проверяет, что каждая иконка вещи и сундука после чистки листов
+// по-прежнему находится: выброшенный лишний лист и выброшенный нужный на диске
+// выглядят одинаково, а в игре — нет.
+func icons(out string) error {
+	p := &packer{src: out}
+	refs, err := p.iconRefs()
+	if err != nil {
+		return err
+	}
+	for pack, want := range refs {
+		var m struct {
+			Sheets map[string]struct {
+				File    string `json:"file"`
+				Sprites []struct {
+					ID string `json:"id"`
+				} `json:"sprites"`
+			} `json:"sheets"`
+		}
+		if err := readJSON(filepath.Join(out, filepath.FromSlash(pack), "manifest.json"), &m); err != nil {
+			return err
+		}
+		have := map[string]bool{}
+		for name, sh := range m.Sheets {
+			if _, err := os.Stat(filepath.Join(out, filepath.FromSlash(pack), filepath.FromSlash(sh.File))); err != nil {
+				continue // лист не поехал — спрайты с него не считаются
+			}
+			for _, s := range sh.Sprites {
+				have[s.ID], have[name+"/"+s.ID] = true, true
+			}
+		}
+		for id := range want {
+			if !have[id] {
+				return fmt.Errorf("иконка %s/%s не нашлась в сборке", pack, id)
+			}
+		}
+	}
 	return nil
 }
 
@@ -632,6 +880,17 @@ func dirSize(dir string) int64 {
 		return nil
 	})
 	return n
+}
+
+func readJSON(path string, v any) error {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(b, v); err != nil {
+		return fmt.Errorf("%s: %w", path, err)
+	}
+	return nil
 }
 
 func copyFile(src, dst string) error {

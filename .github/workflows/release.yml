@@ -31,15 +31,18 @@ jobs:
           go-version-file: go.mod
 
       # pack проверяет собранное загрузчиками игры, а они тянут за собой
-      # Ebitengine — отсюда системные библиотеки и виртуальный экран.
+      # Ebitengine — отсюда системные библиотеки и виртуальный экран. ffmpeg —
+      # чтобы сжать музыку: кодировщика Vorbis на Go нет.
       - name: системные библиотеки
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            libgl1-mesa-dev xorg-dev libasound2-dev libxxf86vm-dev xvfb
+            libgl1-mesa-dev xorg-dev libasound2-dev libxxf86vm-dev xvfb ffmpeg
 
+      # -music ogg, а не auto: без ffmpeg сборка должна падать, а не тихо
+      # потяжелеть на пять мегабайт.
       - name: собрать ресурсы раздачи
-        run: xvfb-run -a go run ./tools/pack -out dist/assets
+        run: xvfb-run -a go run ./tools/pack -out dist/assets -music ogg
 
       - uses: actions/upload-artifact@v4
         with:
