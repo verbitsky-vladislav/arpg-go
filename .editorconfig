@@ -17,11 +17,6 @@ indent_size = 4
 indent_style = space
 indent_size = 2
 
-# Сетки диагоналей (tools/dir8): пробел в конце строки — это прозрачный
-# пиксель, и обрезать его нельзя.
-[assets/character/**/dir8/**/*.txt]
-trim_trailing_whitespace = false
-
 [*.md]
 # Два пробела в конце строки — перенос в markdown.
 trim_trailing_whitespace = false
