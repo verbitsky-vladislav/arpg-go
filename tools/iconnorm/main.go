@@ -286,7 +286,7 @@ func rewriteSources(s string) string {
 func pruneEmpty(root string) error {
 	for pass := 0; pass < 4; pass++ {
 		var empty []string
-		filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		_ = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 			if err != nil || !info.IsDir() || path == root {
 				return nil
 			}
@@ -300,7 +300,7 @@ func pruneEmpty(root string) error {
 			return nil
 		}
 		for _, d := range empty {
-			os.Remove(d)
+			_ = os.Remove(d)
 		}
 	}
 	return nil

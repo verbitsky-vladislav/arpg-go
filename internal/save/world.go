@@ -93,7 +93,7 @@ func (s *Store) LoadMap(slot int) (*worldgen.MapV1, bool) {
 	if err != nil {
 		return nil, false
 	}
-	defer zr.Close()
+	defer func() { _ = zr.Close() }()
 
 	var mv worldgen.MapV1
 	if json.NewDecoder(zr).Decode(&mv) != nil {
@@ -126,7 +126,7 @@ func (s *Store) SaveMap(slot int, mv *worldgen.MapV1) error {
 	name := tmp.Name()
 	fail := func(err error) error {
 		tmp.Close()
-		os.Remove(name)
+		_ = os.Remove(name)
 		return err
 	}
 	zw := gzip.NewWriter(tmp)
@@ -137,11 +137,11 @@ func (s *Store) SaveMap(slot int, mv *worldgen.MapV1) error {
 		return fail(fmt.Errorf("save: сжатие карты %q: %w", name, err))
 	}
 	if err := tmp.Close(); err != nil {
-		os.Remove(name)
+		_ = os.Remove(name)
 		return fmt.Errorf("save: закрытие %q: %w", name, err)
 	}
 	if err := os.Rename(name, p); err != nil {
-		os.Remove(name)
+		_ = os.Remove(name)
 		return fmt.Errorf("save: переименование в %q: %w", p, err)
 	}
 	return nil

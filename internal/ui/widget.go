@@ -32,7 +32,7 @@ func (b Button) Draw(dst *ebiten.Image, hovered bool) {
 		bg = color.RGBA{0x3a, 0x46, 0x66, 0xff}
 		border = color.RGBA{0xc8, 0xd4, 0xff, 0xff}
 	}
-	vector.DrawFilledRect(dst, b.X, b.Y, b.W, b.H, bg, false)
+	vector.FillRect(dst, b.X, b.Y, b.W, b.H, bg, false)
 	vector.StrokeRect(dst, b.X, b.Y, b.W, b.H, 1, border, false)
 	tx := int(b.X + (b.W-float32(len(b.Label)*charW))/2)
 	ty := int(b.Y + (b.H-16)/2)

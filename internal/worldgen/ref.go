@@ -100,7 +100,7 @@ func RunRef(args []string) {
 	info := map[[2]int][]cellInfo{}
 	for _, l := range t.Layers {
 		for _, c := range csvCells(l, t.Width) {
-			sheet, id := sheetForGid(t.Tilesets, c.Gid)
+			sheet, id := sheetForGID(t.Tilesets, c.GID)
 			tile := atlas.Tile(sheet, id)
 			if tile != nil {
 				drawTileScaled(canvas, tile, c.X*ts*scale, c.Y*ts*scale, scale, 0)
@@ -156,7 +156,7 @@ func csvCells(l tmxLayer, width int) []tmxCell {
 		if v == 0 {
 			continue
 		}
-		out = append(out, tmxCell{X: i % width, Y: i / width, Gid: v & gidMask})
+		out = append(out, tmxCell{X: i % width, Y: i / width, GID: v & gidMask})
 	}
 	return out
 }

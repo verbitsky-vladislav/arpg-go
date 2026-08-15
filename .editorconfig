@@ -1,0 +1,27 @@
+# Одинаковые отступы и переводы строк во всех редакторах.
+# https://editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.go]
+indent_style = tab
+indent_size = 4
+
+[*.{json,yml,yaml,md}]
+indent_style = space
+indent_size = 2
+
+# Сетки диагоналей (tools/dir8): пробел в конце строки — это прозрачный
+# пиксель, и обрезать его нельзя.
+[assets/character/**/dir8/**/*.txt]
+trim_trailing_whitespace = false
+
+[*.md]
+# Два пробела в конце строки — перенос в markdown.
+trim_trailing_whitespace = false

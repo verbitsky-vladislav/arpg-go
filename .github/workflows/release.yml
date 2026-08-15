@@ -7,17 +7,26 @@
 # бы дороже, чем три честных сборки.
 name: Release
 
+#
+# Тегов у релизов два вида, и это разные вещи:
+#
+#	nightly — свежая сборка main. Тег один на все времена и переезжает с
+#	          каждым пушем: иначе за месяц работы их накопились бы сотни, и
+#	          в списке релизов нельзя было бы найти ничего.
+#	vX.Y.Z  — веха. Ставится руками (git tag v0.1.0 && git push --tags), живёт
+#	          вечно, и к ней подшивается список изменений с прошлой вехи.
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   workflow_dispatch:
 
 permissions:
   contents: write
 
-# Два релиза одновременно не собираются: они дерутся за тег и за метку latest.
+# Два релиза одновременно не собираются: они дерутся за теги.
 concurrency:
-  group: release
+  group: release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -115,7 +124,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # Вся история и теги: список изменений к вехе снимается с них.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/download-artifact@v4
         with:
@@ -143,7 +155,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cat > notes.md <<'EOF'
-          Сборка коммита ${{ github.sha }}.
+          Собрано из коммита ${{ github.sha }}.
 
           Распакуйте архив целиком и запустите игру — ресурсы она ищет рядом с собой,
           поэтому один файл без папки `assets` работать не будет.
@@ -159,7 +171,29 @@ jobs:
           В раздачу едут только те ресурсы, которые в игре могут появиться, — лес и
           его обитатели, а не все восемнадцать биомов и шестьдесят тварей сразу.
           EOF
-          gh release create "build-${{ github.run_number }}" dist/*.zip \
-            --title "Сборка ${{ github.run_number }}" \
-            --latest \
+
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            # Веха: список изменений с прошлой вехи — из самих коммитов, а не из
+            # чужого генератора: заголовки здесь пишутся руками и читаются лучше
+            # любой автоматики.
+            prev=$(git describe --tags --abbrev=0 --match 'v*' "${{ github.ref_name }}^" 2>/dev/null || true)
+            if [ -n "$prev" ]; then
+              printf '\n## Что изменилось с %s\n\n' "$prev" >> notes.md
+              git log --no-merges --pretty='- %s' "$prev".."${{ github.ref_name }}" >> notes.md
+            fi
+            gh release create "${{ github.ref_name }}" dist/*.zip \
+              --title "${{ github.ref_name }}" \
+              --latest \
+              --notes-file notes.md
+            exit 0
+          fi
+
+          # Ночная сборка живёт под одним тегом: прошлую вместе с тегом убираем,
+          # новую кладём на её место. Помечена предварительной — «латест» должен
+          # оставаться за вехой, даже если она вышла месяц назад.
+          gh release delete nightly --yes --cleanup-tag 2>/dev/null || true
+          gh release create nightly dist/*.zip \
+            --title "Свежая сборка main" \
+            --prerelease \
+            --target "${{ github.sha }}" \
             --notes-file notes.md

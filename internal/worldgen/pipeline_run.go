@@ -320,15 +320,6 @@ func (g *Generator) markPropCells(cells []uint8, sw, sh int) {
 	}
 }
 
-// navSub — индексы под-клеток, на которые ложится клетка уровней v.
-func navSub(v int) []int {
-	out := make([]int, navScale)
-	for i := range out {
-		out[i] = v*navScale + navScale/2 + i
-	}
-	return out
-}
-
 // sheetIndexInManifest — индекс листа по имени в порядке автора (для SparseTile.Sheet).
 func (g *Generator) sheetIndexInManifest(name string) uint8 {
 	for i, n := range sheetOrder(g.Manifest) {

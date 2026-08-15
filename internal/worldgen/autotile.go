@@ -7,7 +7,6 @@ package worldgen
 // (tmxhint) и при генерации, поэтому соответствие «маска → тайл» сходится.
 
 import (
-	"math/bits"
 	"sort"
 )
 
@@ -38,31 +37,6 @@ func normalizeBlob(m uint8) uint8 {
 
 // blobKey — строковый ключ набора для нормализованной маски.
 func blobKey(m uint8) string { return itoa(int(normalizeBlob(m))) }
-
-// resolveFromSet ищет тайл по ключу маски; при промахе берёт ближайший по
-// Хеммингу среди имеющихся ключей, иначе -1. Гарантирует, что дырки покрытия
-// не роняют рендер (worldgen.spec §3, риск покрытия).
-func resolveFromSet(set map[string]int, key uint8, keyBits int) (int, bool) {
-	if set == nil {
-		return -1, false
-	}
-	if id, ok := set[itoa(int(key))]; ok {
-		return id, true
-	}
-	// ближайший по числу различающихся бит
-	best, bestID, found := 99, -1, false
-	for k, id := range set {
-		kv, ok := atoi(k)
-		if !ok {
-			continue
-		}
-		d := bits.OnesCount8(uint8(kv) ^ key)
-		if d < best {
-			best, bestID, found = d, id, true
-		}
-	}
-	return bestID, found
-}
 
 // resolveCorner ищет ВСЕ варианты тайла по угловому ключу; при промахе — варианты
 // ближайшего по Хеммингу ключа (дырки покрытия не роняют рендер). id локальные.

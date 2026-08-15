@@ -109,13 +109,3 @@ func (g *Game) itemNote(id string) string {
 	}
 	return name
 }
-
-// bagWearable — можно ли надеть то, что лежит в ячейке сумки.
-func (g *Game) bagWearable(i int) bool {
-	s := g.bag.At(i)
-	if s.Empty() {
-		return false
-	}
-	it, ok := g.items.Get(s.ID)
-	return ok && it.Wearable()
-}

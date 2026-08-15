@@ -195,16 +195,16 @@ func (s *Store) Save(b *Book) error {
 	}
 	name := tmp.Name()
 	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
-		os.Remove(name)
+		_ = tmp.Close()
+		_ = os.Remove(name)
 		return fmt.Errorf("save: запись %q: %w", name, err)
 	}
 	if err := tmp.Close(); err != nil {
-		os.Remove(name)
+		_ = os.Remove(name)
 		return fmt.Errorf("save: закрытие %q: %w", name, err)
 	}
 	if err := os.Rename(name, s.path); err != nil {
-		os.Remove(name)
+		_ = os.Remove(name)
 		return fmt.Errorf("save: переименование в %q: %w", s.path, err)
 	}
 	return nil

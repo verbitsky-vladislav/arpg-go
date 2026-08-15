@@ -10,13 +10,13 @@
 
 ### ⬇ Скачать и играть
 
-[**Windows**](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-windows-amd64.zip) ·
-[**macOS**](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-macos.zip) ·
-[**Linux**](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-linux-amd64.zip)
+[**Windows**](https://github.com/verbitsky-vladislav/arpg-go/releases/download/nightly/pixel-arpg-windows-amd64.zip) ·
+[**macOS**](https://github.com/verbitsky-vladislav/arpg-go/releases/download/nightly/pixel-arpg-macos.zip) ·
+[**Linux**](https://github.com/verbitsky-vladislav/arpg-go/releases/download/nightly/pixel-arpg-linux-amd64.zip)
 
 Около 10 МБ: распакуйте папку целиком и запустите `pixel-arpg` — ничего
-ставить не нужно.
-Сборки обновляются на каждое изменение в `main`, все они —
+ставить не нужно. Это свежая сборка `main`: она пересобирается на каждое
+изменение, поэтому бывает и лучше вчерашней, и хуже. Отмеченные версии —
 [в релизах](https://github.com/verbitsky-vladislav/arpg-go/releases).
 
 ![остров вблизи](docs/media/world-detail.png)
@@ -187,3 +187,13 @@ go test ./...
 - **локаций** — подземелья, деревни и пещеры лежат ассетами, генератора под
   них ещё нет;
 - **сюжета и смены дня и ночи** — данные под ночь есть, самой ночи нет.
+
+## Права
+
+Код — [MIT](LICENSE): берите, режьте, делайте своё.
+
+Графика — пиксельные паки [CraftPix](https://craftpix.net), приведённые к общей
+раскладке инструментами проекта. На них MIT **не распространяется**: паки
+остаются под своей лицензией, и вынуть их отсюда в свой проект нельзя
+([подробнее](assets/LICENSE.md)). Звук свой, синтезированный, и идёт вместе с
+кодом.

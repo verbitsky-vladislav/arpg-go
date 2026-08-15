@@ -43,9 +43,6 @@ func (b *bagPane) aim(mx, my float64) {
 	}
 }
 
-// hovered — есть ли вообще что-то под курсором.
-func (b *bagPane) hovered() bool { return b.slot >= 0 || b.worn != "" }
-
 // note — подпись про то, на что наведён курсор. У оружия к имени добавляются
 // его боевые свойства: сравнить две находки, не примерив обе, иначе нечем.
 func (b *bagPane) note(g *Game) string {

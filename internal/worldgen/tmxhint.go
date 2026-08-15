@@ -58,7 +58,7 @@ type tmxChunk struct {
 const gidMask = 0x1FFFFFFF // снять флаги отражения Tiled
 
 // tmxCell — распакованная клетка слоя.
-type tmxCell struct{ X, Y, Gid int }
+type tmxCell struct{ X, Y, GID int }
 
 // parseTMX читает и разбирает .tmx.
 func parseTMX(path string) (*tmxMap, error) {
@@ -82,8 +82,8 @@ func (t tmxTileset) tilesetName() string {
 	return strings.TrimSuffix(base, filepath.Ext(base))
 }
 
-// sheetForGid — имя листа и локальный id для gid по диапазонам firstgid.
-func sheetForGid(sets []tmxTileset, gid int) (string, int) {
+// sheetForGID — имя листа и локальный id для gid по диапазонам firstgid.
+func sheetForGID(sets []tmxTileset, gid int) (string, int) {
 	best := -1
 	for i, ts := range sets {
 		if ts.Firstgid <= gid && (best == -1 || ts.Firstgid > sets[best].Firstgid) {
@@ -105,7 +105,7 @@ func (l tmxLayer) cells() []tmxCell {
 			if v == 0 {
 				continue
 			}
-			out = append(out, tmxCell{X: baseX + i%w, Y: baseY + i/w, Gid: v & gidMask})
+			out = append(out, tmxCell{X: baseX + i%w, Y: baseY + i/w, GID: v & gidMask})
 		}
 	}
 	if len(l.Data.Chunks) > 0 {
@@ -222,7 +222,7 @@ func deriveBlobRef(m *tmxMap, layerName string, ref map[[2]int]bool) (sheet stri
 	cs := l.cells()
 	sheetCount := map[string]int{}
 	for _, c := range cs {
-		name, _ := sheetForGid(m.Tilesets, c.Gid)
+		name, _ := sheetForGID(m.Tilesets, c.GID)
 		sheetCount[name]++
 	}
 	sheet = topKey(sheetCount)
@@ -230,7 +230,7 @@ func deriveBlobRef(m *tmxMap, layerName string, ref map[[2]int]bool) (sheet stri
 	votes := map[string]map[int]int{}
 	idHist := map[int]int{}
 	for _, c := range cs {
-		name, local := sheetForGid(m.Tilesets, c.Gid)
+		name, local := sheetForGID(m.Tilesets, c.GID)
 		if name != sheet {
 			continue
 		}
@@ -357,7 +357,7 @@ func spotSetFrom(m *tmxMap, layers ...string) SpotSet {
 			continue
 		}
 		for _, c := range l.cells() {
-			name, local := sheetForGid(m.Tilesets, c.Gid)
+			name, local := sheetForGID(m.Tilesets, c.GID)
 			if sheet == "" {
 				sheet = name
 			}
@@ -394,7 +394,7 @@ func deriveBlob(m *tmxMap, l tmxLayer) (sheet string, blob map[string]int, fill 
 	}
 	sheetCount := map[string]int{}
 	for _, c := range cs {
-		name, _ := sheetForGid(m.Tilesets, c.Gid)
+		name, _ := sheetForGID(m.Tilesets, c.GID)
 		sheetCount[name]++
 	}
 	sheet = topKey(sheetCount)
@@ -403,12 +403,12 @@ func deriveBlob(m *tmxMap, l tmxLayer) (sheet string, blob map[string]int, fill 
 	w, h := maxX-minX+1, maxY-minY+1
 	grid := make([]int, w*h)
 	for _, c := range cs {
-		grid[(c.Y-minY)*w+(c.X-minX)] = c.Gid
+		grid[(c.Y-minY)*w+(c.X-minX)] = c.GID
 	}
 	votes := map[string]map[int]int{}
 	idHist := map[int]int{}
 	for _, c := range cs {
-		name, local := sheetForGid(m.Tilesets, c.Gid)
+		name, local := sheetForGID(m.Tilesets, c.GID)
 		if name != sheet {
 			continue
 		}
@@ -445,7 +445,7 @@ func reportLayer(m *tmxMap, l tmxLayer) {
 	// разбивка по листам и гистограмма локальных id доминирующего листа
 	sheetCount := map[string]int{}
 	for _, c := range cs {
-		name, _ := sheetForGid(m.Tilesets, c.Gid)
+		name, _ := sheetForGID(m.Tilesets, c.GID)
 		sheetCount[name]++
 	}
 	domSheet := topKey(sheetCount)
@@ -455,13 +455,13 @@ func reportLayer(m *tmxMap, l tmxLayer) {
 	w, h := maxX-minX+1, maxY-minY+1
 	grid := make([]int, w*h)
 	for _, c := range cs {
-		grid[(c.Y-minY)*w+(c.X-minX)] = c.Gid
+		grid[(c.Y-minY)*w+(c.X-minX)] = c.GID
 	}
 
 	idHist := map[int]int{}
 	blob := map[string]map[int]int{} // ключ маски → (localID → голоса)
 	for _, c := range cs {
-		name, local := sheetForGid(m.Tilesets, c.Gid)
+		name, local := sheetForGID(m.Tilesets, c.GID)
 		if name != domSheet {
 			continue
 		}

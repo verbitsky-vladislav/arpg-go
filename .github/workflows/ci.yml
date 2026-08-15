@@ -13,6 +13,7 @@ on:
 
 jobs:
   test:
+    name: тесты
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,5 +29,50 @@ jobs:
             libgl1-mesa-dev xorg-dev libasound2-dev libxxf86vm-dev xvfb
 
       - run: go build ./...
-      - run: go vet ./...
-      - run: xvfb-run -a go test ./...
+
+      - name: тесты
+        run: xvfb-run -a go test -coverprofile=cover.out ./...
+
+      # Покрытие не гейт, а сводка: в игре половина кода — рисование, которое
+      # тестами не покрывается по существу, и требовать процент значило бы
+      # писать тесты ради процента. Но видеть его полезно.
+      - name: покрытие
+        run: |
+          {
+            echo '## Покрытие тестами'
+            echo
+            echo '```'
+            go tool cover -func=cover.out | grep -E 'total:|internal/(mob|worldgen|character|combat|item|progress|save)/' | tail -25
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  lint:
+    name: линтер
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: системные библиотеки
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1-mesa-dev xorg-dev libasound2-dev libxxf86vm-dev
+
+      # Формат проверяется отдельно от линтера и первым: он не обсуждается и
+      # чинится одной командой, а видеть его в общем списке замечаний незачем.
+      - name: формат
+        run: |
+          bad=$(gofmt -l cmd internal tools)
+          if [ -n "$bad" ]; then
+            echo "не отформатировано (gofmt -w):"
+            echo "$bad"
+            exit 1
+          fi
+
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.12.2
