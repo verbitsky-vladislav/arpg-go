@@ -1,0 +1,147 @@
+# Сборка под раздачу: каждый пуш в main превращается в релиз со сборками под
+# Windows, macOS (Apple Silicon и Intel) и Linux.
+#
+# Ресурсы собираются один раз и общие на все платформы (tools/pack: в раздачу
+# едет только то, что в игре может появиться), бинарник — на своём раннере:
+# Ebitengine на macOS и Linux собирается через cgo, и кросс-компиляция обошлась
+# бы дороже, чем четыре честных сборки.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Два релиза одновременно не собираются: они дерутся за тег и за метку latest.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  assets:
+    name: ресурсы
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      # pack проверяет собранное загрузчиками игры, а они тянут за собой
+      # Ebitengine — отсюда системные библиотеки и виртуальный экран.
+      - name: системные библиотеки
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1-mesa-dev xorg-dev libasound2-dev libxxf86vm-dev xvfb
+
+      - name: собрать ресурсы раздачи
+        run: xvfb-run -a go run ./tools/pack -out dist/assets
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: assets
+          path: dist/assets
+          retention-days: 3
+
+  build:
+    name: ${{ matrix.target }}
+    needs: assets
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: linux-amd64, goarch: amd64, cgo: 1, bin: pixel-arpg }
+          - { os: macos-latest, target: macos-arm64, goarch: arm64, cgo: 1, bin: pixel-arpg }
+          - { os: macos-13, target: macos-amd64, goarch: amd64, cgo: 1, bin: pixel-arpg }
+          - { os: windows-latest, target: windows-amd64, goarch: amd64, cgo: 0, bin: pixel-arpg.exe }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: системные библиотеки
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1-mesa-dev xorg-dev libasound2-dev libxxf86vm-dev
+
+      # -s -w выкидывают таблицу символов и отладку: игроку они не нужны, а
+      # бинарник худеет на четверть. -H=windowsgui убирает чёрное окно консоли,
+      # которое иначе висит за игрой всю сессию.
+      - name: собрать игру
+        shell: bash
+        env:
+          CGO_ENABLED: ${{ matrix.cgo }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          flags="-s -w"
+          if [ "${{ runner.os }}" = "Windows" ]; then flags="-H=windowsgui $flags"; fi
+          go build -trimpath -ldflags "$flags" -o "${{ matrix.bin }}" ./cmd/game
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bin-${{ matrix.target }}
+          path: ${{ matrix.bin }}
+          retention-days: 3
+
+  release:
+    name: релиз
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: art
+
+      # Раздача — папка «игра + её ресурсы»: игра ищет assets рядом с собой,
+      # поэтому распаковать и запустить достаточно.
+      - name: собрать архивы
+        run: |
+          mkdir -p dist
+          for t in linux-amd64 macos-arm64 macos-amd64 windows-amd64; do
+            dir="pixel-arpg-$t"
+            mkdir -p "$dir"
+            cp -r art/assets "$dir/assets"
+            cp art/bin-$t/* "$dir/"
+            # Права на выполнение теряются при выгрузке артефакта — возвращаем.
+            chmod +x "$dir"/pixel-arpg* || true
+            cp .github/dist-README.txt "$dir/README.txt"
+            zip -qr "dist/$dir.zip" "$dir"
+          done
+          ls -lh dist
+
+      - name: выложить релиз
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<'EOF'
+          Сборка коммита ${{ github.sha }}.
+
+          Распакуйте архив целиком и запустите игру — ресурсы она ищет рядом с собой,
+          поэтому один файл без папки `assets` работать не будет.
+
+          | | |
+          |---|---|
+          | Windows | `pixel-arpg-windows-amd64.zip` |
+          | macOS, Apple Silicon (M1 и новее) | `pixel-arpg-macos-arm64.zip` |
+          | macOS, Intel | `pixel-arpg-macos-amd64.zip` |
+          | Linux | `pixel-arpg-linux-amd64.zip` |
+
+          Сборка не подписана: на macOS первый запуск — правым кликом и «Открыть».
+
+          В раздачу едут только те ресурсы, которые в игре могут появиться, — лес и
+          его обитатели, а не все восемнадцать биомов и шестьдесят тварей сразу.
+          EOF
+          gh release create "build-${{ github.run_number }}" dist/*.zip \
+            --title "Сборка ${{ github.run_number }}" \
+            --latest \
+            --notes-file notes.md

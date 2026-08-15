@@ -47,7 +47,7 @@ func NewChar(name, bodyID string) *save.Char {
 		Name:  save.CleanName(name),
 		Body:  bodyID,
 		Seed:  int64(rand.Uint64N(1_000_000)),
-		Biome: gameBiome,
+		Biome: GameBiome,
 		Level: 1,
 		Kills: map[string]int{},
 		Worn:  map[string]save.Slot{},
@@ -76,7 +76,7 @@ func loadMap(l *assets.Loader, st *save.Store, slot int, c *save.Char) (*world.M
 	}
 	biome := c.Biome
 	if biome == "" {
-		biome = gameBiome
+		biome = GameBiome
 	}
 	m, err := world.Generate(l, biome, uint64(c.Seed), gameSize)
 	if err != nil {

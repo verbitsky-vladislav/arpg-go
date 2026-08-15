@@ -77,7 +77,7 @@ func TestLootRulesLoad(t *testing.T) {
 // видна и недостижима.
 func TestLootSpotOnGround(t *testing.T) {
 	l := assets.NewLoader(os.DirFS(testAssets))
-	m, err := world.Generate(l, gameBiome, 11, 96)
+	m, err := world.Generate(l, GameBiome, 11, 96)
 	if err != nil {
 		t.Fatalf("карта: %v", err)
 	}

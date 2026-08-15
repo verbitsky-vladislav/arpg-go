@@ -13,6 +13,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
@@ -26,8 +27,11 @@ import (
 )
 
 func main() {
-	root := flag.String("assets", "assets", "каталог с ресурсами")
+	root := flag.String("assets", "", "каталог с ресурсами (по умолчанию — рядом с игрой)")
 	flag.Parse()
+	if *root == "" {
+		*root = findAssets()
+	}
 
 	ebiten.SetWindowTitle("Pixel ARPG")
 	ebiten.SetWindowSize(config.WindowW, config.WindowH)
@@ -70,4 +74,30 @@ func main() {
 	if err := ebiten.RunGame(core.New(menu)); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// findAssets ищет каталог ресурсов: сначала в текущем каталоге (так игра
+// запускается из исходников), потом рядом с бинарником (так она запускается из
+// раздачи — распакованной папки, по которой кликнули из проводника).
+//
+// Второе не прихоть: запущенная двойным кликом программа получает рабочим
+// каталогом что угодно — домашний каталог, корень, — и «assets» относительно
+// него не существует. Игра при этом лежит ровно рядом со своими ресурсами.
+func findAssets() string {
+	const name = "assets"
+	if st, err := os.Stat(name); err == nil && st.IsDir() {
+		return name
+	}
+	exe, err := os.Executable()
+	if err != nil {
+		return name
+	}
+	if exe, err = filepath.EvalSymlinks(exe); err != nil {
+		return name
+	}
+	near := filepath.Join(filepath.Dir(exe), name)
+	if st, err := os.Stat(near); err == nil && st.IsDir() {
+		return near
+	}
+	return name
 }

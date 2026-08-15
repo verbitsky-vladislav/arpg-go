@@ -8,7 +8,20 @@
 живёт не по-доброму. Меч в руке, курсор — прицел, и чем дальше от берега, тем
 злее встречают.
 
+### ⬇ Скачать и играть
+
+[**Windows**](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-windows-amd64.zip) ·
+[**macOS** (M1 и новее)](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-macos-arm64.zip) ·
+[**macOS** (Intel)](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-macos-amd64.zip) ·
+[**Linux**](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-linux-amd64.zip)
+
+Распакуйте папку целиком и запустите `pixel-arpg` — ничего ставить не нужно.
+Сборки обновляются на каждое изменение в `main`, все они —
+[в релизах](https://github.com/verbitsky-vladislav/arpg-go/releases).
+
 ![остров вблизи](docs/media/world-detail.png)
+
+Или из исходников:
 
 ```bash
 go run ./cmd/game
@@ -154,6 +167,7 @@ go test ./...
 | [`tools/charview`](tools/charview) | просмотрщик персонажа: сетка клипов и живой режим |
 | [`tools/sfxgen`](tools/sfxgen), [`tools/musgen`](tools/musgen) | синтез звуков и музыки |
 | [`tools/showcase`](tools/showcase) | картинки для этого README (`go run ./tools/showcase`) |
+| [`tools/pack`](tools/pack) | ресурсы для раздачи: едет только то, что в игре появится ([release.md](docs/release.md)) |
 
 ## Документация
 
@@ -162,7 +176,7 @@ go test ./...
 | мир | [worldgen.spec](docs/worldgen/worldgen.spec.md) · [автотайлинг](docs/worldgen/autotiling.md) · [слои и плато](docs/worldgen/layers_and_plateau.md) · [формат карты](docs/worldgen/map_format.md) · [манифест биома](docs/worldgen/manifest.schema.md) · [подключение тайлсета](docs/worldgen/tileset-onboarding.md) |
 | герой | [персонаж](docs/character/character.md) · [числа удара](docs/character/combat.md) · [прокачка](docs/character/progress.md) |
 | мобы | [виды зверей](docs/mobs/species.md) · [их спавн](docs/mobs/spawn.md) · [враги и боссы](docs/mobs/enemies.md) · [ИИ](docs/mobs/enemies_ai.md) · [заселение картой](docs/mobs/enemies_spawn.md) · [добыча](docs/mobs/loot.md) |
-| прочее | [сохранение](docs/save.md) · [звук](docs/sound.md) |
+| прочее | [сохранение](docs/save.md) · [звук](docs/sound.md) · [сборка под раздачу](docs/release.md) |
 
 ## Чего ещё нет
 

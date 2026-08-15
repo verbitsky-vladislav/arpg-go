@@ -54,7 +54,7 @@ func TestChestLootIsReal(t *testing.T) {
 // неё превращается в поход через полкарты.
 func TestChestSpotRules(t *testing.T) {
 	l := assets.NewLoader(os.DirFS(testAssets))
-	m, err := world.Generate(l, gameBiome, 7, 96)
+	m, err := world.Generate(l, GameBiome, 7, 96)
 	if err != nil {
 		t.Fatalf("карта: %v", err)
 	}
