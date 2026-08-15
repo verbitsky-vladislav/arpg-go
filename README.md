@@ -14,7 +14,8 @@
 [**macOS**](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-macos.zip) ·
 [**Linux**](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-linux-amd64.zip)
 
-Распакуйте папку целиком и запустите `pixel-arpg` — ничего ставить не нужно.
+Около 10 МБ: распакуйте папку целиком и запустите `pixel-arpg` — ничего
+ставить не нужно.
 Сборки обновляются на каждое изменение в `main`, все они —
 [в релизах](https://github.com/verbitsky-vladislav/arpg-go/releases).
 
