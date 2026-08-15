@@ -1,10 +1,10 @@
 # Сборка под раздачу: каждый пуш в main превращается в релиз со сборками под
-# Windows, macOS (Apple Silicon и Intel) и Linux.
+# Windows, macOS (универсальная — Apple Silicon и Intel) и Linux.
 #
 # Ресурсы собираются один раз и общие на все платформы (tools/pack: в раздачу
 # едет только то, что в игре может появиться), бинарник — на своём раннере:
 # Ebitengine на macOS и Linux собирается через cgo, и кросс-компиляция обошлась
-# бы дороже, чем четыре честных сборки.
+# бы дороже, чем три честных сборки.
 name: Release
 
 on:
@@ -54,10 +54,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, target: linux-amd64, goarch: amd64, cgo: 1, bin: pixel-arpg }
-          - { os: macos-latest, target: macos-arm64, goarch: arm64, cgo: 1, bin: pixel-arpg }
-          - { os: macos-13, target: macos-amd64, goarch: amd64, cgo: 1, bin: pixel-arpg }
-          - { os: windows-latest, target: windows-amd64, goarch: amd64, cgo: 0, bin: pixel-arpg.exe }
+          - { os: ubuntu-latest, target: linux-amd64, cgo: 1, bin: pixel-arpg }
+          - { os: macos-latest, target: macos, cgo: 1, bin: pixel-arpg }
+          - { os: windows-latest, target: windows-amd64, cgo: 0, bin: pixel-arpg.exe }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -75,15 +74,32 @@ jobs:
       # -s -w выкидывают таблицу символов и отладку: игроку они не нужны, а
       # бинарник худеет на четверть. -H=windowsgui убирает чёрное окно консоли,
       # которое иначе висит за игрой всю сессию.
+      #
+      # macOS собирается универсальной: обе архитектуры на одном раннере и lipo
+      # поверх. Отдельный раннер под Intel был бы честнее, но их выдают по
+      # получасу — а игрок не должен выбирать между «M1» и «Intel», чтобы
+      # запустить игру.
       - name: собрать игру
         shell: bash
         env:
           CGO_ENABLED: ${{ matrix.cgo }}
-          GOARCH: ${{ matrix.goarch }}
         run: |
           flags="-s -w"
-          if [ "${{ runner.os }}" = "Windows" ]; then flags="-H=windowsgui $flags"; fi
-          go build -trimpath -ldflags "$flags" -o "${{ matrix.bin }}" ./cmd/game
+          case "${{ matrix.target }}" in
+            macos)
+              GOARCH=arm64 go build -trimpath -ldflags "$flags" -o pixel-arpg.arm64 ./cmd/game
+              GOARCH=amd64 go build -trimpath -ldflags "$flags" -o pixel-arpg.amd64 ./cmd/game
+              lipo -create -output pixel-arpg pixel-arpg.arm64 pixel-arpg.amd64
+              rm pixel-arpg.arm64 pixel-arpg.amd64
+              lipo -archs pixel-arpg
+              ;;
+            windows-amd64)
+              GOARCH=amd64 go build -trimpath -ldflags "-H=windowsgui $flags" -o pixel-arpg.exe ./cmd/game
+              ;;
+            *)
+              GOARCH=amd64 go build -trimpath -ldflags "$flags" -o pixel-arpg ./cmd/game
+              ;;
+          esac
 
       - uses: actions/upload-artifact@v4
         with:
@@ -107,7 +123,7 @@ jobs:
       - name: собрать архивы
         run: |
           mkdir -p dist
-          for t in linux-amd64 macos-arm64 macos-amd64 windows-amd64; do
+          for t in linux-amd64 macos windows-amd64; do
             dir="pixel-arpg-$t"
             mkdir -p "$dir"
             cp -r art/assets "$dir/assets"
@@ -132,8 +148,7 @@ jobs:
           | | |
           |---|---|
           | Windows | `pixel-arpg-windows-amd64.zip` |
-          | macOS, Apple Silicon (M1 и новее) | `pixel-arpg-macos-arm64.zip` |
-          | macOS, Intel | `pixel-arpg-macos-amd64.zip` |
+          | macOS (Apple Silicon и Intel) | `pixel-arpg-macos.zip` |
           | Linux | `pixel-arpg-linux-amd64.zip` |
 
           Сборка не подписана: на macOS первый запуск — правым кликом и «Открыть».

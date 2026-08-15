@@ -11,8 +11,7 @@
 ### ⬇ Скачать и играть
 
 [**Windows**](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-windows-amd64.zip) ·
-[**macOS** (M1 и новее)](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-macos-arm64.zip) ·
-[**macOS** (Intel)](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-macos-amd64.zip) ·
+[**macOS**](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-macos.zip) ·
 [**Linux**](https://github.com/verbitsky-vladislav/arpg-go/releases/latest/download/pixel-arpg-linux-amd64.zip)
 
 Распакуйте папку целиком и запустите `pixel-arpg` — ничего ставить не нужно.
